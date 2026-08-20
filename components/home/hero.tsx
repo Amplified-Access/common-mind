@@ -115,7 +115,7 @@ const Hero = () => {
 
   return (
     <section ref={targetRef} className="relative h-[650vh] bg-white">
-      <div className="sticky top-0 flex h-[100vw] items-center overflow-hidden py-4 sm:h-[calc((100vw-32px)*0.5625+32px)]">
+      <div className="sticky top-0 flex h-[100vw] items-center overflow-hidden pt-4 sm:h-[calc((100vw-32px)*0.5625+32px)]">
         <Container size={"full"}>
           <div className="relative">
             <SideContent

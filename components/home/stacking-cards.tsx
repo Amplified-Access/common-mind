@@ -123,8 +123,8 @@ const StackingCards = () => {
 
   return (
     <section ref={targetRef} className="relative h-[400vh] bg-white">
-      <div className="sticky top-0 h-screen overflow-hidden p-4">
-        <div className="relative h-full">
+      <div className="sticky top-0 h-screen p-4">
+        <div className="relative h-full overflow-hidden">
           <BaseCard data={CARDS[0]} />
           {CARDS.slice(1).map((card, index) => (
             <Card
