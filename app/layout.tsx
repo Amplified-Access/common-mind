@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Figtree } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import Header from "@/components/layout/header";
 
 const figtree = Figtree({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -26,6 +27,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={cn(
         "h-full ",
+        "dark",
         "antialiased",
         geistSans.variable,
         geistMono.variable,
@@ -33,7 +35,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         figtree.variable,
       )}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col text-foreground">
+        <Header />
+        {children}
+      </body>
     </html>
   );
 }
