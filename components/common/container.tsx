@@ -8,7 +8,7 @@ const containerVariants = cva("mx-auto w-full px-4", {
       sm: "max-w-3xl",
       default: "max-w-5xl",
       lg: "max-w-7xl",
-      xl: "max-w-[1500px]",
+      xl: "max-w-[1520px]",
       full: "max-w-none",
     },
   },
