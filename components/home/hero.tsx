@@ -75,33 +75,46 @@ const Hero = () => {
     offset: ["start start", "end end"],
   });
 
-  // Phase 1 (0 – 0.3): shrink + slide right, revealing content on the left.
-  // Hold (0.3 – 0.45): pause so the left content can be read.
-  // Phase 2 (0.45 – 0.7): slide left at a fixed scale, revealing content on the right.
-  // Hold (0.7 – 1): pause so the right content can be read.
+  // Phase 1 (0 – 0.2): shrink + slide right, revealing content on the left.
+  // Hold A (0.2 – 0.3): pause so the left content can be read.
+  // Phase 2 (0.3 – 0.5): slide left at a fixed scale, revealing content on the right.
+  // Hold B (0.5 – 0.6): pause so the right content can be read.
+  // Phase 3 (0.6 – 0.85): grow back to full size, filling the screen again.
+  // Final hold (0.85 – 1).
+  const P1_END = 0.2;
+  const HOLD_A_END = 0.3;
+  const P2_END = 0.5;
+  const HOLD_B_END = 0.6;
+  const P3_END = 0.85;
+  const SHIFT = `-${(1 - BOX_SCALE) * 100}%`;
+
   const scale = useTransform(
     scrollYProgress,
-    [0, 0.3, 1],
-    [1, BOX_SCALE, BOX_SCALE],
+    [0, P1_END, HOLD_B_END, P3_END, 1],
+    [1, BOX_SCALE, BOX_SCALE, 1, 1],
   );
   const x = useTransform(
     scrollYProgress,
-    [0, 0.45, 0.7, 1],
-    ["0%", "0%", `-${(1 - BOX_SCALE) * 100}%`, `-${(1 - BOX_SCALE) * 100}%`],
+    [0, HOLD_A_END, P2_END, HOLD_B_END, P3_END, 1],
+    ["0%", "0%", SHIFT, SHIFT, "0%", "0%"],
   );
 
   const leftOpacity = useTransform(
     scrollYProgress,
-    [0, 0.15, 0.45, 0.55],
+    [0, 0.1, HOLD_A_END, HOLD_A_END + 0.05],
     [0, 1, 1, 0],
   );
-  const leftY = useTransform(scrollYProgress, [0, 0.15], [24, 0]);
+  const leftY = useTransform(scrollYProgress, [0, 0.1], [24, 0]);
 
-  const rightOpacity = useTransform(scrollYProgress, [0.55, 0.7, 1], [0, 1, 1]);
-  const rightY = useTransform(scrollYProgress, [0.55, 0.7], [24, 0]);
+  const rightOpacity = useTransform(
+    scrollYProgress,
+    [P2_END - 0.05, P2_END, HOLD_B_END, HOLD_B_END + 0.05],
+    [0, 1, 1, 0],
+  );
+  const rightY = useTransform(scrollYProgress, [P2_END - 0.05, P2_END], [24, 0]);
 
   return (
-    <section ref={targetRef} className="relative h-[500vh] bg-white">
+    <section ref={targetRef} className="relative h-[650vh] bg-white">
       <div className="sticky top-0 flex h-[max(100vh,100vw)] items-start overflow-hidden sm:h-[max(100vh,56.25vw)]">
         <Container size={"full"}>
           <div className="relative">
