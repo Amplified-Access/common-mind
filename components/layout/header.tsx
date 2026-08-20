@@ -23,7 +23,7 @@ const Header = () => {
   const pathname = usePathname();
 
   return (
-    <header className="py-8 bg-white">
+    <header className="pt-8 pb-4 bg-white">
       <Container className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3" size={"xl"}>
         <Link href="/" aria-label="Home">
           <Image
