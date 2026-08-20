@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Figtree } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { AnnouncementBanner } from "@/components/layout/announcement-banner";
+import { SmoothScroll } from "@/components/common/smooth-scroll";
 import Header from "@/components/layout/header";
 
 const figtree = Figtree({ subsets: ["latin"], variable: "--font-sans" });
@@ -37,15 +38,17 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       )}
     >
       <body className="min-h-full flex flex-col text-foreground">
-        {/* TODO: swap in the real announcement copy + link */}
-        <AnnouncementBanner
-          id="welcome-2026"
-          message="Welcome to CommonMind."
-          linkLabel="Explore models"
-          href="/models"
-        />
-        <Header />
-        {children}
+        <SmoothScroll>
+          {/* TODO: swap in the real announcement copy + link */}
+          <AnnouncementBanner
+            id="welcome-2026"
+            message="Welcome to CommonMind."
+            linkLabel="Explore models"
+            href="/models"
+          />
+          <Header />
+          {children}
+        </SmoothScroll>
       </body>
     </html>
   );
