@@ -85,7 +85,7 @@ function CardContent({ data }: { data: CardData }) {
 function BaseCard({ data }: { data: CardData }) {
   return (
     <div
-      className={`absolute inset-0 flex flex-col justify-center gap-4 rounded-3xl px-8 py-12 text-white sm:px-16 ${data.bg}`}
+      className={`absolute inset-0 flex flex-col justify-center items-center text-center gap-4 rounded-3xl px-8 py-12 text-white sm:px-16 ${data.bg}`}
     >
       <CardContent data={data} />
     </div>
@@ -107,7 +107,7 @@ function Card({ index, total, progress, data }: CardProps) {
   return (
     <motion.div
       style={{ y, zIndex: index + 1 }}
-      className={`absolute inset-0 flex flex-col justify-center gap-4 rounded-3xl px-8 py-12 text-white sm:px-16 ${data.bg}`}
+      className={`absolute inset-0 flex flex-col justify-center items-center text-center gap-4 rounded-3xl px-8 py-12 text-white sm:px-16 ${data.bg}`}
     >
       <CardContent data={data} />
     </motion.div>

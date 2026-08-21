@@ -18,6 +18,13 @@ import { Container } from "../common/container";
 const BOX_SCALE = 0.55;
 const GAP_WIDTH = `${(1 - BOX_SCALE) * 100}%`;
 
+// rounded-2xl resolves to 18px (--radius: 0.625rem * 1.8). transform: scale()
+// shrinks the rendered corner curve by the same factor as the box, so at
+// BOX_SCALE the corners read as visibly sharper even though the radius/size
+// ratio is unchanged. Dividing the local radius by the live scale cancels
+// that out, keeping the on-screen radius a constant 18px throughout.
+const BASE_RADIUS = 18;
+
 type SideContentProps = {
   align: "left" | "right";
   opacity: MotionValue<number>;
@@ -98,6 +105,7 @@ const Hero = () => {
     [0, HOLD_A_END, P2_END, HOLD_B_END, P3_END, 1],
     ["0%", "0%", SHIFT, SHIFT, "0%", "0%"],
   );
+  const borderRadius = useTransform(scale, (s) => `${BASE_RADIUS / s}px`);
 
   const leftOpacity = useTransform(
     scrollYProgress,
@@ -139,8 +147,8 @@ const Hero = () => {
               ctaHref="/datasets"
             />
             <motion.div
-              style={{ scale, x }}
-              className="flex aspect-square w-full origin-right items-center justify-center rounded-2xl bg-black px-6 text-center sm:aspect-video sm:px-8"
+              style={{ scale, x, borderRadius }}
+              className="flex aspect-square w-full origin-right items-center justify-center bg-black px-6 text-center sm:aspect-video sm:px-8"
             >
               <div>
                 <h1 className="text-4xl text-balance text-white sm:text-5xl md:text-6xl lg:text-7xl max-w-5xl">
