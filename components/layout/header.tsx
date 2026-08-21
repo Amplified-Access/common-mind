@@ -30,10 +30,8 @@ const Header = () => {
   const pathname = usePathname();
   const isHome = pathname === "/";
   const [hidden, setHidden] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
 
   useLenis(({ scroll, direction }) => {
-    setScrolled(scroll > 0);
     if (scroll < REVEAL_THRESHOLD) {
       setHidden(false);
       return;
@@ -45,9 +43,9 @@ const Header = () => {
   return (
     <header
       className={cn(
-        "sticky top-0 z-50 bg-white pt-8 transition-all duration-300 ease-in-out",
+        "sticky top-0 z-50 bg-[#f4f4f4] pt-8 transition-all duration-300 ease-in-out",
         hidden ? "-translate-y-full" : "translate-y-0",
-        (!isHome || scrolled) && "pb-7",
+        !isHome && "pb-7",
       )}
     >
       <Container

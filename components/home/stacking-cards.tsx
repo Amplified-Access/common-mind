@@ -142,7 +142,7 @@ const StackingCards = () => {
   });
 
   return (
-    <section ref={targetRef} className="relative h-[400vh] bg-white">
+    <section ref={targetRef} className="relative h-[400vh] bg-[#f4f4f4]">
       <div className="sticky top-0 h-screen p-4">
         <div className="relative h-full overflow-hidden">
           <BaseCard data={CARDS[0]} />

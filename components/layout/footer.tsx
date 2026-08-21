@@ -14,7 +14,7 @@ const footerLinks = [
 
 const Footer = () => {
   return (
-    <footer className="bg-white p-4">
+    <footer className="bg-[#f4f4f4] p-4">
       <div className="flex flex-col gap-16 rounded-3xl bg-black px-8 py-16 text-white sm:px-16 sm:py-20">
         <div className="flex flex-col items-start gap-6">
           <span className="text-xs font-medium tracking-widest text-white/60 uppercase">

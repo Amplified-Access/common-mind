@@ -121,8 +121,17 @@ const Hero = () => {
   );
   const rightY = useTransform(scrollYProgress, [P2_END - 0.05, P2_END], [24, 0]);
 
+  // The heading only belongs on the video's initial full-frame state — fade
+  // it out as soon as scrolling starts, and back in once the box returns to
+  // full size at the end.
+  const headingOpacity = useTransform(
+    scrollYProgress,
+    [0, 0.05, P3_END, P3_END + 0.05],
+    [1, 0, 0, 1],
+  );
+
   return (
-    <section ref={targetRef} className="relative h-[650vh] bg-white">
+    <section ref={targetRef} className="relative h-[650vh] bg-[#f4f4f4]">
       <div className="sticky top-0 flex h-[100vw] items-center overflow-hidden pt-4 sm:h-[calc((100vw-32px)*0.5625+32px)]">
         <Container size={"full"}>
           <div className="relative">
@@ -159,11 +168,11 @@ const Hero = () => {
                 className="absolute inset-0 size-full object-cover"
               />
               <div className="absolute inset-0 bg-black/50" />
-              <div className="relative">
+              <motion.div style={{ opacity: headingOpacity }} className="relative">
                 <h1 className="text-4xl text-balance text-white sm:text-5xl md:text-6xl lg:text-7xl max-w-5xl">
                   Building the open foundations for Inclusive AI.
                 </h1>
-              </div>
+              </motion.div>
             </motion.div>
           </div>
         </Container>
