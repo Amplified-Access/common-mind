@@ -148,9 +148,18 @@ const Hero = () => {
             />
             <motion.div
               style={{ scale, x, borderRadius }}
-              className="flex aspect-square w-full origin-right items-center justify-center bg-black px-6 text-center sm:aspect-video sm:px-8"
+              className="relative flex aspect-square w-full origin-right items-center justify-center overflow-hidden bg-black px-6 text-center sm:aspect-video sm:px-8"
             >
-              <div>
+              <video
+                src="/video.mp4"
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="absolute inset-0 size-full object-cover"
+              />
+              <div className="absolute inset-0 bg-black/50" />
+              <div className="relative">
                 <h1 className="text-4xl text-balance text-white sm:text-5xl md:text-6xl lg:text-7xl max-w-5xl">
                   Building the open foundations for Inclusive AI.
                 </h1>

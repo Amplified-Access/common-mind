@@ -1,6 +1,7 @@
 "use client";
 
 import { motion, useScroll, useTransform, type MotionValue } from "motion/react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRef } from "react";
 
@@ -12,7 +13,7 @@ type CardData = {
   description: string;
   ctaLabel: string;
   ctaHref: string;
-  bg: string;
+  image: string;
 };
 
 const CARDS: CardData[] = [
@@ -23,7 +24,7 @@ const CARDS: CardData[] = [
       "See how CommonMind models perform, how they compare with base models, and where they still need to improve.",
     ctaLabel: "Compare models",
     ctaHref: "/benchmarks",
-    bg: "bg-neutral-700",
+    image: "/flat-lay-statistics-presentation-with-chart.jpg",
   },
   {
     eyebrow: "Playground",
@@ -32,7 +33,7 @@ const CARDS: CardData[] = [
       "Choose a model, enter something, and experience CommonMind directly in your browser.",
     ctaLabel: "Start experimenting",
     ctaHref: "/playground",
-    bg: "bg-amber-700",
+    image: "/man-speaking-into-his-smartphone-s-speaker.jpg",
   },
   {
     eyebrow: "Build",
@@ -41,7 +42,7 @@ const CARDS: CardData[] = [
       "Use CommonMind models and tools to build local-language AI applications, from prototypes to real-world deployments.",
     ctaLabel: "Get started",
     ctaHref: "/build",
-    bg: "bg-emerald-700",
+    image: "/close-up-man-repairing-computer-chips.jpg",
   },
   {
     eyebrow: "Research",
@@ -50,7 +51,7 @@ const CARDS: CardData[] = [
       "Explore research on building, evaluating, and deploying AI for languages and contexts underserved by mainstream systems.",
     ctaLabel: "Read the research",
     ctaHref: "/research",
-    bg: "bg-violet-700",
+    image: "/working-from-home-ergonomic-workstation.jpg",
   },
 ];
 
@@ -79,15 +80,31 @@ function CardContent({ data }: { data: CardData }) {
   );
 }
 
+function CardBackground({ data }: { data: CardData }) {
+  return (
+    <>
+      <Image
+        src={data.image}
+        alt=""
+        fill
+        sizes="100vw"
+        className="object-cover"
+      />
+      <div className="absolute inset-0 bg-black/50" />
+    </>
+  );
+}
+
 // The base card sits in place from the start (no slide-in, nothing behind
 // it) — it's what continues straight off the Hero's final frame, so there's
 // no separate blank layer before it.
 function BaseCard({ data }: { data: CardData }) {
   return (
-    <div
-      className={`absolute inset-0 flex flex-col justify-center items-center text-center gap-4 rounded-3xl px-8 py-12 text-white sm:px-16 ${data.bg}`}
-    >
-      <CardContent data={data} />
+    <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 overflow-hidden rounded-3xl px-8 py-12 text-center text-white sm:px-16">
+      <CardBackground data={data} />
+      <div className="relative flex flex-col items-center gap-4">
+        <CardContent data={data} />
+      </div>
     </div>
   );
 }
@@ -107,9 +124,12 @@ function Card({ index, total, progress, data }: CardProps) {
   return (
     <motion.div
       style={{ y, zIndex: index + 1 }}
-      className={`absolute inset-0 flex flex-col justify-center items-center text-center gap-4 rounded-3xl px-8 py-12 text-white sm:px-16 ${data.bg}`}
+      className="absolute inset-0 flex flex-col items-center justify-center gap-4 overflow-hidden rounded-3xl px-8 py-12 text-center text-white sm:px-16"
     >
-      <CardContent data={data} />
+      <CardBackground data={data} />
+      <div className="relative flex flex-col items-center gap-4">
+        <CardContent data={data} />
+      </div>
     </motion.div>
   );
 }
