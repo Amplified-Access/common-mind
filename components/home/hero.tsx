@@ -1,5 +1,6 @@
 "use client";
 
+import { useLenis } from "lenis/react";
 import {
   motion,
   useScroll,
@@ -7,7 +8,7 @@ import {
   type MotionValue,
 } from "motion/react";
 import Link from "next/link";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 
 import { Button } from "@/components/ui/button";
 
@@ -75,24 +76,90 @@ function SideContent({
   );
 }
 
+// Phase 1 (0 – 0.2): shrink + slide right, revealing content on the left.
+// Hold A (0.2 – 0.3): pause so the left content can be read.
+// Phase 2 (0.3 – 0.5): slide left at a fixed scale, revealing content on the right.
+// Hold B (0.5 – 0.6): pause so the right content can be read.
+// Phase 3 (0.6 – 0.85): grow back to full size, filling the screen again.
+// Final hold (0.85 – 1).
+const P1_END = 0.2;
+const HOLD_A_END = 0.3;
+const P2_END = 0.5;
+const HOLD_B_END = 0.6;
+const P3_END = 0.85;
+
+// One wheel/touch gesture should carry the reader from one readable stop to
+// the next — the resting frame, the middle of each hold, then the final
+// frame — rather than dribbling through the animation over many scroll
+// ticks, or (the other extreme) blowing past every stop in a single scroll.
+const SNAP_PROGRESS = [0, (P1_END + HOLD_A_END) / 2, (P2_END + HOLD_B_END) / 2, 1];
+
+const easeInOutCubic = (t: number) =>
+  t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+
 const Hero = () => {
   const targetRef = useRef<HTMLDivElement>(null);
+  const snapPixelsRef = useRef<number[] | null>(null);
+  const snappingRef = useRef(false);
   const { scrollYProgress } = useScroll({
     target: targetRef,
     offset: ["start start", "end end"],
   });
 
-  // Phase 1 (0 – 0.2): shrink + slide right, revealing content on the left.
-  // Hold A (0.2 – 0.3): pause so the left content can be read.
-  // Phase 2 (0.3 – 0.5): slide left at a fixed scale, revealing content on the right.
-  // Hold B (0.5 – 0.6): pause so the right content can be read.
-  // Phase 3 (0.6 – 0.85): grow back to full size, filling the screen again.
-  // Final hold (0.85 – 1).
-  const P1_END = 0.2;
-  const HOLD_A_END = 0.3;
-  const P2_END = 0.5;
-  const HOLD_B_END = 0.6;
-  const P3_END = 0.85;
+  useEffect(() => {
+    const measure = () => {
+      const el = targetRef.current;
+      if (!el) return;
+      const top = el.getBoundingClientRect().top + window.scrollY;
+      const bottom = top + el.offsetHeight - window.innerHeight;
+      const pixels = SNAP_PROGRESS.map((p) => top + p * (bottom - top));
+      // scrollYProgress hits 1 once the section's sticky child could release,
+      // but the section's own box (and the next section's start) sits a full
+      // viewport further down — snap the last stop there instead, or the
+      // "final" stop still leaves a viewport of dead scroll before the next
+      // section actually appears.
+      pixels[pixels.length - 1] = top + el.offsetHeight;
+      snapPixelsRef.current = pixels;
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
+
+  useLenis((lenis) => {
+    const snapPixels = snapPixelsRef.current;
+    if (!snapPixels || lenis.direction === 0) return;
+
+    const { scroll, direction } = lenis;
+    const first = snapPixels[0];
+    const last = snapPixels[snapPixels.length - 1];
+    const withinHero = scroll > first - 1 && scroll < last + 1;
+    if (!withinHero) {
+      snappingRef.current = false;
+      return;
+    }
+    if (snappingRef.current) return;
+
+    const EPS = 2;
+    let target: number | undefined;
+    if (direction === 1) {
+      target = snapPixels.find((p) => p > scroll + EPS);
+    } else {
+      target = [...snapPixels].reverse().find((p) => p < scroll - EPS);
+    }
+    if (target === undefined) return;
+
+    snappingRef.current = true;
+    lenis.scrollTo(target, {
+      duration: 1.1,
+      easing: easeInOutCubic,
+      lock: true,
+      onComplete: () => {
+        snappingRef.current = false;
+      },
+    });
+  });
+
   const SHIFT = `-${(1 - BOX_SCALE) * 100}%`;
 
   const scale = useTransform(
