@@ -113,12 +113,12 @@ const Hero = () => {
       const top = el.getBoundingClientRect().top + window.scrollY;
       const bottom = top + el.offsetHeight - window.innerHeight;
       const pixels = SNAP_PROGRESS.map((p) => top + p * (bottom - top));
-      // scrollYProgress hits 1 once the section's sticky child could release,
-      // but the section's own box (and the next section's start) sits a full
-      // viewport further down — snap the last stop there instead, or the
-      // "final" stop still leaves a viewport of dead scroll before the next
-      // section actually appears.
-      pixels[pixels.length - 1] = top + el.offsetHeight;
+      // scrollYProgress hits 1 (pixels' last entry above) once the box has
+      // zoomed back to full frame, but the section's own box — and the next
+      // section's start — sits a further viewport down. That hand-off to the
+      // next section is its own stop, separate from the zoom-back landing,
+      // so one gesture never does both at once.
+      pixels.push(top + el.offsetHeight);
       snapPixelsRef.current = pixels;
     };
     measure();

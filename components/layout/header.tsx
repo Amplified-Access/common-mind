@@ -4,7 +4,7 @@ import { useLenis } from "lenis/react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -30,9 +30,14 @@ const Header = () => {
   const pathname = usePathname();
   const isHome = pathname === "/";
   const [hidden, setHidden] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
+  const lenis = useLenis();
 
   useLenis(({ scroll, direction }) => {
-    if (scroll < REVEAL_THRESHOLD) {
+    const pastThreshold = scroll >= REVEAL_THRESHOLD;
+    setScrolled(pastThreshold);
+    if (!pastThreshold) {
       setHidden(false);
       return;
     }
@@ -40,12 +45,26 @@ const Header = () => {
     else if (direction === -1) setHidden(false);
   });
 
+  // The header is `sticky`, so its own box still occupies flow space — when
+  // pb-7 toggles, the document's total scroll height changes too. Lenis only
+  // measures that on mount/window-resize, so without this it caps scroll a
+  // padding's worth short of the real bottom whenever this padding is added
+  // after the initial measurement.
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(() => lenis?.resize());
+    observer.observe(el, { box: "border-box" });
+    return () => observer.disconnect();
+  }, [lenis]);
+
   return (
     <header
+      ref={headerRef}
       className={cn(
         "sticky top-0 z-50 bg-[#f4f4f4] pt-8 transition-all duration-300 ease-in-out",
         hidden ? "-translate-y-full" : "translate-y-0",
-        !isHome && "pb-7",
+        (!isHome || scrolled) && "pb-7",
       )}
     >
       <Container
