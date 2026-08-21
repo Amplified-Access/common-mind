@@ -56,17 +56,17 @@ function SideContent({
       }`}
     >
       <div className="flex max-w-md flex-col items-start gap-4 text-left">
-        <span className="text-xs font-medium tracking-widest text-gray-500 uppercase">
+        <span className="text-xs font-medium tracking-widest text-white/60 uppercase">
           {eyebrow}
         </span>
-        <h2 className="text-3xl font-semibold tracking-tight text-balance text-black sm:text-4xl">
+        <h2 className="text-3xl font-semibold tracking-tight text-balance text-white sm:text-4xl">
           {heading}
         </h2>
-        <p className="text-base text-gray-600">{description}</p>
+        <p className="text-base text-white/70">{description}</p>
         <Button
           nativeButton={false}
           render={<Link href={ctaHref} />}
-          className="bg-black text-white hover:bg-black/85"
+          className="bg-white text-black hover:bg-white/85"
         >
           {ctaLabel} →
         </Button>
@@ -130,8 +130,21 @@ const Hero = () => {
     [1, 0, 0, 1],
   );
 
+  // The page background matches the resting, full-frame state and drops to
+  // black for the scroll-driven interaction in between, since the side
+  // content is styled for a dark backdrop during that stretch.
+  const backgroundColor = useTransform(
+    scrollYProgress,
+    [0, 0.05, P3_END, P3_END + 0.05],
+    ["#f4f4f4", "#000000", "#000000", "#f4f4f4"],
+  );
+
   return (
-    <section ref={targetRef} className="relative h-[650vh] bg-[#f4f4f4]">
+    <motion.section
+      ref={targetRef}
+      style={{ backgroundColor }}
+      className="relative h-[650vh]"
+    >
       <div className="sticky top-0 flex h-[100vw] items-center overflow-hidden pt-4 sm:h-[calc((100vw-32px)*0.5625+32px)]">
         <Container size={"full"}>
           <div className="relative">
@@ -177,7 +190,7 @@ const Hero = () => {
           </div>
         </Container>
       </div>
-    </section>
+    </motion.section>
   );
 };
 
