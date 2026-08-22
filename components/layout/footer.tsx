@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -15,8 +16,16 @@ const footerLinks = [
 const Footer = () => {
   return (
     <footer className="bg-[#f4f4f4] p-4">
-      <div className="flex flex-col gap-16 rounded-3xl bg-black px-8 py-16 text-white sm:px-16 sm:py-20">
-        <div className="flex flex-col items-start gap-6">
+      <div className="relative flex flex-col gap-16 overflow-hidden rounded-3xl bg-black px-8 py-16 text-white sm:px-16 sm:py-20">
+        <Image
+          src="/icon-white.svg"
+          alt=""
+          aria-hidden
+          width={512}
+          height={512}
+          className="pointer-events-none absolute top-1/2 right-0 h-[140%] w-auto max-w-none -translate-y-1/2 translate-x-1/4 opacity-10"
+        />
+        <div className="relative flex flex-col items-start gap-6">
           <span className="text-xs font-medium tracking-widest text-white/60 uppercase">
             Get involved
           </span>
@@ -37,7 +46,7 @@ const Footer = () => {
           </Button>
         </div>
 
-        <div className="flex flex-col gap-6 border-t border-white/10 pt-8 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative flex flex-col gap-6 border-t border-white/10 pt-8 sm:flex-row sm:items-center sm:justify-between">
           <nav className="flex flex-wrap gap-x-6 gap-y-2">
             {footerLinks.map((item) => (
               <Link
