@@ -150,12 +150,23 @@ const Hero = () => {
     if (target === undefined) return;
 
     snappingRef.current = true;
+    // Lenis's own `resize()` (fired e.g. by the header's ResizeObserver
+    // toggling its padding mid-snap) doesn't touch a running locked
+    // animation or call its `onComplete` — it just lets the tween keep
+    // ticking toward a now-stale target. If that happens, onComplete never
+    // fires and this ref would stay stuck `true` forever, permanently
+    // disabling snapping. The timeout guarantees it clears regardless.
+    const unlock = () => {
+      snappingRef.current = false;
+    };
+    const fallback = window.setTimeout(unlock, 1100 + 200);
     lenis.scrollTo(target, {
       duration: 1.1,
       easing: easeInOutCubic,
       lock: true,
       onComplete: () => {
-        snappingRef.current = false;
+        window.clearTimeout(fallback);
+        unlock();
       },
     });
   });

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { Hero } from "@/components/common/hero";
+import { ImageHero } from "@/components/common/image-hero";
 import { SectionPlaceholder } from "@/components/common/section-placeholder";
 
 export const metadata: Metadata = {
@@ -12,20 +12,10 @@ export const metadata: Metadata = {
 const BenchmarksPage = () => {
   return (
     <>
-      <Hero
+      <ImageHero
         title="Benchmarks"
         tagline="Measure what improves."
-        topics={[
-          { label: "Languages" },
-          { label: "Models" },
-          { label: "Tasks" },
-          { label: "Evaluations" },
-        ]}
-        description="See how CommonMind models perform, how they compare with base models, and where they still need to improve."
-        ctas={[
-          { label: "Compare models", href: "#comparison" },
-          { label: "View methodology", href: "#methodology" },
-        ]}
+        imageSrc="/flat-lay-statistics-presentation-with-chart.jpg"
       />
       <SectionPlaceholder id="comparison" title="Benchmark comparison" />
       <SectionPlaceholder id="methodology" title="Benchmark methodology" />

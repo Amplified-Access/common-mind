@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { Hero } from "@/components/common/hero";
+import { ImageHero } from "@/components/common/image-hero";
 import { SectionPlaceholder } from "@/components/common/section-placeholder";
 
 export const metadata: Metadata = {
@@ -12,20 +12,10 @@ export const metadata: Metadata = {
 const PlaygroundPage = () => {
   return (
     <>
-      <Hero
+      <ImageHero
         title="Playground"
         tagline="Try AI in your language."
-        topics={[
-          { label: "Translate" },
-          { label: "Chat" },
-          { label: "Speech" },
-          { label: "Compare" },
-        ]}
-        description="Choose a model, enter something, and experience CommonMind directly in your browser."
-        ctas={[
-          { label: "Choose a model", href: "#model-selector" },
-          { label: "Start experimenting", href: "#experiment" },
-        ]}
+        imageSrc="/man-speaking-into-his-smartphone-s-speaker.jpg"
       />
       <SectionPlaceholder id="model-selector" title="Model selector" />
       <SectionPlaceholder id="experiment" title="Interactive playground" />

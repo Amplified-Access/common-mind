@@ -6,7 +6,10 @@ async function ModelCard({ model }: { model: Model }) {
   const usageHtml = await highlightCode(model.usage.code, model.usage.language);
 
   return (
-    <article className="rounded-3xl bg-white p-8 sm:p-12">
+    <article
+      id={model.slug}
+      className="scroll-mt-24 rounded-3xl bg-white p-8 sm:p-12"
+    >
       <div className="flex flex-col gap-3">
         <h3 className="text-2xl font-semibold tracking-tight text-black sm:text-3xl">
           {model.name}

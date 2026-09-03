@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { Hero } from "@/components/common/hero";
+import { ImageHero } from "@/components/common/image-hero";
 import { SectionPlaceholder } from "@/components/common/section-placeholder";
 
 export const metadata: Metadata = {
@@ -12,21 +12,10 @@ export const metadata: Metadata = {
 const ResearchPage = () => {
   return (
     <>
-      <Hero
+      <ImageHero
         title="Research"
         tagline="Researching AI from where people are."
-        topics={[
-          { label: "Models" },
-          { label: "Evaluation" },
-          { label: "Local knowledge" },
-          { label: "Efficient AI" },
-          { label: "Participatory AI" },
-        ]}
-        description="Explore research on building, evaluating, and deploying AI for languages and contexts underserved by mainstream systems."
-        ctas={[
-          { label: "Read the research", href: "#catalogue" },
-          { label: "View releases", href: "#releases" },
-        ]}
+        imageSrc="/flat-lay-statistics-presentation-with-chart.jpg"
       />
       <SectionPlaceholder id="catalogue" title="Research catalogue" />
       <SectionPlaceholder id="releases" title="Releases" />

@@ -8,6 +8,7 @@ export type Model = {
   name: string;
   tagline: string;
   platforms: string[];
+  languages: string[];
   overview: string;
   metrics: Metric[];
   capabilities: string[];
@@ -25,6 +26,7 @@ export const models: Model[] = [
     tagline:
       "Fine-tuned Gemma 3 1B Instruct for English to Luganda and Luganda to English translation",
     platforms: ["HuggingFace", "Kaggle", "Ollama"],
+    languages: ["lg"],
     overview:
       "A fine-tuned version of Google Gemma 3 1B Instruct for English to Luganda, Luganda to English translation and Luganda conversational AI. Trained with QLoRA (4-bit quantization + LoRA adapters) runs on consumer GPUs. Only 52 MB adapter on top of the 1B base model, trained primarily on the Sunbird SALT parallel corpus covering agriculture, health, and society topics.",
     metrics: [
@@ -89,6 +91,7 @@ print(response)`,
     name: "Swahili-gemma-1B-it",
     tagline: "Fine-tuned Gemma 3 1B for English to Swahili translation",
     platforms: ["HuggingFace", "Kaggle", "Ollama"],
+    languages: ["sw"],
     overview:
       "A fine-tuned version of Google Gemma 3 1B, continued-pretrained and instruction-tuned for English to Swahili translation. Trained on 159K+ examples from MAFAND-MT, Sunbird SALT, Rogendo, Inkuba-Swahili-MMT, Aya, and Alpaca-Swahili, then merged to full weights. Also follows general Swahili instructions from its instruction-tuning data.",
     metrics: [
@@ -128,6 +131,100 @@ with torch.no_grad():
 
 response = tokenizer.decode(outputs[0][inputs["input_ids"].shape[1]:], skip_special_tokens=True)
 print(response.strip())`,
+    },
+  },
+  {
+    slug: "swahili-nllb-1-3b",
+    name: "Swahili-nllb-1.3B",
+    tagline: "LoRA fine-tune of NLLB-200 1.3B for English to Swahili translation",
+    platforms: ["HuggingFace"],
+    languages: ["sw"],
+    overview:
+      "A LoRA fine-tune of Meta's facebook/nllb-200-distilled-1.3B, a purpose-built translation architecture (encoder-decoder, SentencePiece), for English to Swahili translation. Trained on 145K+ parallel pairs from MAFAND-MT, Sunbird SALT, Rogendo, and Inkuba-Swahili-MMT. Only 23.6M trainable LoRA parameters on top of the 1.3B base model.",
+    metrics: [
+      { value: "38.74", label: "BLEU score" },
+      { value: "63.37", label: "chrF++ score" },
+      { value: "23.6M", label: "Trainable parameters" },
+      { value: "128 tokens", label: "Max sequence length" },
+    ],
+    capabilities: [
+      "English to Swahili translation",
+      "Low-resource African language NLP research",
+    ],
+    achievements: [
+      "BLEU 38.74 / chrF++ 63.37 on FLORES devtest, beating the CraneAILabs Swahili-Gemma-1B reference (27.6 BLEU / 56.8 chrF++)",
+      "Only 23.6M trainable LoRA parameters, ~1.7% of the 1.37B base model",
+      "Purpose-built NLLB-200 translation architecture rather than a general-purpose chat LLM",
+    ],
+    usage: {
+      language: "python",
+      code: `import torch
+from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+from peft import PeftModel
+
+base_model_id = "facebook/nllb-200-distilled-1.3B"
+adapter_id = "AmplifiedAccess/Swahili-nllb-1.3b"
+
+tokenizer = AutoTokenizer.from_pretrained(base_model_id, src_lang="eng_Latn")
+model = AutoModelForSeq2SeqLM.from_pretrained(base_model_id)
+model = PeftModel.from_pretrained(model, adapter_id)
+model.eval()
+
+text = "A community officer can help residents complete forms, check eligibility, and even process applications offline."
+inputs = tokenizer(text, return_tensors="pt")
+target_lang_id = tokenizer.convert_tokens_to_ids("swh_Latn")
+
+with torch.no_grad():
+    outputs = model.generate(**inputs, forced_bos_token_id=target_lang_id, max_new_tokens=128)
+
+print(tokenizer.batch_decode(outputs, skip_special_tokens=True)[0])`,
+    },
+  },
+  {
+    slug: "swahili-nllb-600m",
+    name: "Swahili-nllb-600M",
+    tagline: "LoRA fine-tune of NLLB-200 600M for English to Swahili translation",
+    platforms: ["HuggingFace"],
+    languages: ["sw"],
+    overview:
+      "A LoRA fine-tune of Meta's facebook/nllb-200-distilled-600M, the smaller sibling of Swahili-nllb-1.3B, for English to Swahili translation. Trained on the same curated corpus mix (MAFAND-MT, Sunbird SALT, Rogendo, Inkuba-Swahili-MMT). Only 8.65M trainable LoRA parameters on top of the 615M base model, for tighter hardware budgets.",
+    metrics: [
+      { value: "35.97", label: "BLEU score" },
+      { value: "61.26", label: "chrF++ score" },
+      { value: "8.65M", label: "Trainable parameters" },
+      { value: "128 tokens", label: "Max sequence length" },
+    ],
+    capabilities: [
+      "English to Swahili translation",
+      "Low-resource African language NLP research",
+    ],
+    achievements: [
+      "BLEU 35.97 / chrF++ 61.26 on FLORES devtest, beating the CraneAILabs Swahili-Gemma-1B reference (27.6 BLEU / 56.8 chrF++) at under half the parameters",
+      "Only 8.65M trainable LoRA parameters, ~1.4% of the 615M base model",
+      "Runs on more constrained hardware than the 1.3B variant",
+    ],
+    usage: {
+      language: "python",
+      code: `import torch
+from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+from peft import PeftModel
+
+base_model_id = "facebook/nllb-200-distilled-600M"
+adapter_id = "AmplifiedAccess/Swahili-nllb-600m"
+
+tokenizer = AutoTokenizer.from_pretrained(base_model_id, src_lang="eng_Latn")
+model = AutoModelForSeq2SeqLM.from_pretrained(base_model_id)
+model = PeftModel.from_pretrained(model, adapter_id)
+model.eval()
+
+text = "A community officer can help residents complete forms, check eligibility, and even process applications offline."
+inputs = tokenizer(text, return_tensors="pt")
+target_lang_id = tokenizer.convert_tokens_to_ids("swh_Latn")
+
+with torch.no_grad():
+    outputs = model.generate(**inputs, forced_bos_token_id=target_lang_id, max_new_tokens=128)
+
+print(tokenizer.batch_decode(outputs, skip_special_tokens=True)[0])`,
     },
   },
 ];
