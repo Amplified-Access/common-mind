@@ -54,7 +54,7 @@ const BuildPage = () => {
           </h2>
           <p className="mt-2 max-w-2xl text-gray-600">
             We&apos;re building a hosted API so you don&apos;t have to run
-            models yourself. It&apos;s not live yet — generate a preview key
+            models yourself. It&apos;s not live yet, so generate a preview key
             to see what the flow will look like.
           </p>
           <div className="mt-8">
@@ -77,7 +77,7 @@ const BuildPage = () => {
             </span>
           </div>
           <p className="mt-2 max-w-2xl text-gray-600">
-            This is the shape the hosted API will take — a single endpoint,
+            This is the shape the hosted API will take: a single endpoint,
             one model per request, matching the same model slugs used across
             the site. Not callable yet.
           </p>
@@ -102,7 +102,7 @@ const BuildPage = () => {
           </h2>
           <p className="mt-2 max-w-2xl text-gray-600">
             While the hosted API is in preview, every CommonMind model
-            already runs directly from Hugging Face — no key required. Here&apos;s
+            already runs directly from Hugging Face, no key required. Here&apos;s
             the same translation shown above, running for real against{" "}
             <a
               href={`/models#${swahiliGemma.slug}`}

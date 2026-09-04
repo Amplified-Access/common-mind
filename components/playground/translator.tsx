@@ -75,23 +75,7 @@ function Translator() {
 
   return (
     <div className="rounded-3xl bg-white p-8 sm:p-12">
-      <div className="flex flex-col gap-2 rounded-2xl bg-amber-50 p-4 text-sm text-amber-900 ring-1 ring-amber-200">
-        <p>
-          <strong className="font-semibold">Preview mode.</strong> This
-          playground isn&apos;t connected to a live model yet — translating
-          shows a genuine published example from the selected model instead
-          of processing your exact text. Run the model yourself from its{" "}
-          <a
-            href={`/models#${model.slug}`}
-            className="underline underline-offset-4 hover:no-underline"
-          >
-            model card
-          </a>{" "}
-          for real output.
-        </p>
-      </div>
-
-      <div className="mt-8 flex flex-wrap items-end gap-4">
+      <div className="flex flex-wrap items-end gap-4">
         <label className="flex flex-col gap-1.5">
           <span className="text-sm font-medium tracking-widest text-gray-500 uppercase">
             Model
@@ -189,18 +173,12 @@ function Translator() {
 
             {status === "idle" && result?.kind === "exact" && (
               <div className="flex flex-col gap-2">
-                <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-800">
-                  Real cached model output
-                </span>
                 <p>{result.example.translation}</p>
               </div>
             )}
 
             {status === "idle" && result?.kind === "preview" && (
               <div className="flex flex-col gap-2">
-                <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-800">
-                  Example output, not a translation of your text
-                </span>
                 <p className="text-sm text-gray-500">
                   &ldquo;{result.example.source}&rdquo;
                 </p>
@@ -210,9 +188,6 @@ function Translator() {
 
             {status === "idle" && result?.kind === "none" && (
               <div className="flex flex-col gap-2">
-                <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-gray-200 px-2.5 py-1 text-xs font-medium text-gray-700">
-                  No cached example yet
-                </span>
                 <p className="text-sm text-gray-500">
                   We don&apos;t have a published example for this model yet.{" "}
                   <a
