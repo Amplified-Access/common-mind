@@ -1,5 +1,7 @@
 "use client";
 
+import { Menu } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useLenis } from "lenis/react";
 import Image from "next/image";
 import Link from "next/link";
@@ -9,7 +11,13 @@ import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 import { Container } from "../common/container";
-// import { Button } from "../ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "../ui/sheet";
 
 const navItems = [
   { label: "Models", href: "/models" },
@@ -31,6 +39,7 @@ const Header = () => {
   const isHome = pathname === "/";
   const [hidden, setHidden] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
   const lenis = useLenis();
 
@@ -81,7 +90,7 @@ const Header = () => {
             className="h-5 w-auto"
           />
         </Link>
-        <nav className="flex flex-wrap items-center gap-x-5 gap-y-2">
+        <nav className="hidden flex-wrap items-center gap-x-5 gap-y-2 md:flex">
           {navItems.map((item) => {
             const active = pathname === item.href;
             return (
@@ -99,7 +108,38 @@ const Header = () => {
             );
           })}
         </nav>
-        {/* <Button></Button> */}
+        <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+          <SheetTrigger
+            aria-label="Open menu"
+            className="text-muted transition-colors hover:text-background md:hidden"
+          >
+            <HugeiconsIcon icon={Menu} className="size-5" />
+          </SheetTrigger>
+          <SheetContent side="right">
+            <SheetHeader>
+              <SheetTitle>Navigation</SheetTitle>
+            </SheetHeader>
+            <nav className="flex flex-col gap-1 px-4">
+              {navItems.map((item) => {
+                const active = pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    aria-current={active ? "page" : undefined}
+                    onClick={() => setMobileNavOpen(false)}
+                    className={cn(
+                      "rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-black/5 hover:text-black",
+                      active ? "bg-black/5 text-black" : "text-black/60",
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </nav>
+          </SheetContent>
+        </Sheet>
       </Container>
     </header>
   );
