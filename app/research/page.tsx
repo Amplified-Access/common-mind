@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { Container } from "@/components/common/container";
 import { ImageHero } from "@/components/common/image-hero";
-import { publications, releases } from "@/components/research/data";
+import { imageForPublication, publications, releases } from "@/components/research/data";
 import { PublicationCard } from "@/components/research/publication-card";
 import { ReleasesList } from "@/components/research/releases-list";
 
@@ -32,9 +32,13 @@ const ResearchPage = () => {
             Write-ups on how we train and evaluate CommonMind models, every
             number sourced from the model card or benchmark it came from.
           </p>
-          <div className="mt-8 flex flex-col gap-8">
-            {publications.map((publication) => (
-              <PublicationCard key={publication.slug} publication={publication} />
+          <div className="mt-8 flex flex-col gap-4">
+            {publications.map((publication, i) => (
+              <PublicationCard
+                key={publication.slug}
+                publication={publication}
+                image={imageForPublication(i)}
+              />
             ))}
           </div>
         </Container>
