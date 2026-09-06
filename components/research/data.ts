@@ -23,6 +23,30 @@ export type Publication = {
   sources: { label: string; href: string }[];
 };
 
+const placeholderImages = [
+  "/flat-lay-statistics-presentation-with-chart.jpg",
+  "/close-up-man-repairing-computer-chips.jpg",
+  "/working-from-home-ergonomic-workstation.jpg",
+  "/man-speaking-into-his-smartphone-s-speaker.jpg",
+];
+
+export function imageForPublication(index: number) {
+  return placeholderImages[index % placeholderImages.length];
+}
+
+export function readTimeForPublication(publication: Publication) {
+  const words = [
+    publication.title,
+    publication.dek,
+    ...publication.sections.flatMap((section) => [
+      section.heading,
+      ...section.paragraphs,
+    ]),
+  ].join(" ").split(/\s+/).filter(Boolean).length;
+
+  return Math.max(1, Math.round(words / 200));
+}
+
 export const publications: Publication[] = [
   {
     slug: "luganda-gemma-qlora",
