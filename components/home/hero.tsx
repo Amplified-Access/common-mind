@@ -8,11 +8,38 @@ import {
   type MotionValue,
 } from "motion/react";
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 
 import { Container } from "../common/container";
+
+type InfoBlock = {
+  eyebrow: string;
+  heading: string;
+  description: string;
+  ctaLabel: string;
+  ctaHref: string;
+};
+
+const INFO_BLOCKS: InfoBlock[] = [
+  {
+    eyebrow: "Models",
+    heading: "Open models, built for local languages.",
+    description:
+      "From Luganda to Swahili, CommonMind trains and evaluates models grounded in the languages and knowledge of the communities they serve, not translated afterthoughts.",
+    ctaLabel: "Explore models",
+    ctaHref: "/models",
+  },
+  {
+    eyebrow: "Open data",
+    heading: "Every dataset, fully open.",
+    description:
+      "Translation pairs, instructions, speech, and evaluation sets: the data behind CommonMind is public, so progress on underserved languages compounds instead of resetting.",
+    ctaLabel: "Browse datasets",
+    ctaHref: "/datasets",
+  },
+];
 
 // The box settles at this scale, so the gap it reveals on either side is
 // exactly (1 - BOX_SCALE) of the container's width.
@@ -26,15 +53,10 @@ const GAP_WIDTH = `${(1 - BOX_SCALE) * 100}%`;
 // that out, keeping the on-screen radius a constant 18px throughout.
 const BASE_RADIUS = 18;
 
-type SideContentProps = {
+type SideContentProps = InfoBlock & {
   align: "left" | "right";
   opacity: MotionValue<number>;
   y: MotionValue<number>;
-  eyebrow: string;
-  heading: string;
-  description: string;
-  ctaLabel: string;
-  ctaHref: string;
 };
 
 function SideContent({
@@ -76,6 +98,26 @@ function SideContent({
   );
 }
 
+// Mobile skips the scroll-jacked overlay entirely, so this renders each info
+// block as a normal static section instead of an absolutely-positioned,
+// scroll-linked reveal.
+function MobileInfoBlock({ eyebrow, heading, description, ctaLabel, ctaHref }: InfoBlock) {
+  return (
+    <div className="flex flex-col items-start gap-4 text-left">
+      <span className="text-xs font-medium tracking-widest text-gray-500 uppercase">
+        {eyebrow}
+      </span>
+      <h2 className="text-3xl font-semibold tracking-tight text-balance text-black">
+        {heading}
+      </h2>
+      <p className="text-base text-gray-600">{description}</p>
+      <Button nativeButton={false} render={<Link href={ctaHref} />}>
+        {ctaLabel} →
+      </Button>
+    </div>
+  );
+}
+
 // Phase 1 (0 – 0.2): shrink + slide right, revealing content on the left.
 // Hold A (0.2 – 0.3): pause so the left content can be read.
 // Phase 2 (0.3 – 0.5): slide left at a fixed scale, revealing content on the right.
@@ -97,14 +139,32 @@ const SNAP_PROGRESS = [0, (P1_END + HOLD_A_END) / 2, (P2_END + HOLD_B_END) / 2, 
 const easeInOutCubic = (t: number) =>
   t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
 
+// Below this width the scroll-jacked, side-sliding hero is skipped entirely
+// in favor of a normal stacked layout. Starts `true` so the first client
+// render matches the server-rendered (desktop) markup; the media query
+// corrects it right after mount.
+const DESKTOP_QUERY = "(min-width: 640px)";
+
 const Hero = () => {
   const targetRef = useRef<HTMLDivElement>(null);
   const snapPixelsRef = useRef<number[] | null>(null);
   const snappingRef = useRef(false);
+  const [isDesktop, setIsDesktop] = useState(true);
   const { scrollYProgress } = useScroll({
     target: targetRef,
     offset: ["start start", "end end"],
   });
+
+  // Layout effect (not a plain effect) so the mobile/desktop branch below is
+  // corrected before the browser paints, rather than one frame after — that
+  // one-frame gap is what showed up as a visible aspect-ratio pop on mobile.
+  useLayoutEffect(() => {
+    const mql = window.matchMedia(DESKTOP_QUERY);
+    const update = () => setIsDesktop(mql.matches);
+    update();
+    mql.addEventListener("change", update);
+    return () => mql.removeEventListener("change", update);
+  }, []);
 
   useEffect(() => {
     const measure = () => {
@@ -127,6 +187,7 @@ const Hero = () => {
   }, []);
 
   useLenis((lenis) => {
+    if (!isDesktop) return;
     const snapPixels = snapPixelsRef.current;
     if (!snapPixels || lenis.direction === 0) return;
 
@@ -217,38 +278,58 @@ const Hero = () => {
     ["#f4f4f4", "#000000", "#000000", "#f4f4f4"],
   );
 
+  if (!isDesktop) {
+    return (
+      <section className="bg-[#f4f4f4]">
+        <Container size="full">
+          <div className="flex flex-col gap-16 pt-4 pb-12">
+            <div className="relative flex aspect-6/9 w-full items-center justify-center overflow-hidden rounded-2xl bg-black px-6 text-center">
+              <video
+                src="/video.mp4"
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="absolute inset-0 size-full object-cover"
+              />
+              <div className="absolute inset-0 bg-black/50" />
+              <h1 className="relative text-4xl text-balance text-white">
+                Building the open foundations for Inclusive AI.
+              </h1>
+            </div>
+            {INFO_BLOCKS.map((block) => (
+              <MobileInfoBlock key={block.eyebrow} {...block} />
+            ))}
+          </div>
+        </Container>
+      </section>
+    );
+  }
+
   return (
     <motion.section
       ref={targetRef}
       style={{ backgroundColor }}
       className="relative h-[650vh]"
     >
-      <div className="sticky top-0 flex h-[100vw] items-center overflow-hidden pt-4 sm:h-[calc((100vw-32px)*0.5625+32px)]">
+      <div className="sticky top-0 flex h-[100vw] items-center overflow-hidden pt-4 lg:h-[calc((100vw-32px)*0.5625+32px)]">
         <Container size={"full"}>
           <div className="relative">
             <SideContent
               align="left"
               opacity={leftOpacity}
               y={leftY}
-              eyebrow="Models"
-              heading="Open models, built for local languages."
-              description="From Luganda to Swahili, CommonMind trains and evaluates models grounded in the languages and knowledge of the communities they serve — not translated afterthoughts."
-              ctaLabel="Explore models"
-              ctaHref="/models"
+              {...INFO_BLOCKS[0]}
             />
             <SideContent
               align="right"
               opacity={rightOpacity}
               y={rightY}
-              eyebrow="Open data"
-              heading="Every dataset, fully open."
-              description="Translation pairs, instructions, speech, and evaluation sets — the data behind CommonMind is public, so progress on underserved languages compounds instead of resetting."
-              ctaLabel="Browse datasets"
-              ctaHref="/datasets"
+              {...INFO_BLOCKS[1]}
             />
             <motion.div
               style={{ scale, x, borderRadius }}
-              className="relative flex aspect-square w-full origin-right items-center justify-center overflow-hidden bg-black px-6 text-center sm:aspect-video sm:px-8"
+              className="relative flex aspect-square w-full origin-right items-center justify-center overflow-hidden bg-black px-8 text-center lg:aspect-video"
             >
               <video
                 src="/video.mp4"

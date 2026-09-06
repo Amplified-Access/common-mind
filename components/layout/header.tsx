@@ -36,16 +36,13 @@ const REVEAL_THRESHOLD = 96;
 
 const Header = () => {
   const pathname = usePathname();
-  const isHome = pathname === "/";
   const [hidden, setHidden] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
   const lenis = useLenis();
 
   useLenis(({ scroll, direction }) => {
     const pastThreshold = scroll >= REVEAL_THRESHOLD;
-    setScrolled(pastThreshold);
     if (!pastThreshold) {
       setHidden(false);
       return;
@@ -71,9 +68,8 @@ const Header = () => {
     <header
       ref={headerRef}
       className={cn(
-        "sticky top-0 z-50 bg-[#f4f4f4] pt-8 transition-all duration-300 ease-in-out",
+        "sticky top-0 z-50 bg-[#f4f4f4] pt-8 pb-7 transition-all duration-300 ease-in-out",
         hidden ? "-translate-y-full" : "translate-y-0",
-        (!isHome || scrolled) && "pb-7",
       )}
     >
       <Container

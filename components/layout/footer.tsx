@@ -39,11 +39,11 @@ const Footer = () => {
         <h2 className="max-w-3xl text-4xl font-semibold tracking-tight text-balance sm:text-5xl md:text-6xl">
           Help build the open foundations for inclusive AI.
         </h2>
-        <p className="max-w-xl text-base text-white/70 sm:text-lg">
+        {/* <p className="max-w-xl text-base text-white/70 sm:text-lg">
           CommonMind is open: the models, the data, and the research. Bring
           your language, your dataset, or your use case, and help close the
           gap.
-        </p>
+        </p> */}
         <Button
           nativeButton={false}
           render={<Link href="/build" />}
@@ -54,7 +54,7 @@ const Footer = () => {
       </div>
 
       <div className="relative flex flex-col gap-6 border-t border-white/10 pt-8 sm:flex-row sm:items-center sm:justify-between">
-        <nav className="flex flex-wrap gap-x-6 gap-y-2">
+        <nav className="grid grid-cols-3 gap-x-4 md:gap-x-8 gap-y-3 sm:grid-cols-7">
           {footerLinks.map((item) => (
             <Link
               key={item.href}
