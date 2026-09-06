@@ -55,11 +55,6 @@ const LanguagesPage = () => {
               />
             ))}
           </div>
-          <p className="mt-8 text-sm text-gray-500">
-            More languages — Luo, Oromo, Dinka, and others — are on the
-            roadmap. This page will grow as models and datasets ship for
-            them.
-          </p>
         </Container>
       </section>
     </>
