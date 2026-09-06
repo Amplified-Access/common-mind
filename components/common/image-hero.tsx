@@ -13,7 +13,7 @@ function ImageHero({ title, tagline, imageSrc, imageAlt = "" }: ImageHeroProps) 
   return (
     <section className="bg-[#f4f4f4] pt-8 pb-16">
       <Container size="xl">
-        <div className="relative aspect-21/9 w-full overflow-hidden rounded-3xl sm:aspect-3/1">
+        <div className="relative aspect-square w-full overflow-hidden rounded-3xl sm:aspect-video lg:aspect-3/1">
           <Image
             src={imageSrc}
             alt={imageAlt}
