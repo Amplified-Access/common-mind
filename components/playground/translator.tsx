@@ -6,10 +6,7 @@ import { Button } from "@/components/ui/button";
 
 import { playgroundModels, type Example } from "./data";
 
-type Result =
-  | { kind: "exact"; example: Example }
-  | { kind: "preview"; example: Example }
-  | { kind: "none" };
+type Status = "idle" | "loading" | "error";
 
 const MAX_CHARS = 500;
 
@@ -24,8 +21,9 @@ function Translator() {
     model.directions[0];
 
   const [input, setInput] = useState("");
-  const [status, setStatus] = useState<"idle" | "loading">("idle");
-  const [result, setResult] = useState<Result | null>(null);
+  const [status, setStatus] = useState<Status>("idle");
+  const [translation, setTranslation] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const examples = useMemo(
     () => model.examples[direction.code] ?? [],
@@ -37,40 +35,54 @@ function Translator() {
       playgroundModels.find((m) => m.slug === nextSlug) ?? playgroundModels[0];
     setModelSlug(nextModel.slug);
     setDirectionCode(nextModel.directions[0].code);
-    setResult(null);
+    setTranslation(null);
+    setError(null);
   };
 
   const handleDirectionChange = (code: string) => {
     setDirectionCode(code);
-    setResult(null);
+    setTranslation(null);
+    setError(null);
   };
 
   const handleExampleClick = (example: Example) => {
     setInput(example.source);
-    setResult(null);
+    setTranslation(null);
+    setError(null);
   };
 
-  const handleTranslate = () => {
+  const handleTranslate = async () => {
     const trimmed = input.trim();
     if (!trimmed) return;
 
     setStatus("loading");
-    setResult(null);
+    setTranslation(null);
+    setError(null);
 
-    window.setTimeout(() => {
-      const exactMatch = examples.find(
-        (ex) => ex.source.trim().toLowerCase() === trimmed.toLowerCase(),
-      );
-      if (exactMatch) {
-        setResult({ kind: "exact", example: exactMatch });
-      } else if (examples.length > 0) {
-        const pick = examples[Math.floor(Math.random() * examples.length)];
-        setResult({ kind: "preview", example: pick });
-      } else {
-        setResult({ kind: "none" });
+    try {
+      const res = await fetch("/api/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          modelSlug: model.slug,
+          text: trimmed,
+          direction: direction.code,
+        }),
+      });
+      const body = await res.json();
+
+      if (!res.ok) {
+        setError(body.error ?? "Something went wrong. Please try again.");
+        setStatus("error");
+        return;
       }
+
+      setTranslation(body.translation);
       setStatus("idle");
-    }, 500);
+    } catch {
+      setError("Something went wrong. Please try again.");
+      setStatus("error");
+    }
   };
 
   return (
@@ -112,7 +124,6 @@ function Translator() {
           </label>
         )}
       </div>
-
       {examples.length > 0 && (
         <div className="mt-6 flex flex-wrap items-center gap-2">
           <span className="text-sm text-gray-500">Try an example:</span>
@@ -162,43 +173,21 @@ function Translator() {
           </span>
           <div className="min-h-[152px] w-full rounded-2xl border border-black/10 bg-[#f4f4f4] p-4 text-black">
             {status === "loading" && (
-              <span className="text-gray-400">Translating…</span>
+              <span className="text-gray-400">
+                Translating… the model may still be warming up.
+              </span>
             )}
 
-            {status === "idle" && result === null && (
+            {status === "idle" && translation === null && (
               <span className="text-gray-400">
                 Your translation will appear here.
               </span>
             )}
 
-            {status === "idle" && result?.kind === "exact" && (
-              <div className="flex flex-col gap-2">
-                <p>{result.example.translation}</p>
-              </div>
-            )}
+            {status === "idle" && translation !== null && <p>{translation}</p>}
 
-            {status === "idle" && result?.kind === "preview" && (
-              <div className="flex flex-col gap-2">
-                <p className="text-sm text-gray-500">
-                  &ldquo;{result.example.source}&rdquo;
-                </p>
-                <p>{result.example.translation}</p>
-              </div>
-            )}
-
-            {status === "idle" && result?.kind === "none" && (
-              <div className="flex flex-col gap-2">
-                <p className="text-sm text-gray-500">
-                  We don&apos;t have a published example for this model yet.{" "}
-                  <a
-                    href={`/models#${model.slug}`}
-                    className="underline underline-offset-4 hover:no-underline"
-                  >
-                    Run it yourself
-                  </a>{" "}
-                  with the code on its model card.
-                </p>
-              </div>
+            {status === "error" && (
+              <p className="text-sm text-red-600">{error}</p>
             )}
           </div>
         </div>
