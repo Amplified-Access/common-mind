@@ -18,6 +18,25 @@ uses it, so it does not stay up on its own.
    It needs a GPU with ≥16GB VRAM (all four models together use ~8GB) and
    ports `22/tcp` and `8000/http` exposed.
 
+   ⚠️ **A stopped pod often cannot be restarted.** Stopping releases the GPU
+   reservation but keeps the pod pinned to its original host, so if that
+   host filled up while you were away, `start` fails with *"not enough free
+   GPUs on the host machine"* and the console shows *"Your Pod's GPUs are no
+   longer available"*. There is no API field to repoint an existing pod at
+   different hardware (`/pods/{id}/update` has no `gpuTypeIds`), so the fix
+   is to **create a new pod** and redo steps 2–3 — cheap in effort, but it
+   re-downloads the weights. Pass a cheapest-first `gpuTypeIds` priority
+   list when creating so it lands on whatever has stock:
+
+   ```
+   "NVIDIA RTX 2000 Ada Generation", "NVIDIA RTX 4000 Ada Generation",
+   "NVIDIA RTX A4000", "NVIDIA RTX A4500", "NVIDIA L4",
+   "NVIDIA GeForce RTX 3090", "NVIDIA RTX PRO 4000 Blackwell",
+   "NVIDIA RTX PRO 4500 Blackwell", "NVIDIA GeForce RTX 4090"
+   ```
+
+   Then delete the stranded pod so it stops accruing disk charges.
+
 2. **Start the server** over SSH:
 
    ```bash
@@ -28,11 +47,59 @@ uses it, so it does not stay up on its own.
      > /workspace/server.log 2>&1 &
    ```
 
-   First start downloads ~13GB of weights from HuggingFace; watch for
-   `ALL MODELS LOADED` in `server.log`. Subsequent starts reuse the container
-   disk if the pod was stopped rather than terminated.
+   This downloads ~13GB of weights from HuggingFace; watch for
+   `ALL MODELS LOADED` in `server.log`. It happens on **every** start: the pod
+   runs on container disk only (`volumeInGb: 0`), and container disk is wiped
+   on stop as well as on terminate. See "Persisting the weights" below.
 
    `HF_TOKEN` is required: `google/gemma-3-1b-it` is a gated repo.
+
+## Persisting the weights
+
+The pod currently has **no volume**, so the ~13GB of weights are re-downloaded
+on every start. Runpod's storage options:
+
+| Storage | Survives stop | Survives terminate | $/GB/mo running | $/GB/mo stopped |
+|---|---|---|---|---|
+| Container disk (current) | no | no | 0.10 | — |
+| Volume disk | yes | no | 0.10 | 0.20 |
+| Network volume | yes | yes | 0.07 | 0.07 |
+
+A **network volume** (~25GB, ~$1.75/mo flat) is the only option that also
+survives termination, and it can be mounted by a *newly created* pod — which
+would fix the stranded-pod problem above as well, since you would terminate
+rather than stop, then mount the same volume on a fresh pod.
+
+The catch: a network volume **pins the pod to one datacenter**, and it must be
+attached at creation (it cannot be added to an existing pod). That pinning is
+what left the serverless endpoint throttled — only EU-RO-1 carried the 16GB
+GPU tier and its stock was low. If the volume's datacenter has no free GPU,
+you cannot create a pod there at all, which is a worse failure than waiting
+out a download. Weigh that before adding one; pinning to a datacenter with
+broad RTX 4090 stock is a safer bet than the 16GB tier was.
+
+## The URL changes every time the pod is recreated
+
+`TRANSLATE_API_URL` embeds the pod id, so recreating the pod means updating
+it (and redeploying the frontend if it is set as a Vercel env var). That is
+the current, deliberate tradeoff — it costs one env change per recreate.
+
+Runpod has no custom-domain feature for pods, and pointing a CNAME straight
+at `*.proxy.runpod.net` is rejected by Cloudflare ("CNAME Cross-User
+Banned"). If the env churn becomes annoying, the two ways out are:
+
+- **Cloudflare Tunnel** (Runpod's own recommendation). Run `cloudflared` in
+  the pod against a named tunnel bound to e.g. `api.amplifiedaccess.org` —
+  that domain is already on Cloudflare. Recreating the pod and restarting the
+  tunnel reuses the same hostname, so the frontend URL never changes again,
+  and it stops tying the frontend to Runpod at all.
+- **Runtime lookup** — have `app/api/translate/route.ts` find the pod by name
+  through Runpod's API and build the URL itself. No domain needed, but it
+  puts a pod-creating Runpod key in the frontend's environment.
+
+A serverless endpoint id, by contrast, is stable across redeploys — another
+reason the serverless path is worth revisiting if the container crash above
+is ever solved.
 
 3. **Point the site at it** — in `.env.local` (gitignored):
 
