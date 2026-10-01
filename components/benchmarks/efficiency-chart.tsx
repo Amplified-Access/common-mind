@@ -1,3 +1,8 @@
+"use client";
+
+import { motion, useInView, useReducedMotion } from "motion/react";
+import { useRef } from "react";
+
 import { cn } from "@/lib/utils";
 
 import type { BenchmarkEntry } from "./data";
@@ -5,6 +10,9 @@ import type { BenchmarkEntry } from "./data";
 // Parameters (log scale) vs BLEU on the same FLORES-200 split. Only models
 // with publicly disclosed parameter counts are plotted.
 function EfficiencyChart({ entries }: { entries: BenchmarkEntry[] }) {
+  const ref = useRef<SVGSVGElement>(null);
+  const inView = useInView(ref, { once: true });
+  const reduce = useReducedMotion();
   const points = entries.filter((e) => e.params !== undefined);
   const W = 640;
   const H = 360;
@@ -33,6 +41,7 @@ function EfficiencyChart({ entries }: { entries: BenchmarkEntry[] }) {
   return (
     <figure className="flex flex-col gap-3">
       <svg
+        ref={ref}
         viewBox={`0 0 ${W} ${H}`}
         className="h-auto w-full"
         role="img"
@@ -88,10 +97,17 @@ function EfficiencyChart({ entries }: { entries: BenchmarkEntry[] }) {
           BLEU
         </text>
 
-        {points.map((p) => {
+        {points.map((p, i) => {
           const [dx, dy, anchor] = labelOffset[p.model] ?? [10, 4, "start"];
+          // Each point rises from the zero line to its score.
+          const rise = y(0) - y(p.bleu);
           return (
-            <g key={p.model}>
+            <motion.g
+              key={p.model}
+              initial={reduce ? false : { y: rise }}
+              animate={reduce || inView ? { y: 0 } : undefined}
+              transition={{ duration: 1.1, delay: i * 0.05, ease: [0.22, 1, 0.36, 1] }}
+            >
               <circle
                 cx={x(p.params!)}
                 cy={y(p.bleu)}
@@ -111,7 +127,7 @@ function EfficiencyChart({ entries }: { entries: BenchmarkEntry[] }) {
               >
                 {p.model} · {p.bleu.toFixed(1)}
               </text>
-            </g>
+            </motion.g>
           );
         })}
       </svg>

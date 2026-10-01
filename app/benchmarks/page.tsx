@@ -11,6 +11,7 @@ import {
 import { EfficiencyChart } from "@/components/benchmarks/efficiency-chart";
 import { Container } from "@/components/common/container";
 import { registryModels } from "@/components/models/registry";
+import { CountUp } from "@/components/system/count-up";
 import { PageHero } from "@/components/system/page-hero";
 import { LinkButton, Section, SectionHeader } from "@/components/system/primitives";
 import { Tabs } from "@/components/system/tabs";
@@ -109,14 +110,20 @@ const BenchmarksPage = () => {
             lede="Gemma 3 1B, before and after civic adaptation."
           />
           <div className="grid gap-16 md:grid-cols-2">
-            {adapted.map((m) => (
+            {adapted.map((m, i) => (
               <Link key={m.slug} href={`/models/${m.slug}`} className="group flex flex-col gap-4">
                 <span className="flex items-baseline gap-4 tabular-nums">
-                  <span className="text-3xl text-faint">{m.evaluation.baseBleu!.toFixed(2)}</span>
+                  <CountUp
+                    value={m.evaluation.baseBleu!}
+                    delay={i * 0.1}
+                    className="text-3xl text-faint"
+                  />
                   <span className="text-3xl text-faint">→</span>
-                  <span className="text-7xl font-medium tracking-tight transition-colors group-hover:text-signal">
-                    {m.evaluation.bleu.toFixed(2)}
-                  </span>
+                  <CountUp
+                    value={m.evaluation.bleu}
+                    delay={i * 0.1}
+                    className="text-7xl font-medium tracking-tight transition-colors group-hover:text-signal"
+                  />
                 </span>
                 <span className="text-subtle">
                   {m.languageNames[0]} · BLEU · {m.evaluation.short}
