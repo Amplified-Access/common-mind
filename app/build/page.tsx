@@ -1,133 +1,101 @@
 import type { Metadata } from "next";
 
-import { ApiCodeExample } from "@/components/build/api-code-example";
-import { ApiKeyCard } from "@/components/build/api-key-card";
+import { journey, paths, quickstart } from "@/components/build/snippets";
 import { Container } from "@/components/common/container";
-import { ImageHero } from "@/components/common/image-hero";
-import { models } from "@/components/models/data";
+import { Code } from "@/components/system/code";
+import { PageHero } from "@/components/system/page-hero";
+import { LinkButton, Section, SectionHeader } from "@/components/system/primitives";
+import { Tabs } from "@/components/system/tabs";
+import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Build · CommonMind",
-  description:
-    "Use CommonMind models and tools to build local-language AI applications, from prototypes to real-world deployments.",
+  title: "Build",
+  description: "Open models, APIs, and deployment options for civic applications.",
 };
 
-const CURL_EXAMPLE = `curl https://api.commonmind.example/v1/translate \\
-  -H "Authorization: Bearer $COMMONMIND_API_KEY" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "model": "swahili-gemma-1b-it",
-    "text": "The children are playing outside.",
-    "direction": "en-sw"
-  }'`;
-
-const PYTHON_EXAMPLE = `import requests
-
-response = requests.post(
-    "https://api.commonmind.example/v1/translate",
-    headers={"Authorization": f"Bearer {COMMONMIND_API_KEY}"},
-    json={
-        "model": "swahili-gemma-1b-it",
-        "text": "The children are playing outside.",
-        "direction": "en-sw",
-    },
-)
-print(response.json()["translation"])`;
-
-const swahiliGemma = models.find((m) => m.slug === "swahili-gemma-1b-it")!;
+const requestFields = [
+  ["model_slug", "Which model to run"],
+  ["text", "Up to 500 characters"],
+  ["direction", "en-lg or lg-en, Luganda only"],
+];
 
 const BuildPage = () => {
   return (
     <>
-      <ImageHero
-        title="Build"
-        tagline="Build with CommonMind."
-        imageSrc="/working-from-home-ergonomic-workstation.jpg"
+      <PageHero
+        title="Build with CommonMind."
+        lede="From first prompt to production."
+        actions={
+          <>
+            <LinkButton href="#journey">Get started</LinkButton>
+            <LinkButton href="#api" variant="secondary">
+              Read the docs
+            </LinkButton>
+          </>
+        }
+        aside={<Code code={quickstart} language="python" title="quickstart.py" />}
       />
-      <section
-        id="api-access"
-        className="scroll-mt-20 border-black/10 bg-[#f4f4f4] pb-16"
-      >
-        <Container>
-          <h2 className="text-2xl font-semibold tracking-tight text-black">
-            Get API access
-          </h2>
-          <p className="mt-2 max-w-2xl text-gray-600">
-            We&apos;re building a hosted API so you don&apos;t have to run
-            models yourself. It&apos;s not live yet, so generate a preview key
-            to see what the flow will look like.
-          </p>
-          <div className="mt-8">
-            <ApiKeyCard />
-          </div>
-        </Container>
-      </section>
 
-      <section
-        id="documentation"
-        className="scroll-mt-20 border-black/10 bg-[#f4f4f4] pb-16"
-      >
-        <Container>
-          <div className="flex items-center gap-3">
-            <h2 className="text-2xl font-semibold tracking-tight text-black">
-              Using the API
-            </h2>
-            <span className="rounded-full border border-black/10 px-3 py-1 text-xs font-medium text-gray-500">
-              Coming soon
-            </span>
-          </div>
-          <p className="mt-2 max-w-2xl text-gray-600">
-            This is the shape the hosted API will take: a single endpoint,
-            one model per request, matching the same model slugs used across
-            the site. Not callable yet.
-          </p>
-          <div className="mt-8 grid gap-8 rounded-3xl bg-white p-8 sm:p-12 lg:grid-cols-2">
-            <ApiCodeExample label="cURL" language="bash" code={CURL_EXAMPLE} />
-            <ApiCodeExample
-              label="Python"
-              language="python"
-              code={PYTHON_EXAMPLE}
-            />
-          </div>
+      <Section id="journey">
+        <Container className="flex flex-col gap-16">
+          <SectionHeader title="Discover. Install. Run. Build. Deploy." />
+          <Tabs
+            items={journey.map((step) => ({
+              id: step.id,
+              label: step.label,
+              content: (
+                <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-20">
+                  <p className="text-xl text-pretty text-subtle">{step.copy}</p>
+                  <Code code={step.code} language={step.lang} title={step.title} />
+                </div>
+              ),
+            }))}
+          />
         </Container>
-      </section>
+      </Section>
 
-      <section
-        id="today"
-        className="scroll-mt-20 border-black/10 bg-[#f4f4f4] pb-16"
-      >
-        <Container>
-          <h2 className="text-2xl font-semibold tracking-tight text-black">
-            Use the models today
-          </h2>
-          <p className="mt-2 max-w-2xl text-gray-600">
-            While the hosted API is in preview, every CommonMind model
-            already runs directly from Hugging Face, no key required. Here&apos;s
-            the same translation shown above, running for real against{" "}
+      <Section id="paths">
+        <Container className="flex flex-col gap-20">
+          <SectionHeader title="Use the stack you already have." />
+          <ul className="grid gap-x-10 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+            {paths.map((p) => (
+              <li key={p.id} className="flex flex-col gap-2">
+                <span className="text-xl tracking-tight">{p.label}</span>
+                <span className="text-subtle">{p.copy}</span>
+              </li>
+            ))}
+          </ul>
+        </Container>
+      </Section>
+
+      <Section id="api">
+        <Container className="grid gap-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] lg:gap-24">
+          <div className="flex flex-col gap-12">
+            <SectionHeader title="POST /translate" />
+            <dl className="flex flex-col gap-6">
+              {requestFields.map(([field, meaning]) => (
+                <div key={field} className="flex flex-col gap-1">
+                  <dt className="font-mono text-sm text-signal">{field}</dt>
+                  <dd className="text-subtle">{meaning}</dd>
+                </div>
+              ))}
+            </dl>
             <a
-              href={`/models#${swahiliGemma.slug}`}
-              className="underline underline-offset-4 hover:no-underline"
+              href={site.links.huggingface}
+              target="_blank"
+              rel="noreferrer"
+              className="text-sm font-medium transition-colors hover:text-signal"
             >
-              {swahiliGemma.name}
+              Model cards on Hugging Face ↗
             </a>
-            .
-          </p>
-          <div className="mt-8 rounded-3xl bg-white p-8 sm:p-12">
-            <ApiCodeExample
-              label="Python (transformers)"
-              language={swahiliGemma.usage.language}
-              code={swahiliGemma.usage.code}
-            />
           </div>
-          <p className="mt-6 text-sm text-gray-500">
-            Every other model, with its own working example, is on the{" "}
-            <a href="/models" className="underline underline-offset-4 hover:no-underline">
-              models page
-            </a>
-            .
-          </p>
+          <Code
+            title="request"
+            language="bash"
+            code={paths.find((p) => p.id === "api")!.code}
+          />
         </Container>
-      </section>
+      </Section>
     </>
   );
 };
