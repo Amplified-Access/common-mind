@@ -1,62 +1,82 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { Container } from "@/components/common/container";
-import { ImageHero } from "@/components/common/image-hero";
-import { datasets } from "@/components/datasets/data";
 import { languages } from "@/components/languages/data";
-import { LanguageCard } from "@/components/languages/language-card";
-import { models } from "@/components/models/data";
+import { ecosystemFor } from "@/components/languages/ecosystem";
+import { LanguageNetwork } from "@/components/languages/language-network";
+import { PageHero } from "@/components/system/page-hero";
+import { Section } from "@/components/system/primitives";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "Languages · CommonMind",
-  description:
-    "Explore the models and datasets being built around each language.",
+  title: "Languages",
+  description: "Every language carries its own civic vocabulary.",
 };
 
 const LanguagesPage = () => {
-  const packages = languages.map((language) => {
-    const languageModels = models.filter((model) =>
-      model.languages.includes(language.code),
-    );
-    const languageModelNames = new Set(languageModels.map((m) => m.name));
-    const languageDatasets = datasets.filter((dataset) =>
-      dataset.usedBy.some((name) => languageModelNames.has(name)),
-    );
-
-    return { language, models: languageModels, datasets: languageDatasets };
-  });
+  const entries = languages.map((language) => ({
+    language,
+    ...ecosystemFor(language),
+  }));
 
   return (
     <>
-      <ImageHero
-        title="Languages"
-        tagline="Start with the language."
-        imageSrc="/close-up-man-repairing-computer-chips.jpg"
+      <PageHero
+        title="Start with the language."
+        lede="One language. An entire civic AI ecosystem."
       />
-      <section
-        id="catalogue"
-        className="scroll-mt-20 border-black/10 bg-[#f4f4f4] pb-16"
-      >
+
+      <Section id="network" className="pt-8 sm:pt-12">
         <Container>
-          <h2 className="text-2xl font-semibold tracking-tight text-black">
-            Language catalogue
-          </h2>
-          <p className="mt-2 max-w-2xl text-gray-600">
-            Every model and dataset we&apos;ve shipped, grouped by the
-            language it serves.
-          </p>
-          <div className="mt-8 flex flex-col gap-6">
-            {packages.map(({ language, models: languageModels, datasets: languageDatasets }) => (
-              <LanguageCard
-                key={language.code}
-                language={language}
-                models={languageModels}
-                datasets={languageDatasets}
-              />
-            ))}
+          <div className="rounded-3xl bg-surface px-4 py-10 sm:px-16 sm:py-16">
+            <LanguageNetwork
+              nodes={entries.map((e) => ({
+                language: e.language,
+                models: e.models.length,
+                corpora: e.corpora.length,
+              }))}
+            />
           </div>
         </Container>
-      </section>
+      </Section>
+
+      <Section id="index" className="pt-0 sm:pt-0">
+        <Container>
+          <ul className="flex flex-col gap-2">
+            {entries.map((e) => {
+              const built = e.models.length > 0;
+              return (
+                <li key={e.language.code}>
+                  <Link
+                    href={`/languages/${e.language.code}`}
+                    className="group -mx-6 grid grid-cols-[1fr_auto] items-baseline gap-x-8 gap-y-2 rounded-2xl px-6 py-7 transition-colors hover:bg-surface md:grid-cols-[1.4fr_1fr_1fr_auto]"
+                  >
+                    <span className="flex items-baseline gap-4">
+                      <span
+                        className={cn(
+                          "size-2 shrink-0 -translate-y-1 rounded-full",
+                          built ? "bg-signal" : "bg-white/20",
+                        )}
+                      />
+                      <span className="text-3xl tracking-tight transition-colors group-hover:text-signal">
+                        {e.language.name}
+                      </span>
+                    </span>
+                    <span className="hidden text-subtle md:block">{e.language.branch}</span>
+                    <span className="hidden text-subtle md:block">
+                      {e.language.regions.slice(0, 2).join(", ")}
+                    </span>
+                    <span className="text-faint transition-transform group-hover:translate-x-1">
+                      →
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </Container>
+      </Section>
     </>
   );
 };
