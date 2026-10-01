@@ -77,11 +77,16 @@ def load_models():
         ("nllb_600m", NLLB_600M_BASE, NLLB_600M_ADAPTER),
         ("nllb_1_3b", NLLB_1_3B_BASE, NLLB_1_3B_ADAPTER),
     ):
-        tok = AutoTokenizer.from_pretrained(base, src_lang="eng_Latn")
+        # One tokenizer per source language, so a request never has to
+        # mutate shared tokenizer state to switch direction.
+        tokenizers = {
+            lang: AutoTokenizer.from_pretrained(base, src_lang=lang)
+            for lang in ("eng_Latn", "swh_Latn")
+        }
         base_model = AutoModelForSeq2SeqLM.from_pretrained(base).to("cuda")
         model = PeftModel.from_pretrained(base_model, adapter)
         model.eval()
-        models[key] = (model, tok)
+        models[key] = (model, tokenizers)
 
     print("ALL MODELS LOADED", flush=True)
 
@@ -105,12 +110,13 @@ def _translate_luganda(text: str, direction: str) -> str:
     return tokenizer.decode(outputs[0][prompt_len:], skip_special_tokens=True).strip()
 
 
-def _translate_swahili_gemma(text: str) -> str:
+def _translate_swahili_gemma(text: str, direction: str) -> str:
     model, tokenizer = models["swahili_gemma"]
+    src, tgt = ("Swahili", "English") if direction == "sw-en" else ("English", "Swahili")
     prompt = (
         "<start_of_turn>user\n"
-        "Translate the following English sentence to Swahili.\n"
-        f"English: {text}\nSwahili:<end_of_turn>\n"
+        f"Translate the following {src} sentence to {tgt}.\n"
+        f"{src}: {text}\n{tgt}:<end_of_turn>\n"
         "<start_of_turn>model\n"
     )
     inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
@@ -121,10 +127,12 @@ def _translate_swahili_gemma(text: str) -> str:
     ).strip()
 
 
-def _translate_nllb(key: str, text: str) -> str:
-    model, tokenizer = models[key]
+def _translate_nllb(key: str, text: str, direction: str) -> str:
+    model, tokenizers = models[key]
+    src, tgt = ("swh_Latn", "eng_Latn") if direction == "sw-en" else ("eng_Latn", "swh_Latn")
+    tokenizer = tokenizers[src]
     inputs = tokenizer(text, return_tensors="pt").to(model.device)
-    target_lang_id = tokenizer.convert_tokens_to_ids("swh_Latn")
+    target_lang_id = tokenizer.convert_tokens_to_ids(tgt)
     with torch.no_grad():
         outputs = model.generate(
             **inputs, forced_bos_token_id=target_lang_id, max_new_tokens=128
@@ -157,10 +165,10 @@ def translate(req: TranslateRequest, x_api_key: str = Header(default="")):
     if req.model_slug == "luganda-gemma-1b-it":
         translation = _translate_luganda(text, req.direction)
     elif req.model_slug == "swahili-gemma-1b-it":
-        translation = _translate_swahili_gemma(text)
+        translation = _translate_swahili_gemma(text, req.direction)
     elif req.model_slug == "swahili-nllb-1-3b":
-        translation = _translate_nllb("nllb_1_3b", text)
+        translation = _translate_nllb("nllb_1_3b", text, req.direction)
     else:
-        translation = _translate_nllb("nllb_600m", text)
+        translation = _translate_nllb("nllb_600m", text, req.direction)
 
     return {"translation": translation, "model_slug": req.model_slug}

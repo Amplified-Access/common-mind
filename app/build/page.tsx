@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 const requestFields = [
   ["model_slug", "Which model to run"],
   ["text", "Up to 500 characters"],
-  ["direction", "en-lg or lg-en, Luganda only"],
+  ["direction", "en-lg, lg-en, en-sw or sw-en"],
 ];
 
 const BuildPage = () => {
