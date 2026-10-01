@@ -36,8 +36,8 @@ function FooterCta() {
         <Image
           src="/icon-black.svg"
           alt=""
-          width={160}
-          height={147}
+          width={458}
+          height={480}
           className="absolute right-8 bottom-8 h-10 w-auto sm:right-14 sm:bottom-14 lg:right-20 lg:bottom-20 lg:h-12"
         />
       </div>

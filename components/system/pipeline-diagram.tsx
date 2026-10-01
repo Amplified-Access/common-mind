@@ -188,8 +188,8 @@ function PipelineDiagram({
         <Image
           src="/icon-black.svg"
           alt="CommonMind"
-          width={160}
-          height={147}
+          width={458}
+          height={480}
           className="h-10 w-auto self-start"
         />
         <div className="relative flex-1 perspective-distant">

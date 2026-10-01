@@ -56,10 +56,10 @@ const Header = () => {
           <Image
             src="/logo-white.svg"
             alt="CommonMind"
-            width={1024}
-            height={147}
+            width={1039}
+            height={184}
             priority
-            className="h-4.5 w-auto"
+            className="h-5.5 w-auto"
           />
         </Link>
 
