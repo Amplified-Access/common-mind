@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   return {
-    title: `${publication.title} · CommonMind Research`,
+    title: publication.title,
     description: publication.dek,
   };
 }
@@ -40,7 +40,7 @@ const ResearchArticlePage = async ({ params }: PageProps) => {
   }
 
   return (
-    <section className="border-black/10 bg-[#f4f4f4] pt-8 pb-16">
+    <section className="pt-20 pb-20 sm:pt-28 sm:pb-28">
       <Container size="lg">
         <PublicationArticle publication={publication} />
       </Container>

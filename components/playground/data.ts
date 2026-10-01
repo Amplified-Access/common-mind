@@ -14,9 +14,8 @@ export type PlaygroundModel = {
   slug: string;
   name: string;
   directions: Direction[];
-  // Real, published example translations for this model — never a
-  // translation generated for arbitrary user input, since there's no live
-  // model connected yet. Keyed by direction code.
+  // Sample inputs, keyed by direction code. Clicking one fills the input;
+  // the translation itself always comes from the live model.
   examples: Record<string, Example[]>;
 };
 
@@ -51,6 +50,7 @@ export const playgroundModels: PlaygroundModel[] = [
     name: "Swahili-gemma-1B-it",
     directions: [
       { code: "en-sw", label: "English → Swahili", from: "English", to: "Swahili" },
+      { code: "sw-en", label: "Swahili → English", from: "Swahili", to: "English" },
     ],
     examples: {
       "en-sw": [
@@ -68,6 +68,16 @@ export const playgroundModels: PlaygroundModel[] = [
           translation: "Serikali ilitangaza sera mpya kusaidia biashara ndogo nchi nzima.",
         },
       ],
+      "sw-en": [
+        {
+          source: "Watoto wanacheza nje.",
+          translation: "The children are playing outside.",
+        },
+        {
+          source: "Ningependa kikombe cha kahawa tafadhali.",
+          translation: "I would like a cup of coffee, please.",
+        },
+      ],
     },
   },
   {
@@ -75,15 +85,17 @@ export const playgroundModels: PlaygroundModel[] = [
     name: "Swahili-nllb-1.3B",
     directions: [
       { code: "en-sw", label: "English → Swahili", from: "English", to: "Swahili" },
+      { code: "sw-en", label: "Swahili → English", from: "Swahili", to: "English" },
     ],
-    examples: { "en-sw": [] },
+    examples: { "en-sw": [], "sw-en": [] },
   },
   {
     slug: "swahili-nllb-600m",
     name: "Swahili-nllb-600M",
     directions: [
       { code: "en-sw", label: "English → Swahili", from: "English", to: "Swahili" },
+      { code: "sw-en", label: "Swahili → English", from: "Swahili", to: "English" },
     ],
-    examples: { "en-sw": [] },
+    examples: { "en-sw": [], "sw-en": [] },
   },
 ];

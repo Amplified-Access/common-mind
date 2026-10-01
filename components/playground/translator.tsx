@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 
-import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 import { playgroundModels, type Example } from "./data";
 
@@ -10,8 +10,10 @@ type Status = "idle" | "loading" | "error";
 
 const MAX_CHARS = 500;
 
-function Translator() {
-  const [modelSlug, setModelSlug] = useState(playgroundModels[0].slug);
+function Translator({ initialModel }: { initialModel?: string }) {
+  const startModel =
+    playgroundModels.find((m) => m.slug === initialModel) ?? playgroundModels[0];
+  const [modelSlug, setModelSlug] = useState(startModel.slug);
   const model =
     playgroundModels.find((m) => m.slug === modelSlug) ?? playgroundModels[0];
 
@@ -24,31 +26,30 @@ function Translator() {
   const [status, setStatus] = useState<Status>("idle");
   const [translation, setTranslation] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [latency, setLatency] = useState<number | null>(null);
 
   const examples = useMemo(
     () => model.examples[direction.code] ?? [],
     [model, direction],
   );
 
+  const reset = () => {
+    setTranslation(null);
+    setError(null);
+    setLatency(null);
+  };
+
   const handleModelChange = (nextSlug: string) => {
     const nextModel =
       playgroundModels.find((m) => m.slug === nextSlug) ?? playgroundModels[0];
     setModelSlug(nextModel.slug);
     setDirectionCode(nextModel.directions[0].code);
-    setTranslation(null);
-    setError(null);
-  };
-
-  const handleDirectionChange = (code: string) => {
-    setDirectionCode(code);
-    setTranslation(null);
-    setError(null);
+    reset();
   };
 
   const handleExampleClick = (example: Example) => {
     setInput(example.source);
-    setTranslation(null);
-    setError(null);
+    reset();
   };
 
   const handleTranslate = async () => {
@@ -56,8 +57,8 @@ function Translator() {
     if (!trimmed) return;
 
     setStatus("loading");
-    setTranslation(null);
-    setError(null);
+    reset();
+    const started = performance.now();
 
     try {
       const res = await fetch("/api/translate", {
@@ -78,6 +79,7 @@ function Translator() {
       }
 
       setTranslation(body.translation);
+      setLatency(Math.round(performance.now() - started));
       setStatus("idle");
     } catch {
       setError("Something went wrong. Please try again.");
@@ -86,111 +88,126 @@ function Translator() {
   };
 
   return (
-    <div className="rounded-3xl bg-white p-8 sm:p-12">
-      <div className="flex flex-wrap items-end gap-4">
-        <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium tracking-widest text-gray-500 uppercase">
-            Model
-          </span>
-          <select
-            value={modelSlug}
-            onChange={(e) => handleModelChange(e.target.value)}
-            className="rounded-xl border border-black/10 bg-white px-4 py-2 text-sm text-black outline-none focus-visible:border-black/30"
-          >
-            {playgroundModels.map((m) => (
-              <option key={m.slug} value={m.slug}>
-                {m.name}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        {model.directions.length > 1 && (
-          <label className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium tracking-widest text-gray-500 uppercase">
-              Direction
-            </span>
-            <select
-              value={direction.code}
-              onChange={(e) => handleDirectionChange(e.target.value)}
-              className="rounded-xl border border-black/10 bg-white px-4 py-2 text-sm text-black outline-none focus-visible:border-black/30"
-            >
-              {model.directions.map((d) => (
-                <option key={d.code} value={d.code}>
-                  {d.label}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
-      </div>
-      {examples.length > 0 && (
-        <div className="mt-6 flex flex-wrap items-center gap-2">
-          <span className="text-sm text-gray-500">Try an example:</span>
-          {examples.map((ex) => (
+    <div className="overflow-hidden rounded-3xl bg-surface">
+      {/* Toolbar */}
+      <div className="flex flex-col gap-4 px-6 pt-6 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+        <div className="scrollbar-none -mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+          {playgroundModels.map((m) => (
             <button
-              key={ex.source}
+              key={m.slug}
               type="button"
-              onClick={() => handleExampleClick(ex)}
-              className="rounded-full border border-black/10 px-3 py-1 text-xs font-medium text-gray-600 transition-colors hover:border-black/20 hover:text-black"
+              onClick={() => handleModelChange(m.slug)}
+              className={cn(
+                "shrink-0 cursor-pointer rounded-full px-3.5 py-1.5 text-sm transition-colors",
+                m.slug === model.slug
+                  ? "bg-signal font-medium text-background"
+                  : "bg-white/5 text-subtle hover:text-foreground",
+              )}
             >
-              {ex.source.length > 40 ? `${ex.source.slice(0, 40)}…` : ex.source}
+              {m.name}
             </button>
           ))}
         </div>
-      )}
+        <div className="flex items-center gap-2">
+          {model.directions.map((d) => (
+            <button
+              key={d.code}
+              type="button"
+              onClick={() => {
+                setDirectionCode(d.code);
+                reset();
+              }}
+              disabled={model.directions.length === 1}
+              className={cn(
+                "cursor-pointer rounded-full px-3 py-1.5 text-sm transition-colors disabled:cursor-default",
+                d.code === direction.code
+                  ? "bg-white/8 text-foreground"
+                  : "text-faint hover:text-subtle",
+              )}
+            >
+              {d.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_auto_1fr] lg:items-center">
-        <div className="flex flex-col gap-2">
-          <span className="text-sm font-medium tracking-widest text-gray-500 uppercase">
-            {direction.from}
-          </span>
+      {/* Panes */}
+      <div className="grid md:grid-cols-2">
+        <div className="flex flex-col">
+          <div className="flex items-center justify-between px-6 pt-8 sm:px-8">
+            <span className="text-sm text-faint">{direction.from}</span>
+            <span className="font-mono text-[11px] text-faint tabular-nums">
+              {input.length}/{MAX_CHARS}
+            </span>
+          </div>
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value.slice(0, MAX_CHARS))}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleTranslate();
+            }}
             placeholder={`Type a sentence in ${direction.from}…`}
             rows={6}
-            className="w-full resize-none rounded-2xl border border-black/10 bg-[#f4f4f4] p-4 text-black outline-none focus-visible:border-black/30"
+            className="w-full flex-1 resize-none bg-transparent px-6 py-4 text-xl text-foreground outline-none placeholder:text-faint sm:px-8"
           />
-          <span className="text-right text-xs text-gray-400">
-            {input.length}/{MAX_CHARS}
-          </span>
+          {examples.length > 0 && (
+            <div className="flex flex-wrap gap-2 px-6 pb-6 sm:px-8">
+              {examples.map((ex) => (
+                <button
+                  key={ex.source}
+                  type="button"
+                  onClick={() => handleExampleClick(ex)}
+                  className="cursor-pointer rounded-full bg-white/5 px-3 py-1.5 text-xs text-subtle transition-colors hover:text-foreground"
+                >
+                  {ex.source.length > 36 ? `${ex.source.slice(0, 36)}…` : ex.source}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
-        <div className="flex justify-center lg:rotate-0">
-          <Button
-            onClick={handleTranslate}
-            disabled={!input.trim() || status === "loading"}
-            size="lg"
-          >
-            {status === "loading" ? "Translating…" : "Translate →"}
-          </Button>
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <span className="text-sm font-medium tracking-widest text-gray-500 uppercase">
-            {direction.to}
-          </span>
-          <div className="min-h-[152px] w-full rounded-2xl border border-black/10 bg-[#f4f4f4] p-4 text-black">
+        <div className="m-2 flex min-h-48 flex-col rounded-[1.25rem] bg-background/60">
+          <div className="flex items-center justify-between px-6 pt-6 sm:px-8">
+            <span className="text-sm text-faint">{direction.to}</span>
+            {latency !== null && (
+              <span className="font-mono text-[11px] text-faint tabular-nums">
+                {latency} ms
+              </span>
+            )}
+          </div>
+          <div className="flex-1 px-6 py-4 sm:px-8" aria-live="polite">
             {status === "loading" && (
-              <span className="text-gray-400">
-                Translating… the model may still be warming up.
+              <span className="flex items-center gap-2 text-sm text-faint">
+                <span className="size-1.5 animate-[cm-pulse_1s_ease-in-out_infinite] rounded-full bg-signal" />
+                Running {model.name}…
               </span>
             )}
-
             {status === "idle" && translation === null && (
-              <span className="text-gray-400">
-                Your translation will appear here.
+              <span className="text-sm text-faint">
+                The translation will appear here.
               </span>
             )}
-
-            {status === "idle" && translation !== null && <p>{translation}</p>}
-
+            {status === "idle" && translation !== null && (
+              <p className="text-xl text-foreground">{translation}</p>
+            )}
             {status === "error" && (
-              <p className="text-sm text-red-600">{error}</p>
+              <p className="text-sm text-destructive">{error}</p>
             )}
           </div>
         </div>
+      </div>
+
+      {/* Footer */}
+      <div className="flex justify-end px-6 pb-6 sm:px-8">
+        <button
+          type="button"
+          onClick={handleTranslate}
+          disabled={!input.trim() || status === "loading"}
+          className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-full bg-foreground px-5 text-sm font-medium text-background transition-colors hover:bg-foreground/85 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          {status === "loading" ? "Translating…" : "Translate"}
+          <kbd className="hidden font-mono text-[10px] opacity-60 sm:inline">⌘↵</kbd>
+        </button>
       </div>
     </div>
   );

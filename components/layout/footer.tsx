@@ -1,86 +1,121 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 
 import { Container } from "@/components/common/container";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { FooterCta } from "@/components/layout/footer-cta";
+import { navItems, site } from "@/lib/site";
 
-const footerLinks = [
-  { label: "Models", href: "/models" },
-  { label: "Languages", href: "/languages" },
-  { label: "Datasets", href: "/datasets" },
-  { label: "Benchmarks", href: "/benchmarks" },
-  { label: "Playground", href: "/playground" },
-  { label: "Build", href: "/build" },
-  { label: "Research", href: "/research" },
+const resourceLinks = [
+  { label: "Hugging Face", href: site.links.huggingface },
+  { label: "Ollama", href: site.links.ollama },
+  { label: "Kaggle", href: site.links.kaggle },
+];
+
+const researchLinks = [
+  { label: "Civic corpus", href: "/research/civic-corpus" },
+  { label: "Datasets", href: "/research#datasets" },
+  { label: "Methodology", href: "/benchmarks#methodology" },
 ];
 
 const Footer = () => {
-  const pathname = usePathname();
-  const isHome = pathname === "/";
-
-  const footerContent = (
-    <div className="relative flex flex-col gap-16 overflow-hidden rounded-3xl bg-black px-8 py-16 text-white sm:px-16 sm:py-20">
-      <Image
-        src="/icon-white.svg"
-        alt=""
-        aria-hidden
-        width={512}
-        height={512}
-        className="pointer-events-none absolute top-1/2 right-0 h-[140%] w-auto max-w-none -translate-y-1/2 translate-x-1/4 opacity-10"
-      />
-      <div className="relative flex flex-col items-start gap-6">
-        <span className="text-xs font-medium tracking-widest text-white/60 uppercase">
-          Get involved
-        </span>
-        <h2 className="max-w-3xl text-4xl font-semibold tracking-tight text-balance sm:text-5xl md:text-6xl">
-          Help build the open foundations for inclusive AI.
-        </h2>
-        {/* <p className="max-w-xl text-base text-white/70 sm:text-lg">
-          CommonMind is open: the models, the data, and the research. Bring
-          your language, your dataset, or your use case, and help close the
-          gap.
-        </p> */}
-        <Button
-          nativeButton={false}
-          render={<Link href="/build" />}
-          className="bg-white text-black hover:bg-white/85"
-        >
-          Start building →
-        </Button>
-      </div>
-
-      <div className="relative flex flex-col gap-6 border-t border-white/10 pt-8 sm:flex-row sm:items-center sm:justify-between">
-        <nav className="grid grid-cols-3 gap-x-4 md:gap-x-8 gap-y-3 sm:grid-cols-7">
-          {footerLinks.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="text-sm text-white/60 transition-colors hover:text-white"
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-        <p className="text-sm text-white/40">
-          © {new Date().getFullYear()} CommonMind. All rights reserved.
-        </p>
-      </div>
-    </div>
-  );
-
   return (
-    <footer className={cn("bg-[#f4f4f4]", isHome ? "p-4" : "py-4")}>
-      {isHome ? (
-        footerContent
-      ) : (
-        <Container size="xl">{footerContent}</Container>
-      )}
+    <footer>
+      <Container className="flex flex-col gap-20 pt-20 pb-16 sm:pt-28">
+        <FooterCta />
+
+        <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
+          <div className="flex flex-col gap-4">
+            <Image
+              src="/logo-white.svg"
+              alt="CommonMind"
+              width={1039}
+              height={184}
+              className="h-5 w-auto self-start"
+            />
+            <p className="max-w-xs text-sm text-subtle">
+              An open civic AI infrastructure initiative by{" "}
+              <a
+                href={site.org.href}
+                target="_blank"
+                rel="noreferrer"
+                className="text-foreground/80 underline decoration-line-strong underline-offset-4 hover:text-foreground"
+              >
+                {site.org.name}
+              </a>
+              .
+            </p>
+          </div>
+
+          <FooterColumn title="Platform">
+            {navItems.map((item) => (
+              <FooterLink key={item.href} href={item.href}>
+                {item.label}
+              </FooterLink>
+            ))}
+          </FooterColumn>
+
+          <FooterColumn title="Research">
+            {researchLinks.map((item) => (
+              <FooterLink key={item.href} href={item.href}>
+                {item.label}
+              </FooterLink>
+            ))}
+          </FooterColumn>
+
+          <FooterColumn title="Open resources">
+            {resourceLinks.map((item) => (
+              <FooterLink key={item.href} href={item.href}>
+                {item.label} ↗
+              </FooterLink>
+            ))}
+          </FooterColumn>
+        </div>
+
+        <span className="text-sm text-faint">
+          © {new Date().getFullYear()} CommonMind
+        </span>
+      </Container>
     </footer>
   );
 };
+
+function FooterColumn({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-3">
+      <span className="text-sm text-faint">{title}</span>
+      <ul className="flex flex-col gap-3">{children}</ul>
+    </div>
+  );
+}
+
+function FooterLink({
+  href,
+  children,
+}: {
+  href: string;
+  children: React.ReactNode;
+}) {
+  const external = /^https?:/.test(href);
+  const className = "text-sm text-subtle transition-colors hover:text-foreground";
+  return (
+    <li>
+      {external ? (
+        <a href={href} target="_blank" rel="noreferrer" className={className}>
+          {children}
+        </a>
+      ) : (
+        <Link href={href} className={className}>
+          {children}
+        </Link>
+      )}
+    </li>
+  );
+}
 
 export default Footer;
