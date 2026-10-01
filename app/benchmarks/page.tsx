@@ -1,147 +1,180 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
+import { BarChart } from "@/components/benchmarks/bar-chart";
+import {
+  civicBench,
+  lugandaFloresReferences,
+  lugandaHeldOut,
+  swahiliFlores,
+} from "@/components/benchmarks/data";
+import { EfficiencyChart } from "@/components/benchmarks/efficiency-chart";
 import { Container } from "@/components/common/container";
-import { ImageHero } from "@/components/common/image-hero";
-import { BenchmarkSection } from "@/components/benchmarks/benchmark-section";
-import { benchmarks } from "@/components/benchmarks/data";
+import { registryModels } from "@/components/models/registry";
+import { PageHero } from "@/components/system/page-hero";
+import { LinkButton, Section, SectionHeader } from "@/components/system/primitives";
+import { Tabs } from "@/components/system/tabs";
 
 export const metadata: Metadata = {
-  title: "Benchmarks · CommonMind",
-  description:
-    "See how CommonMind models perform, how they compare with base models, and where they still need to improve.",
+  title: "Benchmarks",
+  description: "Reliable evaluation for civic AI. CivicBench Africa and published results.",
 };
 
 const BenchmarksPage = () => {
+  const adapted = registryModels.filter((m) => m.evaluation.baseBleu !== undefined);
+
   return (
     <>
-      <ImageHero
-        title="Benchmarks"
-        tagline="Measure what improves."
-        imageSrc="/flat-lay-statistics-presentation-with-chart.jpg"
+      <PageHero
+        title="Measure what improves."
+        lede="What gets measured gets improved."
+        actions={<LinkButton href="#results">See results</LinkButton>}
       />
-      <section
-        id="comparison"
-        className="scroll-mt-20 border-black/10 bg-[#f4f4f4] pb-16"
-      >
-        <Container>
-          <h2 className="text-2xl font-semibold tracking-tight text-black">
-            Benchmark comparison
-          </h2>
-          <p className="mt-2 max-w-2xl text-gray-600">
-            Every model below was scored on the same FLORES-200 devtest split,
-            so BLEU and chrF++ are directly comparable within each language.
-          </p>
-          <div className="mt-8 flex flex-col gap-8">
-            {benchmarks.map((benchmark) => (
-              <BenchmarkSection key={benchmark.code} benchmark={benchmark} />
+
+      <Section id="civicbench">
+        <Container className="flex flex-col gap-20">
+          <SectionHeader
+            title="CivicBench Africa."
+            lede="Nine tests of how well a model understands civic speech."
+          />
+          <ol className="grid gap-x-10 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+            {civicBench.map((c) => (
+              <li key={c.id} className="flex flex-col gap-2">
+                <span className="text-xl tracking-tight">
+                  {c.results ? (
+                    <Link href={c.results} className="text-signal hover:underline">
+                      {c.name} →
+                    </Link>
+                  ) : (
+                    c.name
+                  )}
+                </span>
+                <span className="text-sm text-faint">{c.metric}</span>
+              </li>
+            ))}
+          </ol>
+        </Container>
+      </Section>
+
+      <Section id="results">
+        <Container className="flex flex-col gap-16">
+          <SectionHeader title="How the models compare." />
+          <Tabs
+            items={[
+              {
+                id: "sw",
+                label: "English → Swahili",
+                content: (
+                  <div className="flex flex-col gap-10">
+                    <div className="grid gap-16 lg:grid-cols-2 lg:gap-20">
+                      <BarChart title="BLEU" entries={swahiliFlores.entries} metric="bleu" />
+                      <BarChart title="chrF++" entries={swahiliFlores.entries} metric="chrf" />
+                    </div>
+                    <p className="text-sm text-faint">{swahiliFlores.evalSet}</p>
+                  </div>
+                ),
+              },
+              {
+                id: "lg",
+                label: "English ↔ Luganda",
+                content: (
+                  <div className="flex flex-col gap-20">
+                    <div className="flex flex-col gap-10">
+                      <div className="grid gap-16 lg:grid-cols-2 lg:gap-20">
+                        <BarChart title="BLEU" entries={lugandaHeldOut.entries} metric="bleu" />
+                        <BarChart title="chrF++" entries={lugandaHeldOut.entries} metric="chrf" />
+                      </div>
+                      <p className="text-sm text-faint">{lugandaHeldOut.evalSet}</p>
+                    </div>
+                    <div className="flex flex-col gap-10 lg:max-w-[calc(50%-2.5rem)]">
+                      <BarChart
+                        title="Published references, FLORES-200"
+                        entries={lugandaFloresReferences.entries}
+                        metric="bleu"
+                      />
+                      <p className="text-sm text-faint">{lugandaFloresReferences.note}</p>
+                    </div>
+                  </div>
+                ),
+              },
+            ]}
+          />
+        </Container>
+      </Section>
+
+      <Section id="adaptation">
+        <Container className="flex flex-col gap-20">
+          <SectionHeader
+            title="Same base model. Different language."
+            lede="Gemma 3 1B, before and after civic adaptation."
+          />
+          <div className="grid gap-16 md:grid-cols-2">
+            {adapted.map((m) => (
+              <Link key={m.slug} href={`/models/${m.slug}`} className="group flex flex-col gap-4">
+                <span className="flex items-baseline gap-4 tabular-nums">
+                  <span className="text-3xl text-faint">{m.evaluation.baseBleu!.toFixed(2)}</span>
+                  <span className="text-3xl text-faint">→</span>
+                  <span className="text-7xl font-medium tracking-tight transition-colors group-hover:text-signal">
+                    {m.evaluation.bleu.toFixed(2)}
+                  </span>
+                </span>
+                <span className="text-subtle">
+                  {m.languageNames[0]} · BLEU · {m.evaluation.short}
+                </span>
+              </Link>
             ))}
           </div>
         </Container>
-      </section>
-      <section
-        id="methodology"
-        className="scroll-mt-20 border-black/10 bg-[#f4f4f4] pb-16"
-      >
-        <Container>
-          <h2 className="text-2xl font-semibold tracking-tight text-black">
-            Benchmark methodology
-          </h2>
-          <div className="mt-6 grid gap-8 sm:grid-cols-2">
-            <div className="rounded-3xl bg-white p-8">
-              <h3 className="text-sm font-medium tracking-widest text-gray-500 uppercase">
-                What we measure
-              </h3>
-              <p className="mt-3 text-black/80">
-                <strong className="text-black">BLEU</strong> scores n-gram
-                overlap against a reference translation — the standard metric
-                for machine translation quality, though it can be harsh on
-                morphologically rich languages like Luganda, where a correct
-                translation may not share many exact word forms with the
-                reference.
-              </p>
-              <p className="mt-3 text-black/80">
-                <strong className="text-black">chrF++</strong> scores
-                character- and word-n-gram overlap instead, which is more
-                forgiving of the spelling and morphology differences common
-                in Bantu languages, and generally tracks human judgment more
-                closely for this kind of low-resource pair.
-              </p>
-              <p className="mt-3 text-black/80">
-                All scores above are English→target-language, evaluated on{" "}
-                <a
-                  href="https://huggingface.co/datasets/openlanguagedata/flores_plus"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="underline underline-offset-4 hover:no-underline"
-                >
-                  FLORES-200 devtest
-                </a>{" "}
-                (1,012 sentence pairs) — the shared benchmark used by every
-                entry in the charts.
+      </Section>
+
+      <Section id="efficiency">
+        <Container className="grid gap-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.7fr)] lg:items-center lg:gap-24">
+          <SectionHeader
+            title="Small models, measured."
+            lede="A 615M-parameter model outscores Gemma 3 27B on English→Swahili."
+          />
+          <div className="rounded-3xl bg-surface p-6 sm:p-10">
+            <EfficiencyChart entries={swahiliFlores.entries} />
+          </div>
+        </Container>
+      </Section>
+
+      <Section id="methodology">
+        <Container className="flex flex-col gap-20">
+          <SectionHeader title="Methodology." />
+          <div className="grid gap-12 md:grid-cols-3 md:gap-16">
+            <div className="flex flex-col gap-3">
+              <h3 className="text-xl tracking-tight">Metrics</h3>
+              <p className="text-subtle">
+                BLEU for exact overlap. chrF++ for character-level accuracy,
+                fairer to rich morphology.
               </p>
             </div>
-            <div className="rounded-3xl bg-white p-8">
-              <h3 className="text-sm font-medium tracking-widest text-gray-500 uppercase">
-                Sourcing
-              </h3>
-              <p className="mt-3 text-black/80">
-                Our own models&apos; scores come from our own FLORES-200 eval
-                runs, documented on each{" "}
-                <a
-                  href="/models"
-                  className="underline underline-offset-4 hover:no-underline"
-                >
-                  model card
-                </a>
-                . Gemma 3 4B/27B, GPT-5 Mini, and Gemini 2.0 Flash figures are
-                not ours — they&apos;re published by{" "}
+            <div className="flex flex-col gap-3">
+              <h3 className="text-xl tracking-tight">Shared test sets</h3>
+              <p className="text-subtle">
+                Models are only compared on the same set. Swahili on FLORES-200;
+                Luganda on a held-out split.
+              </p>
+            </div>
+            <div className="flex flex-col gap-3">
+              <h3 className="text-xl tracking-tight">Cited sources</h3>
+              <p className="text-subtle">
+                Third-party figures are published by{" "}
                 <a
                   href="https://huggingface.co/CraneAILabs"
                   target="_blank"
                   rel="noreferrer"
-                  className="underline underline-offset-4 hover:no-underline"
+                  className="text-foreground hover:text-signal"
                 >
                   Crane AI Labs
                 </a>{" "}
-                on the model cards for{" "}
-                <a
-                  href="https://huggingface.co/CraneAILabs/ganda-gemma-1b"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="underline underline-offset-4 hover:no-underline"
-                >
-                  Ganda-gemma-1b
-                </a>{" "}
-                and{" "}
-                <a
-                  href="https://huggingface.co/CraneAILabs/swahili-gemma-1b"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="underline underline-offset-4 hover:no-underline"
-                >
-                  swahili-gemma-1b
-                </a>
-                , not independently re-run by us — click through to the
-                Source column in either table above to verify any number.
-              </p>
-              <p className="mt-3 text-black/80">
-                <strong className="text-black">Not pictured:</strong>{" "}
-                <a
-                  href="https://huggingface.co/Sunbird/translate-nllb-1.3b-salt"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="underline underline-offset-4 hover:no-underline"
-                >
-                  Sunbird&apos;s translate-nllb-1.3b-salt
-                </a>{" "}
-                covers English→Luganda too (30.4 BLEU) but is evaluated on
-                its own SALT-dev split rather than FLORES-200, so it isn&apos;t
-                a fair head-to-head number against the models charted here.
+                and linked from every chart row.
               </p>
             </div>
           </div>
         </Container>
-      </section>
+      </Section>
     </>
   );
 };

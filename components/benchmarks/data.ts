@@ -1,4 +1,4 @@
-import { models } from "@/components/models/data";
+import { registryModels } from "@/components/models/registry";
 
 export type BenchmarkEntry = {
   model: string;
@@ -6,6 +6,8 @@ export type BenchmarkEntry = {
   isOurs: boolean;
   bleu: number;
   chrf: number;
+  /** Total parameters in billions, when publicly disclosed. */
+  params?: number;
   href: string;
 };
 
@@ -13,148 +15,176 @@ export type LanguageBenchmark = {
   code: string;
   label: string;
   evalSet: string;
+  note?: string;
   entries: BenchmarkEntry[];
 };
 
-function metricValue(modelSlug: string, label: string): number {
-  const model = models.find((m) => m.slug === modelSlug);
-  const metric = model?.metrics.find((m) => m.label === label);
-  if (!metric) {
-    throw new Error(`Missing "${label}" metric for model "${modelSlug}"`);
-  }
-  return Number(metric.value);
-}
-
-function ours(modelSlug: string): BenchmarkEntry {
-  const model = models.find((m) => m.slug === modelSlug);
-  if (!model) throw new Error(`Unknown model slug: ${modelSlug}`);
+function ours(slug: string): BenchmarkEntry {
+  const model = registryModels.find((m) => m.slug === slug);
+  if (!model) throw new Error(`Unknown model slug: ${slug}`);
   return {
     model: model.name,
     org: "CommonMind",
     isOurs: true,
-    bleu: metricValue(modelSlug, "BLEU score"),
-    chrf: metricValue(modelSlug, "chrF++ score"),
-    href: `/models#${model.slug}`,
+    bleu: model.evaluation.bleu,
+    chrf: model.evaluation.chrf,
+    params: model.base.paramsNumeric,
+    href: `/models/${model.slug}`,
   };
 }
 
-// External figures are published, third-party numbers — not independently
-// re-run by us — cited by their source so they can be checked. All entries
-// in a given section were evaluated on the same FLORES-200 devtest split, so
-// BLEU/chrF++ are directly comparable within that section.
-export const benchmarks: LanguageBenchmark[] = [
+const CRANE_SW = "https://huggingface.co/CraneAILabs/swahili-gemma-1b";
+const CRANE_LG = "https://huggingface.co/CraneAILabs/ganda-gemma-1b";
+
+// External figures are published third-party numbers, not re-run by us, and
+// cited by source. Every entry in the Swahili set was scored on the same
+// FLORES-200 devtest split, so BLEU/chrF++ are directly comparable.
+export const swahiliFlores: LanguageBenchmark = {
+  code: "sw",
+  label: "English → Swahili",
+  evalSet: "FLORES-200 devtest · 1,012 sentence pairs",
+  entries: [
+    {
+      model: "Gemma 3 1B (base)",
+      org: "Google",
+      isOurs: false,
+      bleu: 0.41,
+      chrf: 14.28,
+      params: 1,
+      href: "https://huggingface.co/google/gemma-3-1b-it",
+    },
+    { model: "Gemma 3 4B", org: "Google", isOurs: false, bleu: 10.9, chrf: 44.1, params: 4, href: CRANE_SW },
+    {
+      model: "Swahili-gemma-1B (Crane)",
+      org: "Crane AI Labs",
+      isOurs: false,
+      bleu: 27.6,
+      chrf: 56.8,
+      params: 1,
+      href: CRANE_SW,
+    },
+    ours("swahili-gemma-1b-it"),
+    { model: "Gemma 3 27B", org: "Google", isOurs: false, bleu: 29.4, chrf: 60.0, params: 27, href: CRANE_SW },
+    { model: "GPT-5 Mini", org: "OpenAI", isOurs: false, bleu: 31.8, chrf: 62.4, href: CRANE_SW },
+    ours("swahili-nllb-600m"),
+    { model: "Gemini 2.0 Flash", org: "Google", isOurs: false, bleu: 35.6, chrf: 64.6, href: CRANE_SW },
+    ours("swahili-nllb-1-3b"),
+  ],
+};
+
+// Luganda: our model was scored on a held-out SALT-derived split, so it is
+// only compared head-to-head with the base model on that same split.
+export const lugandaHeldOut: LanguageBenchmark = {
+  code: "lg",
+  label: "English ↔ Luganda",
+  evalSet: "Held-out SALT-derived test split · 100 examples",
+  entries: [
+    {
+      model: "Gemma 3 1B (base)",
+      org: "Google",
+      isOurs: false,
+      bleu: 0.06,
+      chrf: 8.84,
+      params: 1,
+      href: "https://huggingface.co/google/gemma-3-1b-it",
+    },
+    ours("luganda-gemma-1b-it"),
+  ],
+};
+
+// Published English→Luganda FLORES-200 references. Shown for context only:
+// a different evaluation set from ours, so not a head-to-head comparison.
+export const lugandaFloresReferences: LanguageBenchmark = {
+  code: "lg-ref",
+  label: "English → Luganda · published references",
+  evalSet: "FLORES-200 devtest · 1,012 sentence pairs",
+  note: "Published by Crane AI Labs on FLORES-200, a different evaluation set from the split above.",
+  entries: [
+    { model: "Gemma 3 4B", org: "Google", isOurs: false, bleu: 1.1, chrf: 20.05, href: CRANE_LG },
+    { model: "Gemma 3 27B", org: "Google", isOurs: false, bleu: 3.65, chrf: 31.37, href: CRANE_LG },
+    { model: "GPT-5 Mini", org: "OpenAI", isOurs: false, bleu: 5.14, chrf: 36.55, href: CRANE_LG },
+    { model: "Ganda-gemma-1B", org: "Crane AI Labs", isOurs: false, bleu: 6.99, chrf: 40.32, href: CRANE_LG },
+    { model: "Gemini 2.0 Flash", org: "Google", isOurs: false, bleu: 7.94, chrf: 43.38, href: CRANE_LG },
+  ],
+};
+
+/* ------------------------------------------------------------------ */
+/* CivicBench Africa                                                   */
+/* ------------------------------------------------------------------ */
+
+export type BenchComponent = {
+  id: string;
+  name: string;
+  measures: string;
+  metric: string;
+  format: string;
+  /** Anchor to live results on this page, where results exist. */
+  results?: string;
+};
+
+export const civicBench: BenchComponent[] = [
   {
-    code: "lg",
-    label: "English → Luganda",
-    evalSet: "FLORES-200 devtest, 1,012 sentence pairs",
-    entries: [
-      {
-        model: "Gemma 3 1B (base)",
-        org: "Google",
-        isOurs: false,
-        bleu: 0.06,
-        chrf: 8.84,
-        href: "https://huggingface.co/google/gemma-3-1b-it",
-      },
-      {
-        model: "Gemma 3 4B",
-        org: "Google",
-        isOurs: false,
-        bleu: 1.1,
-        chrf: 20.05,
-        href: "https://huggingface.co/CraneAILabs/ganda-gemma-1b",
-      },
-      {
-        model: "Gemma 3 27B",
-        org: "Google",
-        isOurs: false,
-        bleu: 3.65,
-        chrf: 31.37,
-        href: "https://huggingface.co/CraneAILabs/ganda-gemma-1b",
-      },
-      {
-        model: "GPT-5 Mini",
-        org: "OpenAI",
-        isOurs: false,
-        bleu: 5.14,
-        chrf: 36.55,
-        href: "https://huggingface.co/CraneAILabs/ganda-gemma-1b",
-      },
-      {
-        model: "Ganda-gemma-1B",
-        org: "Crane AI Labs",
-        isOurs: false,
-        bleu: 6.99,
-        chrf: 40.32,
-        href: "https://huggingface.co/CraneAILabs/ganda-gemma-1b",
-      },
-      {
-        model: "Gemini 2.0 Flash",
-        org: "Google",
-        isOurs: false,
-        bleu: 7.94,
-        chrf: 43.38,
-        href: "https://huggingface.co/CraneAILabs/ganda-gemma-1b",
-      },
-      ours("luganda-gemma-1b-it"),
-    ],
+    id: "asr",
+    name: "Civic speech recognition",
+    measures: "Transcription accuracy on community voice reports and public meeting audio.",
+    metric: "WER · CER",
+    format: "audio → reference transcript",
   },
   {
-    code: "sw",
-    label: "English → Swahili",
-    evalSet: "FLORES-200 devtest, 1,012 sentence pairs",
-    entries: [
-      {
-        model: "Gemma 3 1B (base)",
-        org: "Google",
-        isOurs: false,
-        bleu: 0.41,
-        chrf: 14.28,
-        href: "https://huggingface.co/google/gemma-3-1b-it",
-      },
-      {
-        model: "Gemma 3 4B",
-        org: "Google",
-        isOurs: false,
-        bleu: 10.9,
-        chrf: 44.1,
-        href: "https://huggingface.co/CraneAILabs/swahili-gemma-1b",
-      },
-      {
-        model: "Swahili-gemma-1B (Crane)",
-        org: "Crane AI Labs",
-        isOurs: false,
-        bleu: 27.6,
-        chrf: 56.8,
-        href: "https://huggingface.co/CraneAILabs/swahili-gemma-1b",
-      },
-      ours("swahili-gemma-1b-it"),
-      {
-        model: "Gemma 3 27B",
-        org: "Google",
-        isOurs: false,
-        bleu: 29.4,
-        chrf: 60.0,
-        href: "https://huggingface.co/CraneAILabs/swahili-gemma-1b",
-      },
-      {
-        model: "GPT-5 Mini",
-        org: "OpenAI",
-        isOurs: false,
-        bleu: 31.8,
-        chrf: 62.4,
-        href: "https://huggingface.co/CraneAILabs/swahili-gemma-1b",
-      },
-      ours("swahili-nllb-600m"),
-      {
-        model: "Gemini 2.0 Flash",
-        org: "Google",
-        isOurs: false,
-        bleu: 35.6,
-        chrf: 64.6,
-        href: "https://huggingface.co/CraneAILabs/swahili-gemma-1b",
-      },
-      ours("swahili-nllb-1-3b"),
-    ],
+    id: "code-switching",
+    name: "Code switching",
+    measures: "Robustness when speakers move between a local language and English mid-utterance.",
+    metric: "WER on switched spans",
+    format: "audio/text with switch annotations",
+  },
+  {
+    id: "terminology",
+    name: "Civic terminology",
+    measures: "Whether a model maps local civic expressions to the right shared concept.",
+    metric: "Accuracy · top-k",
+    format: "expression → concept",
+  },
+  {
+    id: "translation",
+    name: "Translation",
+    measures: "Translation quality between English and the target language on shared test sets.",
+    metric: "BLEU · chrF++",
+    format: "parallel sentence pairs",
+    results: "#results",
+  },
+  {
+    id: "classification",
+    name: "Issue classification",
+    measures: "Routing reports to the civic category they concern, such as public services, elections, or accountability.",
+    metric: "Macro-F1",
+    format: "report → category",
+  },
+  {
+    id: "ner",
+    name: "Entity recognition",
+    measures: "Extraction of offices, services, officials' roles, and places from civic text.",
+    metric: "Span F1",
+    format: "BIO-tagged spans",
+  },
+  {
+    id: "geo",
+    name: "Geographic interpretation",
+    measures: "Resolving local place references (villages, parishes, sub-counties) to administrative units.",
+    metric: "Accuracy@admin level",
+    format: "mention → admin unit",
+  },
+  {
+    id: "context",
+    name: "Misinformation & context sensitivity",
+    measures: "Whether a model flags claims that need more context.",
+    metric: "Calibrated F1",
+    format: "claim → context flag",
+  },
+  {
+    id: "summarisation",
+    name: "Report summarisation",
+    measures: "Faithful summaries of community reports and meetings: questions raised versus answers given.",
+    metric: "Faithfulness · ROUGE-L",
+    format: "transcript → structured summary",
   },
 ];
