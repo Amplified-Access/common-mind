@@ -1,95 +1,75 @@
 import Link from "next/link";
 
-import type { Publication } from "./data";
+import { formatDate } from "@/components/models/registry";
 
-function formatDate(iso: string) {
-  return new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    timeZone: "UTC",
-  });
-}
+import { readTimeForPublication, type Publication } from "./data";
 
 function PublicationArticle({ publication }: { publication: Publication }) {
   return (
-    <article className="rounded-3xl bg-white p-8 sm:p-12">
-      <Link
-        href="/research"
-        className="text-sm text-black/60 underline underline-offset-4 hover:text-black"
-      >
-        ← Back to research
-      </Link>
-
-      <div className="mt-6 flex flex-col gap-3">
-        <div className="flex flex-wrap items-center gap-2">
-          {publication.tags.map((tag) => (
-            <span
-              key={tag}
-              className="rounded-full border border-black/10 px-3 py-1 text-xs font-medium text-gray-500"
-            >
-              {tag}
-            </span>
-          ))}
+    <article className="flex flex-col gap-20">
+      <header className="flex flex-col gap-6">
+        <Link
+          href="/research#papers"
+          className="text-sm text-faint transition-colors hover:text-foreground"
+        >
+          ← Research
+        </Link>
+        <h1 className="text-h1 text-balance">{publication.title}</h1>
+        <p className="max-w-3xl text-lg text-pretty text-subtle sm:text-xl">
+          {publication.dek}
+        </p>
+        <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-faint">
+          <time dateTime={publication.date}>{formatDate(publication.date, "long")}</time>
+          <span>CommonMind Research</span>
+          <span>{readTimeForPublication(publication)} min read</span>
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-black sm:text-3xl">
-          {publication.title}
-        </h1>
-        <p className="max-w-2xl text-gray-600">{publication.dek}</p>
-        <time dateTime={publication.date} className="text-sm text-gray-400">
-          {formatDate(publication.date)} · CommonMind Team
-        </time>
-      </div>
+      </header>
 
       {publication.results && (
-        <div className="mt-8 overflow-x-auto rounded-2xl bg-[#f4f4f4] p-6">
-          <p className="text-sm font-medium tracking-widest text-gray-500 uppercase">
-            {publication.results.caption}
-          </p>
-          <div className="mt-4 flex flex-col gap-3">
+        <div className="flex flex-col gap-6 rounded-3xl bg-surface p-8 sm:p-10">
+          <p className="text-sm text-faint">{publication.results.caption}</p>
+          <dl className="flex flex-col gap-4">
             {publication.results.rows.map((row) => (
               <div
                 key={row.label}
-                className="flex flex-wrap items-baseline justify-between gap-2 border-b border-black/5 pb-3 last:border-0 last:pb-0"
+                className="flex flex-wrap items-baseline justify-between gap-2"
               >
-                <span className="text-black/70">{row.label}</span>
-                <span className="font-medium text-black">
+                <dt className="text-sm text-subtle">{row.label}</dt>
+                <dd className="font-mono text-sm tabular-nums">
                   {row.before && (
-                    <>
-                      <span className="text-gray-400 line-through">
-                        {row.before}
-                      </span>{" "}
-                      →{" "}
-                    </>
+                    <span className="text-faint">{row.before} → </span>
                   )}
-                  {row.after}
-                </span>
+                  <span className="text-foreground">{row.after}</span>
+                </dd>
               </div>
             ))}
-          </div>
+          </dl>
         </div>
       )}
 
-      <div className="mt-8 flex flex-col gap-8">
+      <div className="flex flex-col gap-16">
         {publication.sections.map((section) => (
-          <div key={section.heading} className="flex flex-col gap-3">
-            <h4 className="text-sm font-medium tracking-widest text-gray-500 uppercase">
+          <section
+            key={section.heading}
+            className="grid gap-4 lg:grid-cols-[12rem_minmax(0,1fr)] lg:gap-10"
+          >
+            <h2 className="text-lg tracking-tight">
               {section.heading}
-            </h4>
-            {section.paragraphs.map((paragraph, i) => (
-              <p key={i} className="text-black/80">
-                {paragraph}
-              </p>
-            ))}
-          </div>
+            </h2>
+            <div className="flex max-w-2xl flex-col gap-4">
+              {section.paragraphs.map((paragraph, j) => (
+                <p key={j} className="leading-relaxed text-pretty text-foreground/85">
+                  {paragraph}
+                </p>
+              ))}
+            </div>
+          </section>
         ))}
       </div>
 
-      <div className="mt-8 flex flex-col gap-3 border-t border-black/10 pt-6">
-        <h4 className="text-sm font-medium tracking-widest text-gray-500 uppercase">
-          Sources
-        </h4>
-        <ul className="flex flex-col gap-1.5">
+      <footer className="grid gap-4 lg:grid-cols-[12rem_minmax(0,1fr)] lg:gap-10">
+        <span className="text-sm text-faint">Sources</span>
+        <ul className="flex flex-col gap-2">
           {publication.sources.map((source) => {
             const isExternal = !source.href.startsWith("/");
             return (
@@ -98,15 +78,16 @@ function PublicationArticle({ publication }: { publication: Publication }) {
                   href={source.href}
                   target={isExternal ? "_blank" : undefined}
                   rel={isExternal ? "noreferrer" : undefined}
-                  className="text-sm text-black/60 underline underline-offset-4 hover:text-black"
+                  className="text-sm text-subtle transition-colors hover:text-signal"
                 >
                   {source.label}
+                  {isExternal ? " ↗" : ""}
                 </a>
               </li>
             );
           })}
         </ul>
-      </div>
+      </footer>
     </article>
   );
 }

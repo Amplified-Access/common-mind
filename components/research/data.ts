@@ -23,17 +23,6 @@ export type Publication = {
   sources: { label: string; href: string }[];
 };
 
-const placeholderImages = [
-  "/flat-lay-statistics-presentation-with-chart.jpg",
-  "/close-up-man-repairing-computer-chips.jpg",
-  "/working-from-home-ergonomic-workstation.jpg",
-  "/man-speaking-into-his-smartphone-s-speaker.jpg",
-];
-
-export function imageForPublication(index: number) {
-  return placeholderImages[index % placeholderImages.length];
-}
-
 export function readTimeForPublication(publication: Publication) {
   const words = [
     publication.title,
@@ -83,14 +72,14 @@ export const publications: Publication[] = [
       },
     ],
     results: {
-      caption: "English→Luganda, held-out test split",
+      caption: "English↔Luganda, held-out test split (100 examples)",
       rows: [
         { label: "BLEU", before: "0.06", after: "13.85" },
         { label: "chrF++", before: "8.84", after: "46.59" },
       ],
     },
     sources: [
-      { label: "Luganda-gemma-1B-it model card", href: "/models#luganda-gemma-1b-it" },
+      { label: "Luganda-gemma-1B-it model card", href: "/models/luganda-gemma-1b-it" },
       {
         label: "Sunbird SALT dataset",
         href: "https://huggingface.co/datasets/Sunbird/salt",
@@ -109,17 +98,17 @@ export const publications: Publication[] = [
     tags: ["Swahili", "Continued pretraining", "Instruction tuning"],
     sections: [
       {
-        heading: "Two stages, not one",
+        heading: "Two stages",
         paragraphs: [
-          "Rather than fine-tuning Gemma 3 1B directly for translation, we split the work in two. Stage 1 continues pretraining the base model on unlabeled Swahili text (JamiiForums-2B, a large monolingual Swahili forum corpus, and Inkuba-Mono, a Swahili monolingual dataset) with no instruction format at all, just raw next-token prediction. That produces an intermediate checkpoint that reads Swahili more fluently before it ever sees a translation pair.",
+          "We split the work in two. Stage 1 continues pretraining the base model on unlabeled Swahili text (JamiiForums-2B, a large monolingual Swahili forum corpus, and Inkuba-Mono, a Swahili monolingual dataset) with no instruction format at all, just raw next-token prediction. That produces an intermediate checkpoint that reads Swahili more fluently before it ever sees a translation pair.",
           "Stage 2 is where translation ability is actually taught: QLoRA fine-tuning (rank 32, alpha 64, dropout 0.05) on top of the CPT checkpoint, for 3 epochs at a 2e-4 cosine schedule, effective batch size 32, packed to 512-token blocks. The adapter was then merged into full fp16 weights, the form the released model ships in.",
         ],
       },
       {
         heading: "Data",
         paragraphs: [
-          "159,311 examples after quality filtering: 32,414 from MAFAND-MT (human-translated news, via Masakhane), 58,052 from Rogendo's English-Swahili sentence pairs, 23,947 from Sunbird SALT, 29,991 from Inkuba-Swahili-MMT, plus smaller instruction-following sets (359 from Cohere's Aya dataset and 14,844 from Alpaca-cleaned-Swahili) so the model picks up general Swahili instruction-following alongside translation, not just a narrow prompt template. That's 25,452 packed training blocks, roughly 13 million training tokens, over 2,388 steps and about 9 hours 45 minutes on a single T4.",
-          "One thing that didn't work: we planned to add back-translated monolingual Swahili (via NLLB) to the mix, but the monolingual source returned zero usable lines in this run; that augmentation simply didn't contribute to the released model, and we're noting it here rather than quietly dropping it.",
+          "159,311 examples after quality filtering: 32,414 from MAFAND-MT (human-translated news, via Masakhane), 58,052 from Rogendo's English-Swahili sentence pairs, 23,947 from Sunbird SALT, 29,991 from Inkuba-Swahili-MMT, plus smaller instruction-following sets (359 from Cohere's Aya dataset and 14,844 from Alpaca-cleaned-Swahili) so the model picks up general Swahili instruction-following alongside translation. That's 25,452 packed training blocks, roughly 13 million training tokens, over 2,388 steps and about 9 hours 45 minutes on a single T4.",
+          "One thing that didn't work: we planned to add back-translated monolingual Swahili (via NLLB) to the mix, but the monolingual source returned zero usable lines in this run; that augmentation simply didn't contribute to the released model, and we're noting it here.",
         ],
       },
     ],
@@ -131,7 +120,7 @@ export const publications: Publication[] = [
       ],
     },
     sources: [
-      { label: "Swahili-gemma-1B-it model card", href: "/models#swahili-gemma-1b-it" },
+      { label: "Swahili-gemma-1B-it model card", href: "/models/swahili-gemma-1b-it" },
       { label: "Full benchmark comparison", href: "/benchmarks" },
       {
         label: "JamiiForums-2B",
@@ -149,14 +138,14 @@ export const publications: Publication[] = [
       {
         heading: "Why try a non-chat architecture",
         paragraphs: [
-          "Every other CommonMind model so far has been a fine-tuned instruction-tuned LLM (Gemma 3). NLLB-200 is a different kind of model entirely: an encoder-decoder architecture with a SentencePiece tokenizer, built by Meta specifically for translation across 200 languages, with no chat template and no general-purpose reasoning ability to spare. The question: does specializing the architecture, not just the training data, buy anything on top of what instruction-tuned LLMs already achieve?",
+          "Every other CommonMind model so far has been a fine-tuned instruction-tuned LLM (Gemma 3). NLLB-200 is a different kind of model entirely: an encoder-decoder architecture with a SentencePiece tokenizer, built by Meta specifically for translation across 200 languages, with no chat template and no general-purpose reasoning ability to spare. The question: does specializing the architecture, on top of the training data, buy anything on top of what instruction-tuned LLMs already achieve?",
         ],
       },
       {
         heading: "Method",
         paragraphs: [
           "LoRA (rank 16, alpha 32) on facebook/nllb-200-distilled-1.3B and facebook/nllb-200-distilled-600M, trained one direction only, English→Swahili (eng_Latn→swh_Latn), on 145,707 parallel pairs: all of MAFAND-MT (32,414) and Sunbird SALT (23,947), plus Rogendo capped at 60,000 and Inkuba-Swahili-MMT capped at 30,000. 3 epochs, 3e-5 learning rate, effective batch size 32, max sequence length 128, on a single Kaggle T4, about 13,662 steps per model.",
-          "One honest wrinkle: raw training loss for both runs plateaued far higher (roughly 10–12) than the causal-LM losses we typically see finishing around 1.2–1.5 on our Gemma fine-tunes. That's a different loss landscape, not a broken run: NLLB's ~256K-token vocabulary changes what the raw cross-entropy number means, and it's exactly why we don't trust training loss alone here and instead evaluate held-out translation quality directly.",
+          "One honest wrinkle: raw training loss for both runs plateaued far higher (roughly 10–12) than the causal-LM losses we typically see finishing around 1.2–1.5 on our Gemma fine-tunes. That reflects a different loss landscape: NLLB's ~256K-token vocabulary changes what the raw cross-entropy number means, which is why we evaluate held-out translation quality directly.",
         ],
       },
       {
@@ -176,8 +165,8 @@ export const publications: Publication[] = [
       ],
     },
     sources: [
-      { label: "Swahili-nllb-1.3B model card", href: "/models#swahili-nllb-1-3b" },
-      { label: "Swahili-nllb-600M model card", href: "/models#swahili-nllb-600m" },
+      { label: "Swahili-nllb-1.3B model card", href: "/models/swahili-nllb-1-3b" },
+      { label: "Swahili-nllb-600M model card", href: "/models/swahili-nllb-600m" },
       { label: "Full benchmark comparison", href: "/benchmarks" },
       {
         label: "NLLB-200 (Meta AI)",
@@ -200,20 +189,20 @@ export const releases: Release[] = [
     title: "Swahili-nllb-1.3B and Swahili-nllb-600M",
     description:
       "Two LoRA-tuned NLLB-200 models for English→Swahili translation, both beating our previous Swahili-Gemma benchmark reference.",
-    href: "/models#swahili-nllb-1-3b",
+    href: "/models/swahili-nllb-1-3b",
   },
   {
     date: "2026-08-11",
     title: "Swahili-gemma-1B-it",
     description:
       "Continued-pretrained and instruction-tuned Gemma 3 1B for English→Swahili translation and general Swahili instruction-following.",
-    href: "/models#swahili-gemma-1b-it",
+    href: "/models/swahili-gemma-1b-it",
   },
   {
     date: "2026-05-23",
     title: "Luganda-gemma-1B-it",
     description:
       "Our first release: a QLoRA adapter for bidirectional English↔Luganda translation and Luganda conversation.",
-    href: "/models#luganda-gemma-1b-it",
+    href: "/models/luganda-gemma-1b-it",
   },
 ];

@@ -1,64 +1,112 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { Container } from "@/components/common/container";
-import { ImageHero } from "@/components/common/image-hero";
-import { imageForPublication, publications, releases } from "@/components/research/data";
-import { PublicationCard } from "@/components/research/publication-card";
-import { ReleasesList } from "@/components/research/releases-list";
+import { datasets } from "@/components/datasets/data";
+import { formatDate } from "@/components/models/registry";
+import { publications, readTimeForPublication } from "@/components/research/data";
+import { PageHero } from "@/components/system/page-hero";
+import { Section, SectionHeader } from "@/components/system/primitives";
 
 export const metadata: Metadata = {
-  title: "Research · CommonMind",
-  description:
-    "Explore research on building, evaluating, and deploying AI for languages and contexts underserved by mainstream systems.",
+  title: "Research",
+  description: "Research at the intersection of language, civic discourse, models, data, and evaluation.",
+};
+
+const datasetKind: Record<string, string> = {
+  "sunbird-salt": "Parallel",
+  "mafand-mt": "Parallel",
+  "rogendo-en-sw": "Parallel",
+  "inkuba-swahili-mmt": "Parallel",
+  "aya-dataset": "Instruction",
+  "alpaca-cleaned-swahili": "Instruction",
+  kenswquad: "Question answering",
+  "jamiiforums-2b": "Monolingual",
+  "inkuba-mono-swahili": "Monolingual",
+  "flores-plus": "Evaluation",
+  "luganda-llm-data": "Parallel",
 };
 
 const ResearchPage = () => {
+  const reports = [...publications].sort((a, b) => b.date.localeCompare(a.date));
+
   return (
     <>
-      <ImageHero
-        title="Research"
-        tagline="Researching AI from where people are."
-        imageSrc="/flat-lay-statistics-presentation-with-chart.jpg"
+      <PageHero
+        title="Advancing civic AI."
+        lede="Civic language requires its own approach to AI."
       />
-      <section
-        id="catalogue"
-        className="scroll-mt-20 border-black/10 bg-[#f4f4f4] pb-16"
-      >
+
+      <Section id="corpus" className="pt-8 sm:pt-12">
         <Container>
-          <h2 className="text-2xl font-semibold tracking-tight text-black">
-            Research catalogue
-          </h2>
-          <p className="mt-2 max-w-2xl text-gray-600">
-            Write-ups on how we train and evaluate CommonMind models, every
-            number sourced from the model card or benchmark it came from.
-          </p>
-          <div className="mt-8 flex flex-col gap-4">
-            {publications.map((publication, i) => (
-              <PublicationCard
-                key={publication.slug}
-                publication={publication}
-                image={imageForPublication(i)}
-              />
+          <Link
+            href="/research/civic-corpus"
+            className="group flex flex-col gap-12 rounded-3xl bg-surface p-8 transition-colors hover:bg-surface-2 sm:p-14 lg:flex-row lg:items-end lg:justify-between"
+          >
+            <div className="flex max-w-xl flex-col gap-5">
+              <h2 className="text-h2 text-balance">The civic corpus.</h2>
+              <p className="text-lg text-subtle">
+                The speech, data, and terminology behind the infrastructure.
+              </p>
+            </div>
+            <p className="font-mono text-sm text-subtle sm:text-base">
+              <span className="text-foreground">Olukiiko</span>
+              <span className="px-3 text-faint">→</span>
+              council
+              <span className="px-3 text-faint">→</span>
+              <span className="text-signal">local_government.body</span>
+            </p>
+          </Link>
+        </Container>
+      </Section>
+
+      <Section id="papers">
+        <Container className="flex flex-col gap-16">
+          <SectionHeader title="Technical reports." />
+          <ul className="flex flex-col gap-2">
+            {reports.map((p) => (
+              <li key={p.slug}>
+                <Link
+                  href={`/research/${p.slug}`}
+                  className="group -mx-6 grid gap-3 rounded-2xl px-6 py-7 transition-colors hover:bg-surface md:grid-cols-[1fr_auto] md:items-baseline md:gap-16"
+                >
+                  <span className="text-2xl tracking-tight text-balance transition-colors group-hover:text-signal">
+                    {p.title}
+                  </span>
+                  <span className="text-sm whitespace-nowrap text-faint">
+                    {formatDate(p.date)} · {readTimeForPublication(p)} min
+                  </span>
+                </Link>
+              </li>
             ))}
-          </div>
+          </ul>
         </Container>
-      </section>
-      <section
-        id="releases"
-        className="scroll-mt-20 border-black/10 bg-[#f4f4f4] pb-16"
-      >
-        <Container>
-          <h2 className="text-2xl font-semibold tracking-tight text-black">
-            Releases
-          </h2>
-          <p className="mt-2 max-w-2xl text-gray-600">
-            Every model we&apos;ve shipped, in order.
-          </p>
-          <div className="mt-8">
-            <ReleasesList releases={releases} />
-          </div>
+      </Section>
+
+      <Section id="datasets">
+        <Container className="flex flex-col gap-16">
+          <SectionHeader title="Datasets." lede="Every source behind every model." />
+          <ul className="grid gap-x-10 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+            {datasets.map((d) => (
+              <li key={d.slug}>
+                <a
+                  href={d.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group flex flex-col gap-1"
+                >
+                  <span className="text-lg tracking-tight transition-colors group-hover:text-signal">
+                    {d.name} <span className="text-faint">↗</span>
+                  </span>
+                  <span className="text-sm text-faint">
+                    {datasetKind[d.slug]} · {d.source}
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
         </Container>
-      </section>
+      </Section>
     </>
   );
 };
