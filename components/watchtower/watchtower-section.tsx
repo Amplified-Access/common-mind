@@ -34,7 +34,7 @@ function WatchTowerSection({ id = "watchtower" }: { id?: string }) {
             evidence. Deployed in Kenya with a human rights partner to map
             reported incidents of technology-facilitated gender-based violence.
           </p>
-          <ArrowLink href={site.org.href}>{site.org.name}</ArrowLink>
+          <ArrowLink href={site.links.watchtower}>thewatchtower.tech</ArrowLink>
         </div>
 
         <div className="flex flex-col gap-8">

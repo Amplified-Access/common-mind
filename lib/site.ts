@@ -22,6 +22,7 @@ export const site = {
     huggingface: "https://huggingface.co/AmplifiedAccess",
     ollama: "https://ollama.com/amplifiedaccessorg",
     kaggle: "https://www.kaggle.com/gracenoble",
+    watchtower: "https://thewatchtower.tech",
   },
 } as const;
 
