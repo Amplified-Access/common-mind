@@ -5,6 +5,7 @@ import { Container } from "@/components/common/container";
 import { languages } from "@/components/languages/data";
 import { ecosystemFor } from "@/components/languages/ecosystem";
 import { LanguageNetwork } from "@/components/languages/language-network";
+import { Chevron } from "@/components/system/chevron";
 import { PageHero } from "@/components/system/page-hero";
 import { Section } from "@/components/system/primitives";
 import { cn } from "@/lib/utils";
@@ -67,9 +68,7 @@ const LanguagesPage = () => {
                     <span className="hidden text-subtle md:block">
                       {e.language.regions.slice(0, 2).join(", ")}
                     </span>
-                    <span className="text-faint transition-transform group-hover:translate-x-1">
-                      →
-                    </span>
+                    <Chevron className="text-faint transition-transform group-hover:translate-x-1" />
                   </Link>
                 </li>
               );

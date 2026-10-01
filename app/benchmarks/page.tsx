@@ -10,6 +10,7 @@ import {
 } from "@/components/benchmarks/data";
 import { EfficiencyChart } from "@/components/benchmarks/efficiency-chart";
 import { Container } from "@/components/common/container";
+import { Chevron } from "@/components/system/chevron";
 import { registryModels } from "@/components/models/registry";
 import { CountUp } from "@/components/system/count-up";
 import { PageHero } from "@/components/system/page-hero";
@@ -43,8 +44,12 @@ const BenchmarksPage = () => {
               <li key={c.id} className="flex flex-col gap-2">
                 <span className="text-xl tracking-tight">
                   {c.results ? (
-                    <Link href={c.results} className="text-signal hover:underline">
-                      {c.name} →
+                    <Link
+                      href={c.results}
+                      className="inline-flex items-center gap-1 text-signal hover:underline"
+                    >
+                      {c.name}
+                      <Chevron />
                     </Link>
                   ) : (
                     c.name

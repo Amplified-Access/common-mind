@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { Container } from "@/components/common/container";
+import { Chevron } from "@/components/system/chevron";
 import { formatDate, getModel, registryModels } from "@/components/models/registry";
 import { Translator } from "@/components/playground/translator";
 import { Code } from "@/components/system/code";
@@ -43,9 +44,10 @@ const ModelPage = async ({ params }: PageProps) => {
           <div className="flex flex-col gap-8">
             <Link
               href="/models#registry"
-              className="text-sm text-faint transition-colors hover:text-foreground"
+              className="inline-flex items-center gap-1 self-start text-sm text-faint transition-colors hover:text-foreground"
             >
-              ← Models
+              <Chevron direction="left" />
+              Models
             </Link>
             <h1 className="text-h1 wrap-break-word">{model.name}</h1>
             <p className="max-w-2xl text-lg text-pretty text-subtle sm:text-xl">

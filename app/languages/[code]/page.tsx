@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { Container } from "@/components/common/container";
+import { Chevron } from "@/components/system/chevron";
 import { getLanguage, languages } from "@/components/languages/data";
 import { ecosystemFor } from "@/components/languages/ecosystem";
 import { Translator } from "@/components/playground/translator";
@@ -44,9 +45,10 @@ const LanguagePage = async ({ params }: PageProps) => {
           <div className="flex flex-col gap-8">
             <Link
               href="/languages"
-              className="text-sm text-faint transition-colors hover:text-foreground"
+              className="inline-flex items-center gap-1 self-start text-sm text-faint transition-colors hover:text-foreground"
             >
-              ← Languages
+              <Chevron direction="left" />
+              Languages
             </Link>
             <h1 className="text-display">{language.name}</h1>
             <p className="max-w-2xl text-lg text-pretty text-subtle sm:text-xl">
@@ -114,9 +116,10 @@ const LanguagePage = async ({ params }: PageProps) => {
               {research[0] && (
                 <Link
                   href={`/research/${research[0].slug}`}
-                  className="text-sm font-medium transition-colors hover:text-signal"
+                  className="inline-flex items-center gap-1 text-sm font-medium transition-colors hover:text-signal"
                 >
-                  How it was built →
+                  How it was built
+                  <Chevron />
                 </Link>
               )}
             </Container>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { Chevron } from "@/components/system/chevron";
 import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
@@ -86,13 +87,12 @@ function ArrowLink({ href, children, className, external }: ArrowLinkProps) {
     "group inline-flex items-center gap-1.5 text-sm font-medium text-foreground transition-colors hover:text-signal",
     className,
   );
-  const arrow = (
-    <span
-      aria-hidden
-      className="transition-transform duration-300 group-hover:translate-x-0.5"
-    >
-      {isExternal ? "↗" : "→"}
+  const arrow = isExternal ? (
+    <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-0.5">
+      ↗
     </span>
+  ) : (
+    <Chevron className="transition-transform duration-300 group-hover:translate-x-0.5" />
   );
   if (isExternal) {
     return (

@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
+import { Chevron } from "@/components/system/chevron";
 import { cn } from "@/lib/utils";
 
 export type PipelineStage = {
@@ -161,9 +162,7 @@ function PipelineDiagram({
             >
               <span className="flex items-center justify-between text-sm text-faint">
                 {String(i + 1).padStart(2, "0")}
-                <span className="text-lg transition-all duration-300 group-hover:translate-x-1 group-hover:text-signal">
-                  →
-                </span>
+                <Chevron className="text-lg transition-all duration-300 group-hover:translate-x-1 group-hover:text-signal" />
               </span>
               <span className="flex flex-col gap-3">
                 <span className="text-xl tracking-tight">{stage.label}</span>
@@ -221,9 +220,7 @@ function PipelineDiagram({
               />
             ))}
           </div>
-          <span className="text-lg transition-transform duration-300 group-hover:translate-x-1">
-            →
-          </span>
+          <Chevron className="text-lg transition-transform duration-300 group-hover:translate-x-1" />
         </div>
       </Link>
     </div>

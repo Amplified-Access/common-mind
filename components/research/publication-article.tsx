@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { formatDate } from "@/components/models/registry";
+import { Chevron } from "@/components/system/chevron";
 
 import { readTimeForPublication, type Publication } from "./data";
 
@@ -10,9 +11,10 @@ function PublicationArticle({ publication }: { publication: Publication }) {
       <header className="flex flex-col gap-6">
         <Link
           href="/research#papers"
-          className="text-sm text-faint transition-colors hover:text-foreground"
+          className="inline-flex items-center gap-1 self-start text-sm text-faint transition-colors hover:text-foreground"
         >
-          ← Research
+          <Chevron direction="left" />
+          Research
         </Link>
         <h1 className="text-h1 text-balance">{publication.title}</h1>
         <p className="max-w-3xl text-lg text-pretty text-subtle sm:text-xl">

@@ -5,6 +5,8 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
 import { useState, useSyncExternalStore } from "react";
 
+import { Chevron } from "@/components/system/chevron";
+
 import { Container } from "../common/container";
 
 const STORAGE_KEY = "cm-announcement-dismissed";
@@ -53,7 +55,8 @@ function AnnouncementBanner({
             href={href}
             className="inline-flex items-center gap-1 font-medium underline-offset-4 hover:underline"
           >
-            {linkLabel} →
+            {linkLabel}
+            <Chevron />
           </Link>
         </p>
       </Container>
