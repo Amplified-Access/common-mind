@@ -104,20 +104,16 @@ class Translator:
         self.swahili_gemma_model.eval()
 
         # Swahili-nllb-600M / 1.3B: LoRA adapters over the NLLB-200 bases.
-        # One tokenizer per source language, so a request never has to
-        # mutate shared tokenizer state to switch direction.
-        self.nllb_600m_tokenizers = {
-            lang: AutoTokenizer.from_pretrained(NLLB_600M_BASE, src_lang=lang)
-            for lang in ("eng_Latn", "swh_Latn")
-        }
+        self.nllb_600m_tokenizer = AutoTokenizer.from_pretrained(
+            NLLB_600M_BASE, src_lang="eng_Latn"
+        )
         nllb_600m_base = AutoModelForSeq2SeqLM.from_pretrained(NLLB_600M_BASE)
         self.nllb_600m_model = PeftModel.from_pretrained(nllb_600m_base, NLLB_600M_ADAPTER)
         self.nllb_600m_model.eval()
 
-        self.nllb_1_3b_tokenizers = {
-            lang: AutoTokenizer.from_pretrained(NLLB_1_3B_BASE, src_lang=lang)
-            for lang in ("eng_Latn", "swh_Latn")
-        }
+        self.nllb_1_3b_tokenizer = AutoTokenizer.from_pretrained(
+            NLLB_1_3B_BASE, src_lang="eng_Latn"
+        )
         nllb_1_3b_base = AutoModelForSeq2SeqLM.from_pretrained(NLLB_1_3B_BASE)
         self.nllb_1_3b_model = PeftModel.from_pretrained(nllb_1_3b_base, NLLB_1_3B_ADAPTER)
         self.nllb_1_3b_model.eval()
@@ -143,12 +139,11 @@ class Translator:
             outputs[0][prompt_len:], skip_special_tokens=True
         ).strip()
 
-    def _translate_swahili_gemma(self, text: str, direction: str) -> str:
-        src, tgt = ("Swahili", "English") if direction == "sw-en" else ("English", "Swahili")
+    def _translate_swahili_gemma(self, text: str) -> str:
         prompt = (
             "<start_of_turn>user\n"
-            f"Translate the following {src} sentence to {tgt}.\n"
-            f"{src}: {text}\n{tgt}:<end_of_turn>\n"
+            "Translate the following English sentence to Swahili.\n"
+            f"English: {text}\nSwahili:<end_of_turn>\n"
             "<start_of_turn>model\n"
         )
         inputs = self.swahili_gemma_tokenizer(prompt, return_tensors="pt").to(
@@ -164,11 +159,9 @@ class Translator:
             outputs[0][inputs["input_ids"].shape[1] :], skip_special_tokens=True
         ).strip()
 
-    def _translate_nllb(self, model, tokenizers, text: str, direction: str) -> str:
-        src, tgt = ("swh_Latn", "eng_Latn") if direction == "sw-en" else ("eng_Latn", "swh_Latn")
-        tokenizer = tokenizers[src]
+    def _translate_nllb(self, model, tokenizer, text: str) -> str:
         inputs = tokenizer(text, return_tensors="pt").to(model.device)
-        target_lang_id = tokenizer.convert_tokens_to_ids(tgt)
+        target_lang_id = tokenizer.convert_tokens_to_ids("swh_Latn")
 
         with self.torch.no_grad():
             outputs = model.generate(
@@ -197,14 +190,14 @@ class Translator:
             if model_slug == "luganda-gemma-1b-it":
                 translation = self._translate_luganda(text, direction)
             elif model_slug == "swahili-gemma-1b-it":
-                translation = self._translate_swahili_gemma(text, direction)
+                translation = self._translate_swahili_gemma(text)
             elif model_slug == "swahili-nllb-1-3b":
                 translation = self._translate_nllb(
-                    self.nllb_1_3b_model, self.nllb_1_3b_tokenizers, text, direction
+                    self.nllb_1_3b_model, self.nllb_1_3b_tokenizer, text
                 )
             else:  # swahili-nllb-600m
                 translation = self._translate_nllb(
-                    self.nllb_600m_model, self.nllb_600m_tokenizers, text, direction
+                    self.nllb_600m_model, self.nllb_600m_tokenizer, text
                 )
         except Exception as e:  # surface a real error to the caller, don't fail silently
             return {"error": f"inference failed: {e}"}

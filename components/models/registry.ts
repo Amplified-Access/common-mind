@@ -82,7 +82,7 @@ export const registry: Record<string, RegistryMeta> = {
     hfId: "AmplifiedAccess/Swahili-gemma-1b-it",
     task: "translation",
     languageNames: ["Swahili", "English"],
-    directions: ["en → sw", "sw → en"],
+    directions: ["en → sw"],
     base: {
       id: "google/gemma-3-1b-it",
       href: hf("google/gemma-3-1b-it"),
@@ -116,7 +116,7 @@ export const registry: Record<string, RegistryMeta> = {
     hfId: "AmplifiedAccess/Swahili-nllb-1.3b",
     task: "translation",
     languageNames: ["Swahili", "English"],
-    directions: ["en → sw", "sw → en"],
+    directions: ["en → sw"],
     base: {
       id: "facebook/nllb-200-distilled-1.3B",
       href: hf("facebook/nllb-200-distilled-1.3B"),
@@ -146,7 +146,7 @@ export const registry: Record<string, RegistryMeta> = {
     hfId: "AmplifiedAccess/Swahili-nllb-600m",
     task: "translation",
     languageNames: ["Swahili", "English"],
-    directions: ["en → sw", "sw → en"],
+    directions: ["en → sw"],
     base: {
       id: "facebook/nllb-200-distilled-600M",
       href: hf("facebook/nllb-200-distilled-600M"),

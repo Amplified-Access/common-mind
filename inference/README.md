@@ -121,9 +121,9 @@ If the pod is recreated from scratch, dependencies are:
 ```
 
 `model_slug` is one of `luganda-gemma-1b-it`, `swahili-gemma-1b-it`,
-`swahili-nllb-1-3b`, `swahili-nllb-600m`. `direction` is `en-lg` (the
-default) or `lg-en` for Luganda, and `en-sw` (the default) or `sw-en` for
-the Swahili models. `GET /health` reports which models are loaded.
+`swahili-nllb-1-3b`, `swahili-nllb-600m`. `direction` only matters for
+Luganda (`en-lg`, the default, or `lg-en`). `GET /health` reports which
+models are loaded.
 
 Warm responses take roughly 0.7–2s.
 
