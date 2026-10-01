@@ -14,9 +14,8 @@ export type PlaygroundModel = {
   slug: string;
   name: string;
   directions: Direction[];
-  // Real, published example translations for this model — never a
-  // translation generated for arbitrary user input, since there's no live
-  // model connected yet. Keyed by direction code.
+  // Sample inputs, keyed by direction code. Clicking one fills the input;
+  // the translation itself always comes from the live model.
   examples: Record<string, Example[]>;
 };
 

@@ -43,7 +43,7 @@ export const models: Model[] = [
       "Low-resource African language NLP research",
     ],
     achievements: [
-      "BLEU 13.85 on English to Luganda translation, up from 0.06 on the base model",
+      "BLEU 13.85 on the held-out English↔Luganda test split, up from 0.06 on the base model",
       "chrF++ 46.59 strong character level accuracy for morphologically rich Luganda",
       "Only 52 MB adapter on top of the 1B base model",
       "Runs on consumer GPUs with QLoRA (4-bit quantization and LoRA adapters)",
@@ -106,7 +106,7 @@ print(response)`,
       "Low-resource African language NLP research",
     ],
     achievements: [
-      "BLEU 28.86 on English to Swahili translation, up from 0.41 on the base model",
+      "BLEU 28.86 on English to Swahili (FLORES-200 devtest), up from 0.41 on the base model",
       "chrF++ 54.77, up from 14.28 on the base model",
       "26.09M trainable LoRA parameters, merged into a 1B model",
       "Quantized to ~814MB for CPU/consumer hardware via Ollama",
@@ -154,7 +154,7 @@ print(response.strip())`,
     achievements: [
       "BLEU 38.74 / chrF++ 63.37 on FLORES devtest, beating the CraneAILabs Swahili-Gemma-1B reference (27.6 BLEU / 56.8 chrF++)",
       "Only 23.6M trainable LoRA parameters, ~1.7% of the 1.37B base model",
-      "Purpose-built NLLB-200 translation architecture rather than a general-purpose chat LLM",
+      "Purpose-built NLLB-200 translation architecture",
     ],
     usage: {
       language: "python",
