@@ -6,8 +6,9 @@ import { useLenis } from "lenis/react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 
+import { isActive, navItems, site } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 import { Container } from "../common/container";
@@ -19,19 +20,8 @@ import {
   SheetTrigger,
 } from "../ui/sheet";
 
-const navItems = [
-  { label: "Models", href: "/models" },
-  { label: "Languages", href: "/languages" },
-  { label: "Datasets", href: "/datasets" },
-  { label: "Benchmarks", href: "/benchmarks" },
-  { label: "Playground", href: "/playground" },
-  { label: "Build", href: "/build" },
-  { label: "Research", href: "/research" },
-];
-
-// Header height in px; scrolling downward past this stops being treated as
-// "near the top", so the reveal-on-scroll-up behavior only kicks in once the
-// header would otherwise have scrolled out of view anyway.
+// Past this scroll offset the header hides on scroll-down and reappears on
+// scroll-up.
 const REVEAL_THRESHOLD = 96;
 
 const Header = () => {
@@ -39,12 +29,10 @@ const Header = () => {
   const [hidden, setHidden] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const headerRef = useRef<HTMLElement>(null);
-  const lenis = useLenis();
 
   useLenis(({ scroll, direction }) => {
     const pastThreshold = scroll >= REVEAL_THRESHOLD;
-    setScrolled(pastThreshold);
+    setScrolled(scroll > 8);
     if (!pastThreshold) {
       setHidden(false);
       return;
@@ -53,53 +41,41 @@ const Header = () => {
     else if (direction === -1) setHidden(false);
   });
 
-  // The header is `sticky`, so its own box still occupies flow space — when
-  // pb-7 toggles, the document's total scroll height changes too. Lenis only
-  // measures that on mount/window-resize, so without this it caps scroll a
-  // padding's worth short of the real bottom whenever this padding is added
-  // after the initial measurement.
-  useEffect(() => {
-    const el = headerRef.current;
-    if (!el) return;
-    const observer = new ResizeObserver(() => lenis?.resize());
-    observer.observe(el, { box: "border-box" });
-    return () => observer.disconnect();
-  }, [lenis]);
-
   return (
     <header
-      ref={headerRef}
       className={cn(
-        "sticky top-0 z-50 bg-[#f4f4f4] pt-8 transition-all duration-300 ease-in-out",
+        "sticky top-0 z-50 transition-[transform,background-color] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
         hidden ? "-translate-y-full" : "translate-y-0",
-        scrolled && "pb-7",
+        scrolled
+          ? "bg-background/80 backdrop-blur-xl"
+          : "bg-background",
       )}
     >
-      <Container
-        className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3"
-        size={"xl"}
-      >
-        <Link href="/" aria-label="Home">
+      <Container className="flex h-16 items-center justify-between gap-6">
+        <Link href="/" aria-label="CommonMind home" className="shrink-0">
           <Image
-            src="/logo-black.svg"
-            alt="Logo"
+            src="/logo-white.svg"
+            alt="CommonMind"
             width={1024}
             height={147}
             priority
-            className="h-5 w-auto"
+            className="h-4.5 w-auto"
           />
         </Link>
-        <nav className="hidden flex-wrap items-center gap-x-5 gap-y-2 md:flex">
+
+        <nav className="hidden items-center gap-1 md:flex">
           {navItems.map((item) => {
-            const active = pathname === item.href;
+            const active = isActive(pathname, item.href);
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "text-sm font-medium transition-colors hover:text-background",
-                  active ? "text-background" : "text-muted",
+                  "rounded-full px-3.5 py-1.5 text-sm transition-colors",
+                  active
+                    ? "bg-white/6 text-foreground"
+                    : "text-subtle hover:text-foreground",
                 )}
               >
                 {item.label}
@@ -107,36 +83,75 @@ const Header = () => {
             );
           })}
         </nav>
+
+        <div className="hidden items-center gap-4 md:flex">
+          <a
+            href={site.links.huggingface}
+            target="_blank"
+            rel="noreferrer"
+            className="font-mono text-xs text-subtle transition-colors hover:text-foreground"
+          >
+            Hugging Face ↗
+          </a>
+          <Link
+            href="/build"
+            className="inline-flex h-8 items-center rounded-full bg-foreground px-4 text-sm font-medium text-background transition-colors hover:bg-foreground/85"
+          >
+            Get started
+          </Link>
+        </div>
+
         <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
           <SheetTrigger
             aria-label="Open menu"
-            className="text-muted transition-colors hover:text-background md:hidden"
+            className="cursor-pointer text-subtle transition-colors hover:text-foreground md:hidden"
           >
             <HugeiconsIcon icon={Menu} className="size-5" />
           </SheetTrigger>
           <SheetContent side="right">
             <SheetHeader>
-              <SheetTitle>Navigation</SheetTitle>
+              <SheetTitle className="sr-only">Navigate</SheetTitle>
             </SheetHeader>
-            <nav className="flex flex-col gap-1 px-4">
+            <nav className="flex flex-col gap-2 px-6 pt-6">
               {navItems.map((item) => {
-                const active = pathname === item.href;
+                const active = isActive(pathname, item.href);
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
                     aria-current={active ? "page" : undefined}
                     onClick={() => setMobileNavOpen(false)}
-                    className={cn(
-                      "rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-black/5 hover:text-black",
-                      active ? "bg-black/5 text-black" : "text-black/60",
-                    )}
+                    className="py-2"
                   >
-                    {item.label}
+                    <span
+                      className={cn(
+                        "text-3xl tracking-tight",
+                        active ? "text-foreground" : "text-foreground/50",
+                      )}
+                    >
+                      {item.label}
+                    </span>
                   </Link>
                 );
               })}
             </nav>
+            <div className="mt-auto flex flex-col gap-3 p-6">
+              <Link
+                href="/build"
+                onClick={() => setMobileNavOpen(false)}
+                className="inline-flex h-11 items-center justify-center rounded-full bg-foreground text-sm font-medium text-background"
+              >
+                Get started
+              </Link>
+              <a
+                href={site.links.huggingface}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex h-11 items-center justify-center rounded-full bg-white/6 text-sm"
+              >
+                Hugging Face ↗
+              </a>
+            </div>
           </SheetContent>
         </Sheet>
       </Container>
