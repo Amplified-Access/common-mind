@@ -11,6 +11,8 @@ export type Dataset = {
   kind: DatasetKind;
   /** Languages the dataset contributes, besides English. */
   languages: string[];
+  /** Subject areas, where the source describes them. */
+  domains?: string[];
   source: string;
   href: string;
   description: string;
@@ -25,6 +27,7 @@ export const datasets: Dataset[] = [
     name: "Sunbird SALT",
     kind: "Parallel",
     languages: ["Luganda", "Swahili"],
+    domains: ["Agriculture", "Health", "Society"],
     source: "HuggingFace",
     href: "https://huggingface.co/datasets/Sunbird/salt",
     description:
@@ -42,6 +45,7 @@ export const datasets: Dataset[] = [
     name: "MAFAND-MT (en-swa)",
     kind: "Parallel",
     languages: ["Swahili"],
+    domains: ["News"],
     source: "GitHub",
     href: "https://github.com/masakhane-io/lafand-mt",
     description:
@@ -54,6 +58,7 @@ export const datasets: Dataset[] = [
     name: "English-Swahili Sentence Pairs",
     kind: "Parallel",
     languages: ["Swahili"],
+    domains: ["General"],
     source: "HuggingFace",
     href: "https://huggingface.co/datasets/Rogendo/English-Swahili-Sentence-Pairs",
     description:
@@ -102,6 +107,7 @@ export const datasets: Dataset[] = [
     name: "KenSwQuAD",
     kind: "Question answering",
     languages: ["Swahili"],
+    domains: ["News"],
     source: "HuggingFace",
     href: "https://huggingface.co/datasets/lighteval/KenSwQuAD",
     description:
@@ -113,6 +119,7 @@ export const datasets: Dataset[] = [
     name: "JamiiForums-2B",
     kind: "Monolingual",
     languages: ["Swahili"],
+    domains: ["Online forums"],
     source: "HuggingFace",
     href: "https://huggingface.co/datasets/AlexLeoTz/jamiiforums-2b",
     description:
@@ -147,6 +154,7 @@ export const datasets: Dataset[] = [
     name: "Luganda LLM Data",
     kind: "Parallel",
     languages: ["Luganda"],
+    domains: ["Agriculture", "Health", "Society"],
     source: "Kaggle",
     href: "https://www.kaggle.com/datasets/gracenoble/luganda-llm-data",
     description:
