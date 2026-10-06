@@ -1,5 +1,6 @@
 import { Container } from "@/components/common/container";
 import { CivicExplorer } from "@/components/civic/civic-explorer";
+import { Foundation } from "@/components/home/foundation";
 import { HomeHero } from "@/components/home/hero";
 import { PipelineDiagram } from "@/components/system/pipeline-diagram";
 import { Section, SectionHeader } from "@/components/system/primitives";
@@ -16,6 +17,7 @@ export default function Home() {
   return (
     <>
       <HomeHero />
+      <Foundation />
 
       <Section id="platform">
         <Container className="flex flex-col gap-16">
