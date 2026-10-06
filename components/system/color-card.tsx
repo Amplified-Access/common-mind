@@ -47,7 +47,7 @@ function ColorCard({ href, title, kind, description, tags, cta, color, className
           {title}
         </h3>
         <span className="text-[13px]">{kind}</span>
-        <p className="max-w-56 font-mono text-[13px] leading-snug">{description}</p>
+        <p className="line-clamp-4 max-w-56 font-mono text-[13px] leading-snug">{description}</p>
       </div>
       <div className="relative mt-auto flex flex-col gap-4 pt-6">
         {tags && tags.length > 0 && <TagChain tags={tags} tone="ink" size="sm" uppercase />}
