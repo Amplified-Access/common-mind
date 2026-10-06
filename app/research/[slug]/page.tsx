@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { Container } from "@/components/common/container";
-import { publications } from "@/components/research/data";
+import { publications, readTimeForPublication } from "@/components/research/data";
 import { PublicationArticle } from "@/components/research/publication-article";
+import { PageHero } from "@/components/system/page-hero";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -40,11 +41,20 @@ const ResearchArticlePage = async ({ params }: PageProps) => {
   }
 
   return (
-    <section className="zoom-viewport pt-20 pb-20 sm:pt-28 sm:pb-28">
-      <Container size="lg">
-        <PublicationArticle publication={publication} />
-      </Container>
-    </section>
+    <>
+      <PageHero
+        ruled
+        eyebrow="Research / Technical Report"
+        title={publication.title}
+        lede={publication.dek}
+        tags={[...publication.tags, `${readTimeForPublication(publication)} MIN READ`]}
+      />
+      <section className="zoom-viewport py-16 sm:py-20">
+        <Container size="sm" className="max-w-2xl">
+          <PublicationArticle publication={publication} />
+        </Container>
+      </section>
+    </>
   );
 };
 

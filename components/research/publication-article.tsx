@@ -1,93 +1,56 @@
-import Link from "next/link";
-
 import { formatDate } from "@/components/models/registry";
-import { Chevron } from "@/components/system/chevron";
+import { ArrowLink, Panel } from "@/components/system/primitives";
 
-import { readTimeForPublication, type Publication } from "./data";
+import type { Publication } from "./data";
 
+// The body of a technical report: headline results, then the write-up in
+// one reading column, then its sources.
 function PublicationArticle({ publication }: { publication: Publication }) {
   return (
-    <article className="flex flex-col gap-20">
-      <header className="flex flex-col gap-6">
-        <Link
-          href="/research#papers"
-          className="inline-flex items-center gap-1 self-start text-sm text-faint transition-colors hover:text-foreground"
-        >
-          <Chevron direction="left" />
-          Research
-        </Link>
-        <h1 className="text-h1 text-balance">{publication.title}</h1>
-        <p className="max-w-3xl text-lg text-pretty text-subtle sm:text-xl">
-          {publication.dek}
-        </p>
-        <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-faint">
-          <time dateTime={publication.date}>{formatDate(publication.date, "long")}</time>
-          <span>CommonMind Research</span>
-          <span>{readTimeForPublication(publication)} min read</span>
-        </div>
-      </header>
+    <article className="flex flex-col gap-16">
+      <p className="font-mono text-sm text-faint">
+        <time dateTime={publication.date}>{formatDate(publication.date, "long")}</time>
+        <span className="px-3">·</span>CommonMind Research
+      </p>
 
       {publication.results && (
-        <div className="flex flex-col gap-6 rounded-3xl bg-surface p-8 sm:p-10">
-          <p className="text-sm text-faint">{publication.results.caption}</p>
-          <dl className="flex flex-col gap-4">
+        <Panel className="overflow-hidden">
+          <h2 className="border-b border-line px-6 py-4 font-mono text-base sm:px-10">
+            {publication.results.caption}
+          </h2>
+          <dl className="flex flex-col gap-3 px-6 py-6 sm:px-10">
             {publication.results.rows.map((row) => (
-              <div
-                key={row.label}
-                className="flex flex-wrap items-baseline justify-between gap-2"
-              >
-                <dt className="text-sm text-subtle">{row.label}</dt>
-                <dd className="font-mono text-sm tabular-nums">
-                  {row.before && (
-                    <span className="text-faint">{row.before} → </span>
-                  )}
-                  <span className="text-foreground">{row.after}</span>
+              <div key={row.label} className="flex flex-wrap items-baseline justify-between gap-2 font-mono text-sm">
+                <dt className="text-foreground/90">{row.label}</dt>
+                <dd className="tabular-nums">
+                  {row.before && <span className="text-faint">{row.before} → </span>}
+                  <span className="text-signal">{row.after}</span>
                 </dd>
               </div>
             ))}
           </dl>
-        </div>
+        </Panel>
       )}
 
-      <div className="flex flex-col gap-16">
-        {publication.sections.map((section) => (
-          <section
-            key={section.heading}
-            className="grid gap-4 lg:grid-cols-[12rem_minmax(0,1fr)] lg:gap-10"
-          >
-            <h2 className="text-lg tracking-tight">
-              {section.heading}
-            </h2>
-            <div className="flex max-w-2xl flex-col gap-4">
-              {section.paragraphs.map((paragraph, j) => (
-                <p key={j} className="leading-relaxed text-pretty text-foreground/85">
-                  {paragraph}
-                </p>
-              ))}
-            </div>
-          </section>
-        ))}
-      </div>
+      {publication.sections.map((section) => (
+        <section key={section.heading} className="flex flex-col gap-5">
+          <h2 className="text-[1.75rem] leading-tight tracking-[-0.01em]">{section.heading}</h2>
+          {section.paragraphs.map((paragraph, i) => (
+            <p key={i} className="text-sm leading-relaxed text-pretty text-subtle">
+              {paragraph}
+            </p>
+          ))}
+        </section>
+      ))}
 
-      <footer className="grid gap-4 lg:grid-cols-[12rem_minmax(0,1fr)] lg:gap-10">
-        <span className="text-sm text-faint">Sources</span>
-        <ul className="flex flex-col gap-2">
-          {publication.sources.map((source) => {
-            const isExternal = !source.href.startsWith("/");
-            return (
-              <li key={source.href}>
-                <a
-                  href={source.href}
-                  target={isExternal ? "_blank" : undefined}
-                  rel={isExternal ? "noreferrer" : undefined}
-                  className="text-sm text-subtle transition-colors hover:text-signal"
-                >
-                  {source.label}
-                  {isExternal ? " ↗" : ""}
-                </a>
-              </li>
-            );
-          })}
+      <footer className="flex flex-col gap-5 border-t border-line pt-8">
+        <span className="font-mono text-sm">Sources</span>
+        <ul className="flex flex-col gap-3">
+          {publication.sources.map((source) => (
+            <li key={source.href}>
+              <ArrowLink href={source.href}>{source.label}</ArrowLink>
+            </li>
+          ))}
         </ul>
       </footer>
     </article>
