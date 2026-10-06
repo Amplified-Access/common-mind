@@ -28,7 +28,7 @@ const BuildPage = () => {
         actions={
           <>
             <LinkButton href="#journey">Get started</LinkButton>
-            <LinkButton href="#api" variant="secondary">
+            <LinkButton href="#api" variant="outline">
               Read the docs
             </LinkButton>
           </>

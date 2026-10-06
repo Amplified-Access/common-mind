@@ -15,7 +15,7 @@ function HomeHero() {
           </h1>
           <div className="flex flex-wrap gap-3">
             <LinkButton href="/models">Explore models</LinkButton>
-            <LinkButton href="/benchmarks" variant="secondary">
+            <LinkButton href="/benchmarks" variant="outline">
               View benchmarks
             </LinkButton>
           </div>

@@ -29,7 +29,7 @@ function FooterCta() {
           <LinkButton href="/build" variant="ink">
             Start building
           </LinkButton>
-          <LinkButton href="/models#try" variant="ink-secondary">
+          <LinkButton href="/models#try" variant="bright">
             Try a model
           </LinkButton>
         </div>
