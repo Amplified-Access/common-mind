@@ -2,6 +2,7 @@ import { CivicExplorer } from "@/components/civic/civic-explorer";
 import { Container } from "@/components/common/container";
 import { Foundation } from "@/components/home/foundation";
 import { HomeHero } from "@/components/home/hero";
+import { ModelCarousel } from "@/components/home/model-carousel";
 import { PlatformTour } from "@/components/home/platform-tour";
 import {
   ApplicationsVisual,
@@ -74,6 +75,8 @@ export default function Home() {
           ]}
         />
       </section>
+
+      <ModelCarousel />
 
       <Section id="civic-speech">
         <Container className="flex flex-col gap-20">
