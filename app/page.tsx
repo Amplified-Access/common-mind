@@ -1,6 +1,8 @@
+import { lugandaHeldOut, swahiliFlores } from "@/components/benchmarks/data";
 import { CivicExplorer } from "@/components/civic/civic-explorer";
 import { Container } from "@/components/common/container";
 import { datasets } from "@/components/datasets/data";
+import { BenchShowcase } from "@/components/home/bench-showcase";
 import { Foundation } from "@/components/home/foundation";
 import { HomeHero } from "@/components/home/hero";
 import { LanguageEcosystems } from "@/components/home/language-ecosystems";
@@ -15,7 +17,7 @@ import {
 } from "@/components/home/platform-visuals";
 import { languages } from "@/components/languages/data";
 import { ecosystemFor } from "@/components/languages/ecosystem";
-import { Section, SectionHeader } from "@/components/system/primitives";
+import { ArrowLink, Eyebrow, Section, SectionHeader } from "@/components/system/primitives";
 import { site } from "@/lib/site";
 
 export default function Home() {
@@ -104,6 +106,34 @@ export default function Home() {
             lede="Every language carries its own civic vocabulary. Explore the models, civic corpora, benchmarks, and research being built around each language."
           />
           <LanguageEcosystems ecosystems={ecosystems} />
+        </Container>
+      </Section>
+
+      <Section id="civicbench">
+        <Container className="flex flex-col gap-16">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)_minmax(0,0.6fr)] lg:gap-12">
+            <div className="flex flex-col gap-3">
+              <Eyebrow>CivicBench Africa</Eyebrow>
+              <h2 className="text-h1 text-balance">Measure what improves.</h2>
+            </div>
+            <div className="flex max-w-md flex-col gap-6 lg:pt-8">
+              <p className="text-sm text-pretty text-foreground/85">
+                Reliable evaluation for civic AI. CivicBench Africa compares how models
+                understand civic speech across languages, terminology, code switching,
+                translation, and issue classification.
+              </p>
+              <ArrowLink href="/benchmarks">Explore Benchmarks</ArrowLink>
+            </div>
+            <p className="max-w-52 font-mono text-xs text-signal lg:pt-9">
+              If it cannot be measured, it cannot be improved.
+            </p>
+          </div>
+          <BenchShowcase
+            sets={[
+              { id: "sw", from: "English", to: "Swahili", entries: swahiliFlores.entries, evalSet: swahiliFlores.evalSet },
+              { id: "lg", from: "English", to: "Luganda", entries: lugandaHeldOut.entries, evalSet: lugandaHeldOut.evalSet },
+            ]}
+          />
         </Container>
       </Section>
 
