@@ -80,7 +80,10 @@ function PlatformTour({
           <h2 className="text-h2">{heading}</h2>
           <p className="max-w-md text-sm text-pretty text-foreground/85">{intro}</p>
         </Container>
-        <Container ref={viewportRef} className={cn(!pinned && "scrollbar-none snap-x snap-mandatory overflow-x-auto")}>
+        <Container
+          ref={viewportRef}
+          className={cn(!pinned && "scrollbar-none snap-x snap-mandatory scroll-px-4 overflow-x-auto md:scroll-px-8")}
+        >
           <motion.div ref={trackRef} style={pinned ? { x } : undefined} className="flex w-max gap-0">
             {panels.map((panel, i) => (
               <article
