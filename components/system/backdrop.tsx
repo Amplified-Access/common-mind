@@ -28,13 +28,13 @@ function Backdrop({ wash, grain, grid, stars, glow, className }: BackdropProps) 
   return (
     <div aria-hidden className={cn("pointer-events-none absolute inset-0 -z-10 overflow-hidden", className)}>
       {wash && (
-        <div className="absolute inset-0 bg-[radial-gradient(120%_90%_at_50%_0%,#2a2a28_0%,#121211_45%,#000_100%)]" />
+        <div className="absolute inset-x-0 top-0 h-[48rem] max-h-full bg-[radial-gradient(120%_90%_at_50%_0%,#2a2a28_0%,#121211_45%,#000_100%)]" />
       )}
       {glow && (
         <div className="absolute inset-x-0 bottom-0 h-[70%] bg-[radial-gradient(70%_100%_at_50%_100%,rgb(255_211_0/0.45)_0%,rgb(255_211_0/0.12)_45%,transparent_75%)]" />
       )}
       {grid && (
-        <div className="absolute inset-0 bg-grid mask-[radial-gradient(80%_70%_at_50%_40%,#000_20%,transparent_100%)]" />
+        <div className="absolute inset-x-0 top-0 h-[48rem] max-h-full bg-grid mask-[radial-gradient(80%_70%_at_50%_40%,#000_20%,transparent_100%)]" />
       )}
       {stars &&
         STARS.map((star, i) => (

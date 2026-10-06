@@ -17,6 +17,8 @@ type PageHeroProps = {
   align?: "center" | "split";
   /** Controls under the heading: search, filters. */
   children?: React.ReactNode;
+  /** Full-width content after the heading block, still on the hero's wash. */
+  after?: React.ReactNode;
   /** A hairline closes the hero, for pages with tabs or a side rail below. */
   ruled?: boolean;
   className?: string;
@@ -30,6 +32,7 @@ function PageHero({
   tile,
   align = "center",
   children,
+  after,
   ruled,
   className,
 }: PageHeroProps) {
@@ -75,6 +78,7 @@ function PageHero({
           </div>
         )}
       </Container>
+      {after}
     </section>
   );
 }
