@@ -16,7 +16,8 @@ const ModelsPage = () => {
   return (
     <>
       <PageHero
-        variant="gradient"
+        tile
+        eyebrow="Model registry"
         title="Open models for civic language understanding."
       />
 

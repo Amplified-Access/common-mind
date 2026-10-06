@@ -27,11 +27,9 @@ const BenchmarksPage = () => {
 
   return (
     <>
-      <PageHero
-        title="Measure what improves."
-        lede="What gets measured gets improved."
-        actions={<LinkButton href="#results">See results</LinkButton>}
-      />
+      <PageHero tile eyebrow="Benchmarks" title="Measure what improves." lede="What gets measured gets improved.">
+        <LinkButton href="#results">See results</LinkButton>
+      </PageHero>
 
       <Section id="civicbench">
         <Container className="flex flex-col gap-20">

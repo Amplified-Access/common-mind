@@ -1,68 +1,117 @@
+import Image from "next/image";
+
 import { Container } from "@/components/common/container";
-import { Grainient } from "@/components/system/grainient";
+import { Backdrop } from "@/components/system/backdrop";
+import { Eyebrow } from "@/components/system/primitives";
+import { TagChain } from "@/components/system/tag-chain";
 import { cn } from "@/lib/utils";
 
 type PageHeroProps = {
+  eyebrow?: React.ReactNode;
   title: React.ReactNode;
   lede?: React.ReactNode;
-  actions?: React.ReactNode;
-  aside?: React.ReactNode;
-  variant?: "default" | "gradient";
+  tags?: string[];
+  /** The yellow CommonMind tile on a grid of nodes, above the eyebrow. */
+  tile?: boolean;
+  /** Centered (default) or left-aligned with the lede beside the title. */
+  align?: "center" | "split";
+  /** Controls under the heading: search, filters. */
+  children?: React.ReactNode;
+  /** A hairline closes the hero, for pages with tabs or a side rail below. */
+  ruled?: boolean;
   className?: string;
 };
 
-// Title first, one line of context at most, and room to breathe.
-function PageHero({ title, lede, actions, aside, variant = "default", className }: PageHeroProps) {
-  if (variant === "gradient") {
-    return (
-      <section className={cn("zoom-viewport relative", className)}>
-        <Container className="pt-8 pb-8 sm:pt-12 sm:pb-12">
-          <div className="relative overflow-hidden rounded-3xl bg-surface-2">
-            <Grainient
-              className="absolute! inset-0"
-              colors={["#55555a", "#2a2a2e", "#131315"]}
-              blendAngle={-25}
-              contrast={1.05}
-              grainAmount={0.07}
-            />
-            <div className="relative flex min-h-96 flex-col items-center justify-center gap-8 px-8 py-20 text-center sm:min-h-112 sm:px-14">
-              <h1 className="text-h1 max-w-4xl text-balance">{title}</h1>
-              {lede && (
-                <p className="max-w-xl text-lg text-pretty text-subtle sm:text-xl">
-                  {lede}
-                </p>
-              )}
-              {actions && (
-                <div className="flex flex-wrap justify-center gap-3 pt-2">{actions}</div>
-              )}
-            </div>
-          </div>
-        </Container>
-      </section>
-    );
-  }
-
+function PageHero({
+  eyebrow,
+  title,
+  lede,
+  tags,
+  tile,
+  align = "center",
+  children,
+  ruled,
+  className,
+}: PageHeroProps) {
+  const centered = align === "center";
   return (
-    <section className={cn("zoom-viewport relative", className)}>
+    <section
+      className={cn(
+        "zoom-viewport relative isolate overflow-hidden",
+        ruled && "border-b border-line",
+        className,
+      )}
+    >
+      <Backdrop wash grain grid stars />
       <Container
         className={cn(
-          "grid gap-16 pt-20 pb-8 sm:pt-28 sm:pb-12",
-          aside && "lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-center lg:gap-24",
+          "flex flex-col gap-6 pt-16 pb-14 sm:pt-20 sm:pb-16",
+          centered ? "items-center text-center" : "items-start",
+          tile && "pt-10 sm:pt-12",
         )}
       >
-        <div className="flex flex-col gap-8">
-          <h1 className="text-h1 max-w-4xl text-balance">{title}</h1>
-          {lede && (
-            <p className="max-w-xl text-lg text-pretty text-subtle sm:text-xl">
-              {lede}
-            </p>
-          )}
-          {actions && <div className="flex flex-wrap gap-3 pt-2">{actions}</div>}
-        </div>
-        {aside && <div className="min-w-0">{aside}</div>}
+        {tile && <NodeTile />}
+        {centered ? (
+          <div className="flex max-w-2xl flex-col items-center gap-5">
+            {eyebrow && <Eyebrow className="text-sm">{eyebrow}</Eyebrow>}
+            <h1 className="text-h2 text-balance">{title}</h1>
+            {lede && <p className="max-w-lg text-sm text-pretty text-subtle">{lede}</p>}
+          </div>
+        ) : (
+          <div className="flex w-full flex-col gap-5">
+            {eyebrow && <Eyebrow className="text-base">{eyebrow}</Eyebrow>}
+            <div className="grid w-full gap-5 md:grid-cols-[minmax(0,26rem)_minmax(0,22rem)] md:gap-6">
+              <h1 className="text-h2 text-balance">{title}</h1>
+              {lede && <p className="text-sm text-pretty text-subtle md:pt-2">{lede}</p>}
+            </div>
+          </div>
+        )}
+        {tags && tags.length > 0 && (
+          <TagChain tags={tags} className={cn(centered && "justify-center")} />
+        )}
+        {children && (
+          <div className={cn("flex w-full flex-col gap-6 pt-4", centered && "items-center")}>
+            {children}
+          </div>
+        )}
       </Container>
     </section>
   );
 }
 
-export { PageHero };
+// The CommonMind mark on a yellow tile, at the center of a faint grid with a
+// few lit nodes: the model at the center of the infrastructure.
+function NodeTile() {
+  const lines = [0, 64, 128, 192, 256, 320];
+  const dots: [number, number][] = [
+    [160, 30],
+    [96, 96],
+    [224, 96],
+    [160, 158],
+    [24, 124],
+    [288, 180],
+  ];
+  return (
+    <div aria-hidden className="relative h-48 w-80">
+      <svg
+        viewBox="0 0 320 192"
+        className="absolute inset-0 size-full mask-[radial-gradient(closest-side,#000_45%,transparent_100%)]"
+      >
+        {lines.map((x) => (
+          <line key={`v${x}`} x1={x} x2={x} y1={0} y2={192} stroke="white" strokeOpacity={0.14} />
+        ))}
+        {[0, 64, 128, 192].map((y) => (
+          <line key={`h${y}`} x1={0} x2={320} y1={y} y2={y} stroke="white" strokeOpacity={0.14} />
+        ))}
+        {dots.map(([cx, cy]) => (
+          <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r={3.5} fill="white" />
+        ))}
+      </svg>
+      <div className="absolute top-1/2 left-1/2 flex size-15 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-xl bg-signal shadow-[0_0_40px_rgb(255_211_0/0.25)]">
+        <Image src="/icon-black.svg" alt="" width={458} height={480} className="h-8 w-auto" />
+      </div>
+    </div>
+  );
+}
+
+export { NodeTile, PageHero };

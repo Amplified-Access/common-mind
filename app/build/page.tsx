@@ -22,19 +22,20 @@ const requestFields = [
 const BuildPage = () => {
   return (
     <>
-      <PageHero
-        title="Build with CommonMind."
-        lede="From first prompt to production."
-        actions={
-          <>
-            <LinkButton href="#journey">Get started</LinkButton>
-            <LinkButton href="#api" variant="outline">
-              Read the docs
-            </LinkButton>
-          </>
-        }
-        aside={<Code code={quickstart} language="python" title="quickstart.py" />}
-      />
+      <PageHero tile eyebrow="Build" title="Build with CommonMind." lede="From first prompt to production.">
+        <div className="flex flex-wrap justify-center gap-3">
+          <LinkButton href="#journey">Get started</LinkButton>
+          <LinkButton href="#api" variant="outline">
+            Read the docs
+          </LinkButton>
+        </div>
+      </PageHero>
+
+      <Section id="quickstart" className="pb-0 sm:pb-0">
+        <Container>
+          <Code code={quickstart} language="python" title="quickstart.py" />
+        </Container>
+      </Section>
 
       <Section id="journey">
         <Container className="flex flex-col gap-16">
