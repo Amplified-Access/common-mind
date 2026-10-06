@@ -1,7 +1,9 @@
 import { CivicExplorer } from "@/components/civic/civic-explorer";
 import { Container } from "@/components/common/container";
+import { datasets } from "@/components/datasets/data";
 import { Foundation } from "@/components/home/foundation";
 import { HomeHero } from "@/components/home/hero";
+import { LanguageEcosystems } from "@/components/home/language-ecosystems";
 import { ModelCarousel } from "@/components/home/model-carousel";
 import { PlatformTour } from "@/components/home/platform-tour";
 import {
@@ -11,10 +13,26 @@ import {
   LanguagesVisual,
   ModelsVisual,
 } from "@/components/home/platform-visuals";
+import { languages } from "@/components/languages/data";
+import { ecosystemFor } from "@/components/languages/ecosystem";
 import { Section, SectionHeader } from "@/components/system/primitives";
 import { site } from "@/lib/site";
 
 export default function Home() {
+  const ecosystems = languages.map((language) => {
+    const { models, research } = ecosystemFor(language);
+    return {
+      code: language.code,
+      name: language.name,
+      models: models.length,
+      datasets: datasets.filter((d) => d.languages.includes(language.name)).length,
+      benchmark: models.length ? "CivicBench Africa" : undefined,
+      researchHref: research[0] && `/research/${research[0].slug}`,
+      description: `Explore the models, civic speech resources, benchmarks, and research being developed to help AI understand ${language.name} in civic contexts.`,
+      sample: models[0]?.usage.code,
+    };
+  });
+
   return (
     <>
       <HomeHero />
@@ -77,6 +95,17 @@ export default function Home() {
       </section>
 
       <ModelCarousel />
+
+      <Section id="languages">
+        <Container className="flex flex-col gap-16">
+          <SectionHeader
+            eyebrow="Language Ecosystems"
+            title="Start with the language."
+            lede="Every language carries its own civic vocabulary. Explore the models, civic corpora, benchmarks, and research being built around each language."
+          />
+          <LanguageEcosystems ecosystems={ecosystems} />
+        </Container>
+      </Section>
 
       <Section id="civic-speech">
         <Container className="flex flex-col gap-20">
