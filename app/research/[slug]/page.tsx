@@ -40,7 +40,7 @@ const ResearchArticlePage = async ({ params }: PageProps) => {
   }
 
   return (
-    <section className="pt-20 pb-20 sm:pt-28 sm:pb-28">
+    <section className="zoom-viewport pt-20 pb-20 sm:pt-28 sm:pb-28">
       <Container size="lg">
         <PublicationArticle publication={publication} />
       </Container>

@@ -127,6 +127,15 @@
   --sidebar-border: var(--line);
   --sidebar-ring: var(--ring);
 
+  /* Layouts are authored at a 1280px (80rem) baseline, where the container
+     reaches its widest gutters. Past that width a max-width container alone
+     would only add empty margin, so --viewport-scale takes over: it grows
+     1:1 with the viewport and holds at 1.5x past 1920px so type and spacing
+     don't run away on ultra-wide and 4K displays. Apply it with the
+     `zoom-viewport` utility on a section's root element; same convention
+     and baseline as WatchTower and the ActionChallenge frontend. */
+  --viewport-scale: clamp(1, calc(100vw / 80rem), 1.5);
+
   color-scheme: dark;
 }
 
@@ -146,33 +155,54 @@
   }
 }
 
-/* Typography scale — type carries most of the brand. */
+/* Typography scale, authored at the 1280px baseline. Large screens are
+   handled by --viewport-scale, so sizes step up at breakpoints instead of
+   tracking vw (which zoom would scale a second time). Sora carries the
+   headings at its regular weight. */
 @utility text-display {
-  font-size: clamp(2.5rem, 5.4vw, 5.25rem);
-  line-height: 0.96;
-  letter-spacing: -0.045em;
-  font-weight: 500;
+  font-size: 2.25rem;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  font-weight: 400;
+  @media (width >= 48rem) {
+    font-size: 2.75rem;
+  }
 }
 
 @utility text-h1 {
-  font-size: clamp(2.5rem, 5.6vw, 5rem);
-  line-height: 1;
-  letter-spacing: -0.04em;
-  font-weight: 500;
+  font-size: 1.875rem;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  font-weight: 400;
+  @media (width >= 48rem) {
+    font-size: 2.375rem;
+  }
 }
 
 @utility text-h2 {
-  font-size: clamp(1.875rem, 3.4vw, 3rem);
-  line-height: 1.05;
-  letter-spacing: -0.035em;
-  font-weight: 500;
+  font-size: 1.625rem;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  font-weight: 400;
+  @media (width >= 48rem) {
+    font-size: 1.875rem;
+  }
 }
 
 @utility text-h3 {
-  font-size: clamp(1.25rem, 1.8vw, 1.5rem);
-  line-height: 1.2;
-  letter-spacing: -0.02em;
-  font-weight: 500;
+  font-size: 1.375rem;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  font-weight: 400;
+  @media (width >= 48rem) {
+    font-size: 1.5rem;
+  }
+}
+
+/* zoom (not transform: scale) so the element's own layout box grows too.
+   Avoid vw/vh units inside a zoomed element: they are zoomed as well. */
+@utility zoom-viewport {
+  zoom: var(--viewport-scale);
 }
 
 @utility scrollbar-none {

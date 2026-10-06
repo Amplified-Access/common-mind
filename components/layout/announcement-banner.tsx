@@ -43,7 +43,7 @@ function AnnouncementBanner({
   if (dismissedNow || storedId === id) return null;
 
   return (
-    <div className="relative bg-foreground text-background">
+    <div className="zoom-viewport relative bg-foreground text-background">
       <Container className="flex items-center justify-center gap-3 py-2.5 pr-10 text-center text-xs sm:text-sm">
         <span className="hidden h-5 shrink-0 items-center justify-center rounded-full bg-signal px-2 text-xs leading-none font-medium whitespace-nowrap text-background sm:inline-flex">
           {label}

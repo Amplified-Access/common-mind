@@ -19,7 +19,7 @@ const researchLinks = [
 
 const Footer = () => {
   return (
-    <footer>
+    <footer className="zoom-viewport">
       <Container className="flex flex-col gap-20 pt-20 pb-16 sm:pt-28">
         <FooterCta />
 

@@ -44,7 +44,7 @@ const Header = () => {
   return (
     <header
       className={cn(
-        "sticky top-0 z-50 transition-[transform,background-color] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
+        "zoom-viewport sticky top-0 z-50 transition-[transform,background-color] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
         hidden ? "-translate-y-full" : "translate-y-0",
         scrolled
           ? "bg-background/80 backdrop-blur-xl"

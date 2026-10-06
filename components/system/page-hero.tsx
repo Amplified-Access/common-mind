@@ -15,7 +15,7 @@ type PageHeroProps = {
 function PageHero({ title, lede, actions, aside, variant = "default", className }: PageHeroProps) {
   if (variant === "gradient") {
     return (
-      <section className={cn("relative", className)}>
+      <section className={cn("zoom-viewport relative", className)}>
         <Container className="pt-8 pb-8 sm:pt-12 sm:pb-12">
           <div className="relative overflow-hidden rounded-3xl bg-surface-2">
             <Grainient
@@ -43,7 +43,7 @@ function PageHero({ title, lede, actions, aside, variant = "default", className 
   }
 
   return (
-    <section className={cn("relative", className)}>
+    <section className={cn("zoom-viewport relative", className)}>
       <Container
         className={cn(
           "grid gap-16 pt-20 pb-8 sm:pt-28 sm:pb-12",

@@ -15,7 +15,7 @@ function Section({
 }: React.ComponentProps<"section">) {
   return (
     <section
-      className={cn("scroll-mt-24 py-20 sm:py-28", className)}
+      className={cn("zoom-viewport scroll-mt-24 py-20 sm:py-28", className)}
       {...props}
     >
       {children}

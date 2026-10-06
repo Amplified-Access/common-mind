@@ -39,7 +39,7 @@ const ModelPage = async ({ params }: PageProps) => {
 
   return (
     <>
-      <section>
+      <section className="zoom-viewport">
         <Container className="flex flex-col gap-20 pt-20 pb-8 sm:pt-28">
           <div className="flex flex-col gap-8">
             <Link
