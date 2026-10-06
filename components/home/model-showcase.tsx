@@ -25,7 +25,7 @@ function ModelShowcase({ sets }: { sets: ShowcaseSet[] }) {
   const set = sets.find((s) => s.id === active) ?? sets[0];
 
   return (
-    <div className="relative pt-8">
+    <div className="relative w-full pt-8">
       {/* The stack behind the front card */}
       <div aria-hidden className="absolute inset-x-[7%] top-0 h-10 rounded-t-lg border border-line bg-[#0b0a07]" />
       <div aria-hidden className="absolute inset-x-[3.5%] top-3 h-10 rounded-t-lg border border-line bg-[#0e0d09]" />
