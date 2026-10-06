@@ -13,20 +13,6 @@ export const metadata: Metadata = {
   description: "Research at the intersection of language, civic discourse, models, data, and evaluation.",
 };
 
-const datasetKind: Record<string, string> = {
-  "sunbird-salt": "Parallel",
-  "mafand-mt": "Parallel",
-  "rogendo-en-sw": "Parallel",
-  "inkuba-swahili-mmt": "Parallel",
-  "aya-dataset": "Instruction",
-  "alpaca-cleaned-swahili": "Instruction",
-  kenswquad: "Question answering",
-  "jamiiforums-2b": "Monolingual",
-  "inkuba-mono-swahili": "Monolingual",
-  "flores-plus": "Evaluation",
-  "luganda-llm-data": "Parallel",
-};
-
 const ResearchPage = () => {
   const reports = [...publications].sort((a, b) => b.date.localeCompare(a.date));
 
@@ -99,7 +85,7 @@ const ResearchPage = () => {
                     {d.name} <span className="text-faint">↗</span>
                   </span>
                   <span className="text-sm text-faint">
-                    {datasetKind[d.slug]} · {d.source}
+                    {d.kind} · {d.source}
                   </span>
                 </a>
               </li>
