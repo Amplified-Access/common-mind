@@ -270,54 +270,6 @@ function StatusDot({
 }
 
 /* ------------------------------------------------------------------ */
-/* Technical metadata                                                  */
-/* ------------------------------------------------------------------ */
-
-type MetaItem = {
-  label: string;
-  value: React.ReactNode;
-  href?: string;
-};
-
-// Label/value pairs laid out on whitespace alone.
-function MetaGrid({
-  items,
-  className,
-}: {
-  items: MetaItem[];
-  className?: string;
-}) {
-  return (
-    <dl
-      className={cn(
-        "grid grid-cols-2 gap-x-10 gap-y-8 md:grid-cols-3 lg:grid-cols-6",
-        className,
-      )}
-    >
-      {items.map((item) => (
-        <div key={item.label} className="flex flex-col gap-2">
-          <dt className="font-mono text-xs text-faint">{item.label}</dt>
-          <dd className="text-sm text-foreground">
-            {item.href ? (
-              <a
-                href={item.href}
-                target={isExternalHref(item.href) ? "_blank" : undefined}
-                rel="noreferrer"
-                className="transition-colors hover:text-signal"
-              >
-                {item.value} ↗
-              </a>
-            ) : (
-              item.value
-            )}
-          </dd>
-        </div>
-      ))}
-    </dl>
-  );
-}
-
-/* ------------------------------------------------------------------ */
 /* Surfaces                                                            */
 /* ------------------------------------------------------------------ */
 
@@ -343,10 +295,9 @@ export {
   Eyebrow,
   isExternalHref,
   LinkButton,
-  MetaGrid,
   Panel,
   Section,
   SectionHeader,
   StatusDot,
 };
-export type { ButtonVariant, MetaItem };
+export type { ButtonVariant };
