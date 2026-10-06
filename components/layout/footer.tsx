@@ -1,120 +1,133 @@
+import {
+  Facebook01Icon,
+  InstagramIcon,
+  Linkedin01Icon,
+  YoutubeIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import Image from "next/image";
 import Link from "next/link";
 
 import { Container } from "@/components/common/container";
 import { FooterCta } from "@/components/layout/footer-cta";
-import { navItems, site } from "@/lib/site";
+import { isExternalHref } from "@/components/system/primitives";
+import { footerColumns, partners, site, socialLinks } from "@/lib/site";
 
-const resourceLinks = [
-  { label: "Hugging Face", href: site.links.huggingface },
-  { label: "Ollama", href: site.links.ollama },
-  { label: "Kaggle", href: site.links.kaggle },
-];
-
-const researchLinks = [
-  { label: "Civic corpus", href: "/research/civic-corpus" },
-  { label: "Datasets", href: "/research#datasets" },
-  { label: "Methodology", href: "/benchmarks#methodology" },
-];
+const socialIcons = {
+  linkedin: Linkedin01Icon,
+  facebook: Facebook01Icon,
+  instagram: InstagramIcon,
+  youtube: YoutubeIcon,
+};
 
 const Footer = () => {
   return (
     <footer className="zoom-viewport">
-      <Container className="flex flex-col gap-20 pt-20 pb-16 sm:pt-28">
+      <Container className="pt-20 sm:pt-28">
         <FooterCta />
+      </Container>
 
-        <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
-          <div className="flex flex-col gap-4">
+      {/* The page settles into a line, lit from below by the call to action. */}
+      <div aria-hidden className="relative mt-4 h-24">
+        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent,rgb(255_211_0/0.07))]" />
+        <div className="absolute inset-x-0 bottom-0 h-px bg-line-strong" />
+      </div>
+
+      <Container className="flex flex-col gap-16 pt-16 pb-16">
+        <div className="grid gap-12 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,2fr)]">
+          <div className="flex flex-col gap-6">
             <Image
               src="/logo-white.svg"
               alt="CommonMind"
               width={1039}
               height={184}
-              className="h-5 w-auto self-start"
+              className="h-7 w-auto self-start"
             />
-            <p className="max-w-xs text-sm text-subtle">
-              An open civic AI infrastructure initiative by{" "}
-              <a
-                href={site.org.href}
-                target="_blank"
-                rel="noreferrer"
-                className="text-foreground/80 underline decoration-line-strong underline-offset-4 hover:text-foreground"
-              >
-                {site.org.name}
-              </a>
-              .
-            </p>
+            <p className="max-w-xs text-sm text-pretty text-subtle">{site.footer}</p>
+            <ul className="flex gap-2.5">
+              {socialLinks.map((social) => (
+                <li key={social.id}>
+                  <a
+                    href={social.href}
+                    aria-label={social.label}
+                    className="flex size-8 items-center justify-center rounded-full bg-[#191500] text-foreground transition-colors hover:bg-signal hover:text-background"
+                  >
+                    <HugeiconsIcon icon={socialIcons[social.id]} className="size-4" />
+                  </a>
+                </li>
+              ))}
+            </ul>
           </div>
 
-          <FooterColumn title="Platform">
-            {navItems.map((item) => (
-              <FooterLink key={item.href} href={item.href}>
-                {item.label}
-              </FooterLink>
+          <div className="grid grid-cols-2 gap-x-8 gap-y-12 sm:grid-cols-4">
+            {footerColumns.map((column) => (
+              <div key={column.title} className="flex flex-col gap-4">
+                <span className="text-[13px] text-foreground">{column.title}</span>
+                <ul className="flex flex-col gap-2.5">
+                  {column.links.map((link) => (
+                    <li key={`${column.title}-${link.label}`}>
+                      <FooterLink href={link.href}>{link.label}</FooterLink>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             ))}
-          </FooterColumn>
-
-          <FooterColumn title="Research">
-            {researchLinks.map((item) => (
-              <FooterLink key={item.href} href={item.href}>
-                {item.label}
-              </FooterLink>
-            ))}
-          </FooterColumn>
-
-          <FooterColumn title="Open resources">
-            {resourceLinks.map((item) => (
-              <FooterLink key={item.href} href={item.href}>
-                {item.label} ↗
-              </FooterLink>
-            ))}
-          </FooterColumn>
+          </div>
         </div>
 
-        <span className="text-sm text-faint">
-          © {new Date().getFullYear()} CommonMind
-        </span>
+        <p className="text-center text-[13px] text-subtle">
+          © {new Date().getFullYear()} CommonMind · An open civic AI initiative by{" "}
+          <a
+            href={site.org.href}
+            target="_blank"
+            rel="noreferrer"
+            className="text-foreground/80 underline decoration-line-strong underline-offset-4 transition-colors hover:text-signal"
+          >
+            {site.org.name}
+          </a>
+        </p>
+
+        <div className="flex flex-col gap-6 rounded-sm bg-[#1a1608] px-6 py-5 sm:flex-row sm:items-center sm:gap-12 sm:px-8">
+          <span className="shrink-0 text-[13px] text-foreground">Backed By:</span>
+          <ul className="flex flex-wrap items-center gap-x-12 gap-y-5">
+            {partners.map((partner) => (
+              <li key={partner.name}>
+                <a
+                  href={partner.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block opacity-90 transition-opacity hover:opacity-100"
+                >
+                  <Image
+                    src={partner.logo}
+                    alt={partner.name}
+                    width={partner.width}
+                    height={partner.height}
+                    className="h-7 w-auto"
+                  />
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
       </Container>
     </footer>
   );
 };
 
-function FooterColumn({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
+function FooterLink({ href, children }: { href: string; children: React.ReactNode }) {
+  const className = "font-mono text-[13px] text-faint transition-colors hover:text-signal";
+  if (isExternalHref(href)) {
+    return (
+      <a href={href} target="_blank" rel="noreferrer" className={className}>
+        {children}
+      </a>
+    );
+  }
   return (
-    <div className="flex flex-col gap-3">
-      <span className="text-sm text-faint">{title}</span>
-      <ul className="flex flex-col gap-3">{children}</ul>
-    </div>
-  );
-}
-
-function FooterLink({
-  href,
-  children,
-}: {
-  href: string;
-  children: React.ReactNode;
-}) {
-  const external = /^https?:/.test(href);
-  const className = "text-sm text-subtle transition-colors hover:text-foreground";
-  return (
-    <li>
-      {external ? (
-        <a href={href} target="_blank" rel="noreferrer" className={className}>
-          {children}
-        </a>
-      ) : (
-        <Link href={href} className={className}>
-          {children}
-        </Link>
-      )}
-    </li>
+    <Link href={href} className={className}>
+      {children}
+    </Link>
   );
 }
 
