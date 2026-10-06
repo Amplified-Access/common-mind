@@ -1,5 +1,4 @@
 import { lugandaHeldOut, swahiliFlores } from "@/components/benchmarks/data";
-import { CivicExplorer } from "@/components/civic/civic-explorer";
 import { Container } from "@/components/common/container";
 import { datasets } from "@/components/datasets/data";
 import { BenchShowcase } from "@/components/home/bench-showcase";
@@ -17,6 +16,8 @@ import {
 } from "@/components/home/platform-visuals";
 import { languages } from "@/components/languages/data";
 import { ecosystemFor } from "@/components/languages/ecosystem";
+import { researchItems } from "@/components/research/items";
+import { cardColor, ColorCard } from "@/components/system/color-card";
 import { ArrowLink, Eyebrow, Section, SectionHeader } from "@/components/system/primitives";
 import { site } from "@/lib/site";
 
@@ -137,13 +138,36 @@ export default function Home() {
         </Container>
       </Section>
 
-      <Section id="civic-speech">
-        <Container className="flex flex-col gap-20">
+      <Section id="research">
+        <Container className="flex flex-col gap-14">
           <SectionHeader
+            eyebrow="Research"
             title="Understanding civic speech."
-            lede="Civic speech is contextual. CommonMind turns what people say into structured records the right people can act on."
+            lede="Explore the civic corpus, terminology mappings, and research shaping how AI understands civic speech across languages beyond the mainstream."
+            layout="split"
           />
-          <CivicExplorer />
+          <div className="scrollbar-none -mx-4 overflow-x-auto px-4 md:mx-0 md:px-0 lg:mask-[linear-gradient(to_right,transparent,#000_6%,#000_94%,transparent)]">
+            <ul className="grid w-max auto-cols-[16rem] grid-flow-col gap-5 md:w-full md:auto-cols-auto md:grid-flow-row md:grid-cols-4">
+              {researchItems()
+                .slice(0, 4)
+                .map((item, i) => (
+                  <li key={item.id} className="flex">
+                    <ColorCard
+                      href={item.href}
+                      title={item.title}
+                      kind={item.kind}
+                      description={item.description}
+                      cta={item.cta}
+                      color={cardColor(i)}
+                      className="w-full"
+                    />
+                  </li>
+                ))}
+            </ul>
+          </div>
+          <ArrowLink href="/research" arrow="right" className="self-end text-sm">
+            Read More
+          </ArrowLink>
         </Container>
       </Section>
     </>
