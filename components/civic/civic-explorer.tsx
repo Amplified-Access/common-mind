@@ -157,7 +157,8 @@ const BARS = 40;
 const bars = Array.from({ length: BARS }, (_, i) => {
   const v = Math.abs(Math.sin(i * 12.9898) * 43758.5453) % 1;
   const envelope = Math.sin((i / (BARS - 1)) * Math.PI);
-  return 0.2 + (0.35 + v * 0.45) * envelope;
+  // Rounded so the server and browser render identical heights.
+  return Math.round((0.2 + (0.35 + v * 0.45) * envelope) * 1e4) / 1e4;
 });
 
 // A drawing of the input itself, used until a photograph is supplied.
