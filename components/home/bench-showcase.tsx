@@ -16,7 +16,7 @@ function BenchShowcase({ sets }: { sets: BenchSet[] }) {
   const back = sets.find((s) => s.id !== front.id) ?? front;
 
   return (
-    <div className="relative grid lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1fr)]">
+    <div className="relative grid grid-cols-1 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1fr)]">
       <div
         aria-hidden
         className="pointer-events-none hidden flex-col gap-8 rounded-l-lg border border-r-0 border-line bg-surface/60 p-10 opacity-40 mask-[linear-gradient(to_right,transparent,#000_40%)] lg:mt-14 lg:flex"
@@ -24,7 +24,7 @@ function BenchShowcase({ sets }: { sets: BenchSet[] }) {
         <span className="text-h2">CivicBench Africa</span>
         <BarChart title="BLEU" entries={back.entries} metric="bleu" />
       </div>
-      <div className="relative flex flex-col gap-7 rounded-lg border border-line bg-surface p-7 shadow-[0_-30px_80px_-30px_rgb(255_211_0/0.25)] sm:p-10 lg:-ml-10">
+      <div className="relative flex min-w-0 flex-col gap-7 rounded-lg border border-line bg-surface p-7 shadow-[0_-30px_80px_-30px_rgb(255_211_0/0.25)] sm:p-10 lg:-ml-10">
         <h3 className="text-h2">CivicBench Africa</h3>
         <Segmented
           label="Translation direction"
