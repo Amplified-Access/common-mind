@@ -3,9 +3,10 @@ import type { Metadata } from "next";
 import { journey, paths, quickstart } from "@/components/build/snippets";
 import { Container } from "@/components/common/container";
 import { Code } from "@/components/system/code";
+import { CodeTabs } from "@/components/system/code-tabs";
+import { InfoTable } from "@/components/system/info-table";
 import { PageHero } from "@/components/system/page-hero";
-import { LinkButton, Section, SectionHeader } from "@/components/system/primitives";
-import { Tabs } from "@/components/system/tabs";
+import { ArrowLink, LinkButton, Section, SectionHeader } from "@/components/system/primitives";
 import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -14,39 +15,50 @@ export const metadata: Metadata = {
 };
 
 const requestFields = [
-  ["model_slug", "Which model to run"],
-  ["text", "Up to 500 characters"],
-  ["direction", "en-lg or lg-en, Luganda only"],
+  { label: "model_slug", value: "Which model to run" },
+  { label: "text", value: "Up to 500 characters" },
+  { label: "direction", value: "en-lg or lg-en, Luganda only" },
 ];
 
 const BuildPage = () => {
   return (
     <>
-      <PageHero tile eyebrow="Build" title="Build with CommonMind." lede="From first prompt to production.">
+      <PageHero
+        tile
+        eyebrow="Build"
+        title="Build with CommonMind."
+        lede="From first prompt to production. Open models, APIs, and deployment options for civic applications."
+        tags={["OPEN MODELS", "API", "DEPLOYMENT"]}
+      >
         <div className="flex flex-wrap justify-center gap-3">
-          <LinkButton href="#journey">Get started</LinkButton>
+          <LinkButton href="#journey">Get Started</LinkButton>
           <LinkButton href="#api" variant="outline">
-            Read the docs
+            Read the Docs
           </LinkButton>
         </div>
       </PageHero>
 
-      <Section id="quickstart" className="pb-0 sm:pb-0">
-        <Container>
+      <Section id="quickstart">
+        <Container className="grid gap-12 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-20">
+          <SectionHeader
+            eyebrow="Quickstart"
+            title="Translate in a few lines."
+            lede="Load an adapter on its base model with Transformers and PEFT, and translate civic text into Swahili."
+          />
           <Code code={quickstart} language="python" title="quickstart.py" />
         </Container>
       </Section>
 
-      <Section id="journey">
-        <Container className="flex flex-col gap-16">
-          <SectionHeader title="Discover. Install. Run. Build. Deploy." />
-          <Tabs
-            items={journey.map((step) => ({
+      <Section id="journey" className="border-t border-line">
+        <Container className="flex flex-col gap-12">
+          <SectionHeader eyebrow="Journey" title="Discover. Install. Run. Build. Deploy." />
+          <CodeTabs
+            tabs={journey.map((step) => ({
               id: step.id,
               label: step.label,
               content: (
-                <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-20">
-                  <p className="text-xl text-pretty text-subtle">{step.copy}</p>
+                <div className="grid gap-8 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-20">
+                  <p className="text-h3 text-pretty text-subtle">{step.copy}</p>
                   <Code code={step.code} language={step.lang} title={step.title} />
                 </div>
               ),
@@ -55,46 +67,33 @@ const BuildPage = () => {
         </Container>
       </Section>
 
-      <Section id="paths">
-        <Container className="flex flex-col gap-20">
-          <SectionHeader title="Use the stack you already have." />
-          <ul className="grid gap-x-10 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
-            {paths.map((p) => (
-              <li key={p.id} className="flex flex-col gap-2">
-                <span className="text-xl tracking-tight">{p.label}</span>
-                <span className="text-subtle">{p.copy}</span>
+      <Section id="paths" className="border-t border-line">
+        <Container className="flex flex-col gap-12">
+          <SectionHeader
+            eyebrow="Deployment"
+            title="Use the stack you already have."
+            lede="Every model ships to the tools developers already use, from a notebook to a CPU at the edge."
+          />
+          <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {paths.map((p, i) => (
+              <li key={p.id} className="flex flex-col gap-3 rounded-lg border border-line bg-surface p-7">
+                <span className="font-mono text-xs text-faint">{String(i + 1).padStart(2, "0")}</span>
+                <span className="font-mono text-lg">{p.label}</span>
+                <span className="text-sm text-faint">{p.copy}</span>
               </li>
             ))}
           </ul>
         </Container>
       </Section>
 
-      <Section id="api">
-        <Container className="grid gap-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] lg:gap-24">
-          <div className="flex flex-col gap-12">
-            <SectionHeader title="POST /translate" />
-            <dl className="flex flex-col gap-6">
-              {requestFields.map(([field, meaning]) => (
-                <div key={field} className="flex flex-col gap-1">
-                  <dt className="font-mono text-sm text-signal">{field}</dt>
-                  <dd className="text-subtle">{meaning}</dd>
-                </div>
-              ))}
-            </dl>
-            <a
-              href={site.links.huggingface}
-              target="_blank"
-              rel="noreferrer"
-              className="text-sm font-medium transition-colors hover:text-signal"
-            >
-              Model cards on Hugging Face ↗
-            </a>
+      <Section id="api" className="border-t border-line">
+        <Container className="grid gap-12 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-20">
+          <div className="flex flex-col gap-10">
+            <SectionHeader eyebrow="API" title="POST /translate" lede="One endpoint for every model." />
+            <InfoTable title="Request" ruled rows={requestFields} />
+            <ArrowLink href={site.links.huggingface}>Model cards on Hugging Face</ArrowLink>
           </div>
-          <Code
-            title="request"
-            language="bash"
-            code={paths.find((p) => p.id === "api")!.code}
-          />
+          <Code title="request" language="bash" code={paths.find((p) => p.id === "api")!.code} />
         </Container>
       </Section>
     </>
