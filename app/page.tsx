@@ -1,5 +1,5 @@
 import { Container } from "@/components/common/container";
-import { CivicExplorer } from "@/components/home/civic-explorer";
+import { CivicExplorer } from "@/components/civic/civic-explorer";
 import { HomeHero } from "@/components/home/hero";
 import { PipelineDiagram } from "@/components/system/pipeline-diagram";
 import { Section, SectionHeader } from "@/components/system/primitives";
