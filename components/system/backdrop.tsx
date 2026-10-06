@@ -50,7 +50,9 @@ function Backdrop({ wash, grain, grid, stars, glow, className }: BackdropProps) 
             }}
           />
         ))}
-      {grain && <div className="absolute inset-0 bg-grain opacity-25 mix-blend-screen" />}
+      {grain && (
+        <div className="absolute inset-x-0 top-0 h-[48rem] max-h-full bg-grain opacity-25 mix-blend-screen mask-[linear-gradient(to_bottom,#000_60%,transparent)]" />
+      )}
     </div>
   );
 }
