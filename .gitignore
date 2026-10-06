@@ -42,3 +42,6 @@ next-env.d.ts
 
 # runpod flash CLI local state
 .flash/
+
+#Temporary files not for committing
+tmp/
