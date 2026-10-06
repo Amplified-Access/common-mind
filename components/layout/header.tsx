@@ -71,7 +71,7 @@ const Header = () => {
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "py-1.5 text-[13px] transition-colors",
+                  "py-1.5 text-xs transition-colors",
                   active ? "text-signal" : "text-foreground hover:text-signal",
                 )}
               >
