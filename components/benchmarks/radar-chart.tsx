@@ -69,7 +69,7 @@ function RadarChart({ models, initial }: { models: RadarModel[]; initial: string
           peak={0.45}
           seed={3}
         />
-        <svg viewBox={`-90 -10 ${SIZE + 180} ${SIZE + 50}`} className="mx-auto w-full max-w-2xl" role="img" aria-label="Radar chart of CivicBench Africa task scores">
+        <svg viewBox={`-150 -10 ${SIZE + 300} ${SIZE + 50}`} className="mx-auto w-full max-w-3xl" role="img" aria-label="Radar chart of CivicBench Africa task scores">
           {[20, 40, 60, 80, 100].map((ring) => (
             <polygon
               key={ring}
