@@ -40,7 +40,10 @@ function HomeHero() {
             <ArrowLink href="/models#try">Try a Model</ArrowLink>
           </div>
         </div>
+        {/* Runs past the section's bottom edge, which cuts the cards off so
+            they read as sitting behind the next section. */}
         <ModelShowcase
+          className="-mb-5 sm:-mb-8"
           sets={[
             {
               id: "sw",

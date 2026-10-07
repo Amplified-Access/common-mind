@@ -38,7 +38,7 @@ const SCORE_PANEL = "bg-[#0b0a07]";
 // that the infrastructure exists. The deck cycles on its own while it is on
 // screen and nobody is hovering or focused inside it; the direction toggle
 // brings any card to the front.
-function ModelShowcase({ sets }: { sets: ShowcaseSet[] }) {
+function ModelShowcase({ sets, className }: { sets: ShowcaseSet[]; className?: string }) {
   const [active, setActive] = useState(sets[0].id);
   const [hovering, setHovering] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -65,7 +65,7 @@ function ModelShowcase({ sets }: { sets: ShowcaseSet[] }) {
   return (
     <div
       ref={ref}
-      className="relative isolate mx-auto grid w-full pt-8 xl:w-[90%]"
+      className={cn("relative isolate mx-auto grid w-full pt-8 xl:w-[90%]", className)}
       onPointerEnter={() => setHovering(true)}
       onPointerLeave={() => setHovering(false)}
       onFocus={() => setFocused(true)}
