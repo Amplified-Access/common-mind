@@ -3,6 +3,7 @@
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState, useSyncExternalStore } from "react";
 
 import { Arrow } from "@/components/system/arrow";
@@ -29,11 +30,13 @@ type AnnouncementBannerProps = {
   href: string;
 };
 
+// Shown on the home page only, for now.
 function AnnouncementBanner({ id, message, linkLabel, href }: AnnouncementBannerProps) {
+  const pathname = usePathname();
   const [dismissedNow, setDismissed] = useState(false);
   const storedId = useSyncExternalStore(noopSubscribe, readDismissed, () => null);
 
-  if (dismissedNow || storedId === id) return null;
+  if (pathname !== "/" || dismissedNow || storedId === id) return null;
 
   return (
     <div className="zoom-viewport relative bg-[#0c0c0c] text-foreground">

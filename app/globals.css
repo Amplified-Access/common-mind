@@ -147,6 +147,11 @@
     --section-pad: 3.75rem;
   }
 
+  /* The header's height, docked or floating. Away from the home page the
+     header floats over the top of the page, and each hero pads by this to
+     carry its backdrop up under it. */
+  --header-height: 3.5rem;
+
   color-scheme: dark;
 }
 

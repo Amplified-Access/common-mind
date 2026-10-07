@@ -40,7 +40,7 @@ function PageHero({
   return (
     <section
       className={cn(
-        "zoom-viewport relative isolate overflow-hidden",
+        "zoom-viewport relative isolate overflow-hidden pt-(--header-height)",
         ruled && "border-b border-line",
         className,
       )}
