@@ -58,7 +58,7 @@ function EvidencePipeline({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "relative flex h-120 flex-col overflow-hidden rounded-3xl bg-surface",
+        "relative flex h-120 flex-col overflow-hidden rounded-card bg-surface",
         className,
       )}
     >

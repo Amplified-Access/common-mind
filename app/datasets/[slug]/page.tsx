@@ -225,7 +225,7 @@ const DatasetPage = async ({ params }: PageProps) => {
                     <li key={m.slug}>
                       <Link
                         href={`/models/${m.slug}`}
-                        className="group flex h-full flex-col gap-5 rounded-lg border border-line bg-surface p-7 transition-colors hover:border-signal/60"
+                        className="group flex h-full flex-col gap-5 rounded-card border border-line bg-surface p-7 transition-colors hover:border-signal/60"
                       >
                         <span className="text-xl">{m.name}</span>
                         <span className="text-sm text-faint">{m.tagline}.</span>

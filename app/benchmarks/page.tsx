@@ -97,7 +97,7 @@ const BenchmarksPage = () => {
           />
           <ol className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {civicBench.map((c, i) => (
-              <li key={c.id} className="flex flex-col gap-4 rounded-lg border border-line bg-surface p-7">
+              <li key={c.id} className="flex flex-col gap-4 rounded-card border border-line bg-surface p-7">
                 <span className="font-mono text-xs text-faint">{String(i + 1).padStart(2, "0")}</span>
                 <span className="text-xl tracking-tight">{c.name}</span>
                 <span className="text-sm text-faint">{c.measures}</span>
@@ -129,7 +129,7 @@ const BenchmarksPage = () => {
               <Link
                 key={m.slug}
                 href={`/models/${m.slug}`}
-                className="group flex flex-col gap-4 rounded-lg border border-line bg-surface p-8 transition-colors hover:border-signal/60"
+                className="group flex flex-col gap-4 rounded-card border border-line bg-surface p-8 transition-colors hover:border-signal/60"
               >
                 <span className="flex items-baseline gap-4 font-mono tabular-nums">
                   <CountUp value={m.evaluation.baseBleu!} delay={i * 0.1} className="text-2xl text-faint" />
@@ -210,7 +210,7 @@ const BenchmarksPage = () => {
 
 function MethodNote({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-line bg-surface p-7">
+    <div className="flex flex-col gap-3 rounded-card border border-line bg-surface p-7">
       <h3 className="font-mono text-lg">{title}</h3>
       <p className="text-sm text-faint">{children}</p>
     </div>

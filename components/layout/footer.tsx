@@ -92,7 +92,7 @@ const Footer = () => {
           © {new Date().getFullYear()} CommonMind
         </p>
 
-        <div className="flex flex-col gap-6 rounded-sm bg-[#1a1608] px-6 py-5 sm:flex-row sm:items-center sm:gap-12 sm:px-8">
+        <div className="flex flex-col gap-6 rounded-card bg-[#1a1608] px-6 py-5 sm:flex-row sm:items-center sm:gap-12 sm:px-8">
           <span className="shrink-0 text-[13px] text-foreground">In collaboration with:</span>
           <ul className="flex flex-wrap items-center gap-x-12 gap-y-5">
             {partners.map((partner) => {

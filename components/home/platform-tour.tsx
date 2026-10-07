@@ -157,8 +157,8 @@ function PlatformTour({
                 </div>
                 {/* Framed like the hero cards on the top and left; flush with
                     the panel's edge on the right and the section's bottom. */}
-                <div className="relative min-h-96 rounded-tl-[3px] border-t border-l border-line bg-[#131000] pt-2 pl-2 shadow-[0_-20px_70px_-10px_rgb(255_211_0/0.1)] lg:min-h-0">
-                  <div className="relative size-full overflow-hidden rounded-tl-[2px] bg-[#0b0a07]">
+                <div className="relative min-h-96 rounded-tl-card border-t border-l border-line bg-[#131000] pt-2 pl-2 shadow-[0_-20px_70px_-10px_rgb(255_211_0/0.1)] lg:min-h-0">
+                  <div className="relative size-full overflow-hidden rounded-tl-inset bg-[#0b0a07]">
                     <div
                       aria-hidden
                       className="absolute inset-x-0 top-0 h-32 bg-[radial-gradient(60%_100%_at_50%_0%,rgb(255_211_0/0.1),transparent)]"

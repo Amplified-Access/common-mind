@@ -97,7 +97,7 @@ function Translator({ initialModel, locked = false }: TranslatorProps) {
   };
 
   return (
-    <div className="relative isolate overflow-hidden rounded-lg border border-line bg-surface">
+    <div className="relative isolate overflow-hidden rounded-card border border-line bg-surface">
       {/* A faint grid behind the input, as on the design. */}
       <div
         aria-hidden
@@ -185,7 +185,7 @@ function Translator({ initialModel, locked = false }: TranslatorProps) {
                   key={ex.source}
                   type="button"
                   onClick={() => handleExampleClick(ex)}
-                  className="cursor-pointer rounded-md bg-[#1b1b1b] px-2.5 py-1.5 font-mono text-[11px] text-faint transition-colors hover:text-foreground"
+                  className="cursor-pointer rounded-inset bg-[#1b1b1b] px-2.5 py-1.5 font-mono text-[11px] text-faint transition-colors hover:text-foreground"
                 >
                   {ex.source.length > 40 ? `${ex.source.slice(0, 40)}…` : ex.source}
                 </button>
@@ -194,7 +194,7 @@ function Translator({ initialModel, locked = false }: TranslatorProps) {
           )}
         </div>
 
-        <div className="flex min-h-64 flex-col rounded-md border border-line bg-background">
+        <div className="flex min-h-64 flex-col rounded-inset border border-line bg-background">
           <div className="flex items-center justify-between px-4 pt-5 sm:px-6">
             <span className="text-[13px]">{direction.to}</span>
             {latency !== null && (

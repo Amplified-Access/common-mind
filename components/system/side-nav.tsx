@@ -29,7 +29,7 @@ function SideNav({ items, className }: { items: SideNavItem[]; className?: strin
   return (
     <nav
       aria-label="On this page"
-      className={cn("rounded-lg border border-line bg-surface/80 px-7 py-6 backdrop-blur", className)}
+      className={cn("rounded-card border border-line bg-surface/80 px-7 py-6 backdrop-blur", className)}
     >
       <ul className="flex flex-col gap-1">
         {items.map((item) => {

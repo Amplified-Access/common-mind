@@ -59,6 +59,10 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  /* Every card, panel and box shares one corner, measured from the
+     2026-10 mocks; anything nested inside one takes the inset corner. */
+  --radius-card: 4px;
+  --radius-inset: 3px;
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);

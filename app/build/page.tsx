@@ -76,7 +76,7 @@ const BuildPage = () => {
           />
           <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {paths.map((p, i) => (
-              <li key={p.id} className="flex flex-col gap-3 rounded-lg border border-line bg-surface p-7">
+              <li key={p.id} className="flex flex-col gap-3 rounded-card border border-line bg-surface p-7">
                 <span className="font-mono text-xs text-faint">{String(i + 1).padStart(2, "0")}</span>
                 <span className="font-mono text-lg">{p.label}</span>
                 <span className="text-sm text-faint">{p.copy}</span>

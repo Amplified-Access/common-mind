@@ -12,7 +12,7 @@ function FooterCta() {
   if (pathname === "/models") return null;
 
   return (
-    <section className="relative isolate overflow-hidden rounded-sm bg-signal text-background">
+    <section className="relative isolate overflow-hidden rounded-card bg-signal text-background">
       <Grainient
         className="absolute! inset-0"
         colors={["#ffd300", "#d9b500", "#5c4c00"]}

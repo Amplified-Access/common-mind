@@ -19,7 +19,7 @@ function ModelCard({ model, className }: { model: ModelCardData; className?: str
     <Link
       href={`/models/${model.slug}`}
       className={cn(
-        "group relative isolate flex flex-col overflow-hidden rounded-lg border border-line bg-surface transition-colors duration-300 hover:border-signal hover:bg-signal",
+        "group relative isolate flex flex-col overflow-hidden rounded-card border border-line bg-surface transition-colors duration-300 hover:border-signal hover:bg-signal",
         className,
       )}
     >

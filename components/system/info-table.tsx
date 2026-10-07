@@ -19,7 +19,7 @@ type InfoTableProps = {
 // dataset information.
 function InfoTable({ title, rows, ruled = false, footer, className }: InfoTableProps) {
   return (
-    <div className={cn("overflow-hidden rounded-lg border border-line bg-surface", className)}>
+    <div className={cn("overflow-hidden rounded-card border border-line bg-surface", className)}>
       {title && (
         <h3 className="border-b border-line px-6 py-4 font-mono text-base tracking-wide sm:px-10 sm:text-lg">
           {title}

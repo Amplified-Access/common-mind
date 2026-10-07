@@ -281,7 +281,7 @@ function Panel({
 }: React.ComponentProps<"div">) {
   return (
     <div
-      className={cn("rounded-lg border border-line bg-surface", className)}
+      className={cn("rounded-card border border-line bg-surface", className)}
       {...props}
     >
       {children}

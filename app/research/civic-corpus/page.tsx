@@ -122,7 +122,7 @@ const CivicCorpusPage = () => {
           <SectionHeader eyebrow="Collection" title="Trust is part of the infrastructure." />
           <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {principles.map(([title, line]) => (
-              <li key={title} className="flex flex-col gap-3 rounded-lg border border-line bg-surface p-7">
+              <li key={title} className="flex flex-col gap-3 rounded-card border border-line bg-surface p-7">
                 <span className="font-mono text-lg">{title}</span>
                 <span className="text-sm text-faint">{line}</span>
               </li>

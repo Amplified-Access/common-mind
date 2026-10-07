@@ -102,7 +102,7 @@ function LanguageGrid({ entries }: { entries: LanguageEntry[] }) {
             <li key={e.code} className="flex">
               <Link
                 href={`/languages/${e.code}`}
-                className="group flex w-full flex-col gap-6 rounded-lg border border-line bg-surface p-7 transition-colors hover:border-signal/60 sm:p-8"
+                className="group flex w-full flex-col gap-6 rounded-card border border-line bg-surface p-7 transition-colors hover:border-signal/60 sm:p-8"
               >
                 <div className="flex items-start justify-between gap-4">
                   <span className="flex flex-wrap items-baseline gap-x-3 gap-y-1">

@@ -125,7 +125,7 @@ function ModelShowcase({ sets, className }: { sets: ShowcaseSet[]; className?: s
                 <p className="max-w-60 text-xs">{set.model.tagline}</p>
                 <ul className="flex flex-wrap gap-2">
                   {set.model.platforms.map((p) => (
-                    <li key={p} className="rounded-sm border border-line-strong px-1.5 py-0.5 text-[10px] text-foreground/85">
+                    <li key={p} className="rounded-inset border border-line-strong px-1.5 py-0.5 text-[10px] text-foreground/85">
                       {p}
                     </li>
                   ))}

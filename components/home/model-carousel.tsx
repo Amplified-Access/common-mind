@@ -51,7 +51,7 @@ async function ModelCarousel() {
             >
               <Link
                 href={`/models/${model.slug}`}
-                className="group relative flex h-[30rem] w-[min(80vw,30rem)] flex-col gap-6 overflow-hidden rounded-[4px] border border-line bg-[#0b0a07] p-8 mask-[linear-gradient(to_bottom,#000_55%,transparent)] transition-colors hover:border-signal/60"
+                className="group relative flex h-[30rem] w-[min(80vw,30rem)] flex-col gap-6 overflow-hidden rounded-card border border-line bg-[#0b0a07] p-8 mask-[linear-gradient(to_bottom,#000_55%,transparent)] transition-colors hover:border-signal/60"
               >
                 <span aria-hidden className="absolute top-5 right-6 flex items-center gap-5 text-faint">
                   <span className="h-px w-3 bg-current" />

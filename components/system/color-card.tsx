@@ -61,7 +61,7 @@ function ColorCard({ href, title, kind, description, tags, cta, color, className
     </>
   );
   const classes = cn(
-    "group relative isolate flex min-h-60 flex-col overflow-hidden rounded-sm p-5 text-background",
+    "group relative isolate flex min-h-60 flex-col overflow-hidden rounded-card p-5 text-background",
     colors[color],
     className,
   );
