@@ -73,6 +73,9 @@ function ModelShowcase({ sets }: { sets: ShowcaseSet[] }) {
         if (!e.currentTarget.contains(e.relatedTarget)) setFocused(false);
       }}
     >
+      {/* A soft yellow halo around the whole stack. */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-8 bottom-0 -z-10 rounded-[3px] shadow-[0_0_90px_10px_rgb(255_211_0/0.14)]" />
+
       {Array.from({ length: Math.max(0, STACK_LAYERS - sets.length) }, (_, i) => {
         const depth = sets.length + i;
         return (
