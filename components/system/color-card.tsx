@@ -29,7 +29,8 @@ type ColorCardProps = {
   className?: string;
 };
 
-// A solid colored card with a large, clipped CommonMind mark as watermark.
+// A solid colored card with a large CommonMind mark as watermark, centered
+// on its right edge so half of it shows.
 function ColorCard({ href, title, kind, description, tags, cta, color, className }: ColorCardProps) {
   const external = isExternalHref(href);
   const body = (
@@ -40,16 +41,17 @@ function ColorCard({ href, title, kind, description, tags, cta, color, className
         width={458}
         height={480}
         aria-hidden
-        className="pointer-events-none absolute top-1/2 -right-16 h-52 w-auto -translate-y-1/2 opacity-[0.07] transition-transform duration-500 group-hover:-rotate-12"
+        className="pointer-events-none absolute top-1/2 right-0 h-52 w-auto translate-x-1/2 -translate-y-1/2 opacity-[0.07] transition-transform duration-500 group-hover:-rotate-12"
       />
       <div className="relative flex flex-col gap-3">
-        <h3 className="text-[1.375rem] leading-[1.15] font-semibold tracking-[-0.01em] text-balance">
+        {/* Two lines at most, so long titles don't stretch the row. */}
+        <h3 title={title} className="line-clamp-2 text-[1.375rem] leading-[1.15] font-semibold tracking-[-0.01em] text-balance">
           {title}
         </h3>
         <span className="text-[13px]">{kind}</span>
-        <p className="line-clamp-4 max-w-56 font-mono text-[13px] leading-snug">{description}</p>
+        <p className="line-clamp-3 max-w-56 font-mono text-[13px] leading-snug">{description}</p>
       </div>
-      <div className="relative mt-auto flex flex-col gap-4 pt-6">
+      <div className="relative mt-auto flex flex-col gap-4 pt-12">
         {tags && tags.length > 0 && <TagChain tags={tags} tone="ink" size="sm" uppercase />}
         <span className="inline-flex items-center gap-2 font-mono text-[11px]">
           {cta}
@@ -59,7 +61,7 @@ function ColorCard({ href, title, kind, description, tags, cta, color, className
     </>
   );
   const classes = cn(
-    "group relative isolate flex min-h-60 flex-col overflow-hidden rounded-sm p-5 text-background transition-transform duration-300 hover:-translate-y-1",
+    "group relative isolate flex min-h-60 flex-col overflow-hidden rounded-sm p-5 text-background",
     colors[color],
     className,
   );
