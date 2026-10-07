@@ -4,6 +4,24 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Lengths that undo --viewport-scale. Registered as lengths so they're
+   resolved once at the root and inherit as fixed values; inside a zoomed
+   section they're zoomed back up to their size on screen.
+   --screen-px: one CSS pixel on screen, for textures that should keep their
+   fidelity instead of growing with the zoom.
+   --hairline: one device pixel, for the thinnest lines. */
+@property --screen-px {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 1px;
+}
+
+@property --hairline {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 1px;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -139,6 +157,11 @@
      `zoom-viewport` utility on a section's root element; same convention
      and baseline as WatchTower and the ActionChallenge frontend. */
   --viewport-scale: clamp(1, calc(100vw / 80rem), 1.5);
+  --screen-px: calc(1px / var(--viewport-scale));
+  --hairline: var(--screen-px);
+  @media (resolution >= 2dppx) {
+    --hairline: calc(0.5px / var(--viewport-scale));
+  }
 
   /* Half the space between two sections; each section pads by this at both
      ends. 60px at the baseline gives the ~120px gaps of the 2026-10 mocks. */
@@ -223,24 +246,28 @@
 }
 
 /* Film grain in pure CSS: an SVG turbulence tile of white specks whose
-   alpha follows the noise. Layer it over a surface and set its opacity. */
+   alpha follows the noise. Layer it over a surface and set its opacity. The
+   tile is sized in screen pixels, so the specks stay as fine on a zoomed
+   wide screen as at the baseline. */
 @utility bg-grain {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 1.6 0 0 0 -0.55'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-size: 180px 180px;
+  background-size: calc(180 * var(--screen-px)) calc(180 * var(--screen-px));
 }
 
 /* The same grain with warm, faintly yellow specks. */
 @utility bg-grain-warm {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 0.86 0 0 0 0 0.45 1.6 0 0 0 -0.55'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-size: 180px 180px;
+  background-size: calc(180 * var(--screen-px)) calc(180 * var(--screen-px));
 }
 
-/* A faint square grid, for hero and panel backgrounds. */
+/* A faint, fine grid of hairlines, for hero and panel backgrounds. Cells
+   are 34 by 30px, as in the 2026-10 mocks, and lines 5% white unless a
+   surface sets its own --grid-size or --grid-line. */
 @utility bg-grid {
   background-image:
-    linear-gradient(to right, rgb(255 255 255 / 0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgb(255 255 255 / 0.05) 1px, transparent 1px);
-  background-size: 76px 76px;
+    linear-gradient(to right, var(--grid-line, rgb(255 255 255 / 0.05)) var(--hairline), transparent var(--hairline)),
+    linear-gradient(to bottom, var(--grid-line, rgb(255 255 255 / 0.05)) var(--hairline), transparent var(--hairline));
+  background-size: var(--grid-size, 34px 30px);
 }
 
 @utility scrollbar-none {

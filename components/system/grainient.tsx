@@ -151,7 +151,13 @@ function Grainient({
 
     const paint = () => {
       const rect = container.getBoundingClientRect();
+      // The on-screen size, zoom included, so the grain renders one-to-one
+      // with the screen's pixels. setSize also sets the canvas's CSS size to
+      // those pixels, which a zoomed section would then zoom again; it
+      // should simply fill the container.
       renderer.setSize(Math.max(1, Math.floor(rect.width)), Math.max(1, Math.floor(rect.height)));
+      canvas.style.width = "100%";
+      canvas.style.height = "100%";
       const res = program.uniforms.iResolution.value as Float32Array;
       res[0] = gl.drawingBufferWidth;
       res[1] = gl.drawingBufferHeight;
