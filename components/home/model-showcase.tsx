@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { BarChart } from "@/components/benchmarks/bar-chart";
 import type { BenchmarkEntry } from "@/components/benchmarks/data";
 import { DirectionLabel, Segmented } from "@/components/system/segmented";
+import { cn } from "@/lib/utils";
 
 export type ShowcaseSet = {
   id: string;
@@ -20,8 +21,18 @@ export type ShowcaseSet = {
 // How long each card stays in front before the next one comes up: long
 // enough to read the overview and scan the chart.
 const DWELL_MS = 9000;
-// Layers drawn in the stack, real cards first, then plain strips.
+// Layers drawn in the stack, real cards first, then empty frames.
 const STACK_LAYERS = 3;
+// Each layer back sits this much higher and smaller, peeking over the one in front.
+const STEP_Y = 14;
+const STEP_SCALE = 0.04;
+
+// A card is a hairline-edged olive frame around two flush panels: the
+// model on the left (about a third of the width), its scores on the right.
+const CARD = "relative col-start-1 row-start-1 flex rounded-[3px] border border-[#1e1c19] bg-[#131000] p-1.5 sm:p-2";
+const PANELS = "grid flex-1 overflow-hidden rounded-[2px] lg:grid-cols-[minmax(0,0.55fr)_minmax(0,1fr)]";
+const MODEL_PANEL = "bg-surface-warm";
+const SCORE_PANEL = "bg-[#0b0a07]";
 
 // A model and how it measures up, on a stack of cards: the hero's proof
 // that the infrastructure exists. The deck cycles on its own while it is on
@@ -54,7 +65,7 @@ function ModelShowcase({ sets }: { sets: ShowcaseSet[] }) {
   return (
     <div
       ref={ref}
-      className="relative isolate grid w-full pt-8"
+      className="relative isolate mx-auto grid w-full pt-8 xl:w-[90%]"
       onPointerEnter={() => setHovering(true)}
       onPointerLeave={() => setHovering(false)}
       onFocus={() => setFocused(true)}
@@ -68,9 +79,14 @@ function ModelShowcase({ sets }: { sets: ShowcaseSet[] }) {
           <div
             key={depth}
             aria-hidden
-            className="absolute h-10 rounded-t-lg border border-line bg-surface"
-            style={{ top: 32 - depth * 16, insetInline: `${depth * 3.5}%`, zIndex: STACK_LAYERS - depth, filter: `brightness(${1 - depth * 0.2})` }}
-          />
+            className={CARD}
+            style={{ zIndex: STACK_LAYERS - depth, transformOrigin: "top", transform: `translateY(${depth * -STEP_Y}px) scale(${1 - depth * STEP_SCALE})` }}
+          >
+            <div className={PANELS}>
+              <div className={MODEL_PANEL} />
+              <div className={SCORE_PANEL} />
+            </div>
+          </div>
         );
       })}
 
@@ -83,9 +99,8 @@ function ModelShowcase({ sets }: { sets: ShowcaseSet[] }) {
             inert={!front}
             initial={false}
             animate={{
-              scale: 1 - depth * 0.07,
-              y: front ? [null, 40, 0] : depth * -16,
-              filter: `brightness(${1 - depth * 0.2})`,
+              scale: 1 - depth * STEP_SCALE,
+              y: front ? [null, 40, 0] : depth * -STEP_Y,
             }}
             transition={
               reduce
@@ -96,31 +111,33 @@ function ModelShowcase({ sets }: { sets: ShowcaseSet[] }) {
                   }
             }
             style={{ zIndex: STACK_LAYERS - depth, originY: 0 }}
-            className="relative col-start-1 row-start-1 grid overflow-hidden rounded-lg border border-line bg-surface lg:grid-cols-[minmax(0,0.75fr)_minmax(0,1fr)]"
+            className={CARD}
           >
-            <div className="flex flex-col gap-5 bg-surface-warm p-7 sm:p-9">
-              <Link href={`/models/${set.model.slug}`} className="text-[1.75rem] leading-tight tracking-[-0.01em] transition-colors hover:text-signal">
-                {set.model.name}
-              </Link>
-              <p className="max-w-60 text-xs">{set.model.tagline}</p>
-              <ul className="flex flex-wrap gap-2">
-                {set.model.platforms.map((p) => (
-                  <li key={p} className="rounded-sm border border-line-strong px-1.5 py-0.5 text-[10px] text-foreground/85">
-                    {p}
-                  </li>
-                ))}
-              </ul>
-              <div className="flex flex-col gap-3 pt-2">
-                <span className="text-xs font-medium">Overview</span>
-                <p className="max-w-72 text-[11px] leading-relaxed text-faint">{set.model.overview}</p>
+            <div className={PANELS}>
+              <div className={cn(MODEL_PANEL, "flex flex-col gap-5 px-5 py-8 sm:px-6")}>
+                <Link href={`/models/${set.model.slug}`} className="text-[1.75rem] leading-tight tracking-[-0.01em] transition-colors hover:text-signal">
+                  {set.model.name}
+                </Link>
+                <p className="max-w-60 text-xs">{set.model.tagline}</p>
+                <ul className="flex flex-wrap gap-2">
+                  {set.model.platforms.map((p) => (
+                    <li key={p} className="rounded-sm border border-line-strong px-1.5 py-0.5 text-[10px] text-foreground/85">
+                      {p}
+                    </li>
+                  ))}
+                </ul>
+                <div className="flex flex-col gap-3 pt-2">
+                  <span className="text-xs font-medium">Overview</span>
+                  <p className="max-w-72 text-[11px] leading-relaxed text-faint">{set.model.overview}</p>
+                </div>
               </div>
-            </div>
 
-            <div className="flex min-w-0 flex-col gap-10 p-7 sm:p-10">
-              <Segmented label="Translation direction" value={active} onChange={setActive} items={items} className="self-start" />
-              {/* Remounts on reaching the front, so the bars grow in again. */}
-              <BarChart key={front ? "front" : "back"} title="BLEU" entries={set.entries} metric="bleu" />
-              <p className="font-mono text-[11px] text-faint">{set.evalSet}</p>
+              <div className={cn(SCORE_PANEL, "flex min-w-0 flex-col gap-10 px-5 py-8 sm:px-10 sm:py-12 xl:pr-16 xl:pl-20")}>
+                <Segmented label="Translation direction" value={active} onChange={setActive} items={items} className="self-start" />
+                {/* Remounts on reaching the front, so the bars grow in again. */}
+                <BarChart key={front ? "front" : "back"} title="BLEU" entries={set.entries} metric="bleu" />
+                <p className="font-mono text-[11px] text-faint">{set.evalSet}</p>
+              </div>
             </div>
           </motion.div>
         );
