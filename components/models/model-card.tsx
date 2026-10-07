@@ -23,9 +23,10 @@ function ModelCard({ model, className }: { model: ModelCardData; className?: str
         className,
       )}
     >
+      {/* A fine grid lit from the middle of the right edge, as in the mock. */}
       <div
         aria-hidden
-        className="absolute inset-0 -z-10 bg-grid mask-[linear-gradient(to_left,#000_0%,transparent_70%)] transition-opacity group-hover:opacity-40"
+        className="absolute inset-0 -z-10 bg-grid [--grid-line:rgb(255_255_255/0.09)] mask-[radial-gradient(260px_115px_at_100%_50%,#000,rgb(0_0_0/0.45)_40%,rgb(0_0_0/0.12)_75%,transparent)] transition-opacity group-hover:opacity-40"
       />
       <div className="flex items-center justify-between gap-6 border-b border-line px-6 py-5 transition-colors group-hover:border-background/80 sm:px-8">
         <h3 className="text-[1.5rem] leading-tight tracking-[-0.01em] text-foreground transition-colors group-hover:text-background sm:text-[1.75rem]">
