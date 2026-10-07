@@ -40,30 +40,37 @@ const LanguagesPage = () => {
 
   return (
     <>
-      <section className="zoom-viewport relative isolate overflow-hidden border-b border-line">
-        <Backdrop wash grain grid stars />
-        <Container className="flex flex-col gap-10 pt-14 pb-16 sm:pt-16 sm:pb-20">
-          <Eyebrow className="self-center text-sm">Languages</Eyebrow>
-          <div className="grid items-center gap-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-            <div className="flex flex-col gap-5 lg:pl-[12%]">
-              <h1 className="text-h2 max-w-sm text-balance">Explore civic AI by language.</h1>
-              <p className="max-w-sm text-sm text-pretty text-faint">
+      <section className="zoom-viewport relative isolate overflow-hidden border-b border-line pt-(--header-height)">
+        <Backdrop wash grain stars shade />
+        {/* The fine grid, showing only toward the sides and
+            fading out before the bottom, as in the mock. */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[30rem] bg-grid [--grid-line:rgb(255_255_255/0.12)] [mask-composite:intersect] mask-[linear-gradient(to_right,#000,transparent_22%,transparent_78%,#000),linear-gradient(to_bottom,#000_55%,transparent)]"
+        />
+        <Container className="flex flex-col gap-10 pt-12 pb-14 sm:pt-13 sm:pb-16">
+          <Eyebrow className="self-center">Languages</Eyebrow>
+          {/* The copy and the globe sit as one centered pair. */}
+          <div className="flex flex-col items-center gap-14 lg:flex-row lg:justify-center lg:gap-25 lg:pl-10">
+            <div className="flex w-full flex-col gap-4 lg:w-75 lg:shrink-0">
+              <h1 className="max-w-62 text-h2">Explore civic AI by language.</h1>
+              <p className="max-w-75 text-[13px] leading-[1.2] text-pretty text-faint">
                 One language. An entire civic AI ecosystem. Explore the models, civic speech
                 resources, benchmarks, terminology, and research being built around each
                 supported language.
               </p>
-              <dl className="grid max-w-sm grid-cols-2 gap-x-10 gap-y-7 pt-5">
+              <dl className="grid grid-cols-[11rem_auto] gap-y-6 pt-4">
                 {stats.map((stat) => (
-                  <div key={stat.label} className="flex flex-col-reverse gap-1.5">
-                    <dt className="font-mono text-sm">{stat.label}</dt>
-                    <dd className="font-mono text-3xl text-signal">{stat.value}</dd>
+                  <div key={stat.label} className="flex flex-col-reverse gap-1">
+                    <dt className="font-mono text-[13px]">{stat.label}</dt>
+                    <dd className="font-mono text-[1.625rem] leading-tight text-signal">{stat.value}</dd>
                   </div>
                 ))}
               </dl>
             </div>
             <LanguageGlobe
               markers={languages.map((l) => l.location)}
-              className="mx-auto w-full max-w-md"
+              className="w-full max-w-md shrink-0 lg:w-md"
             />
           </div>
         </Container>

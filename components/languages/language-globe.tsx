@@ -95,7 +95,7 @@ function LanguageGlobe({
     <div className={cn("relative aspect-square", className)}>
       <div
         aria-hidden
-        className="absolute inset-[11%] rounded-full shadow-[0_0_60px_10px_rgb(255_211_0/0.55),0_0_140px_30px_rgb(255_211_0/0.18)]"
+        className="absolute inset-[11%] rounded-full shadow-[0_0_40px_4px_rgb(255_211_0/0.4)]"
       />
       <canvas
         ref={canvasRef}
