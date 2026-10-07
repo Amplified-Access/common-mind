@@ -267,3 +267,11 @@
     transition-duration: 0.001ms !important;
   }
 }
+
+/* A row that holds two copies of its items drifts left by one copy, then
+   starts over seamlessly. */
+@keyframes cm-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}

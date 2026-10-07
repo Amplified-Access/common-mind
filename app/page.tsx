@@ -99,7 +99,7 @@ export default function Home() {
 
       <ModelCarousel />
 
-      <Section id="languages">
+      <Section id="languages" className="pt-16 sm:pt-20">
         <Container className="flex flex-col gap-16">
           <SectionHeader
             eyebrow="Language Ecosystems"
