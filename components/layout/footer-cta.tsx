@@ -15,7 +15,7 @@ function FooterCta() {
     <section className="relative isolate overflow-hidden rounded-sm bg-signal text-background">
       <Grainient
         className="absolute! inset-0"
-        colors={["#ffdc1f", "#d9b500", "#5c4c00"]}
+        colors={["#ffd300", "#d9b500", "#5c4c00"]}
         blendAngle={-30}
         warpAmplitude={60}
         contrast={1.08}
