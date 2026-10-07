@@ -25,7 +25,12 @@ const ModelsPage = () => {
       <PageHero
         tile
         eyebrow="Model registry"
-        title="Open models for civic language understanding."
+        title={
+          <>
+            Open models for civic
+            <br className="max-sm:hidden" /> language understanding.
+          </>
+        }
         lede="Explore, evaluate, and use models built for transcription, translation, civic terminology mapping, and issue classification across languages beyond the mainstream."
         className="pb-(--section-pad)"
         after={

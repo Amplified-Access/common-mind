@@ -24,12 +24,15 @@ type BackdropProps = {
   sweep?: boolean;
   /** A yellow glow rising from the bottom edge, reaching both corners. */
   glow?: boolean;
+  /** Darkness over the wash for page heroes: deepening toward the right, and
+      black rising from below so only the top-left glows faintly. */
+  shade?: boolean;
   className?: string;
 };
 
 // The atmosphere behind heroes and feature panels. Sits behind its parent's
 // content: give the parent `relative isolate`.
-function Backdrop({ wash, grain, warmGrain, grid, stars, sweep, glow, className }: BackdropProps) {
+function Backdrop({ wash, grain, warmGrain, grid, stars, sweep, glow, shade, className }: BackdropProps) {
   return (
     <div aria-hidden className={cn("pointer-events-none absolute inset-0 -z-10 overflow-hidden", className)}>
       {wash && (
@@ -58,6 +61,9 @@ function Backdrop({ wash, grain, warmGrain, grid, stars, sweep, glow, className 
       {warmGrain && <div className="absolute inset-0 bg-grain-warm opacity-25 mix-blend-screen" />}
       {sweep && (
         <div className="absolute inset-0 bg-[linear-gradient(to_bottom_left,#000_0%,rgb(0_0_0/0.92)_30%,rgb(0_0_0/0.5)_55%,transparent_80%)]" />
+      )}
+      {shade && (
+        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent_4rem,#000_26rem),linear-gradient(to_right,rgb(0_0_0/0.5),rgb(0_0_0/0.85)_60%,rgb(0_0_0/0.95))]" />
       )}
       {glow && (
         <div className="absolute inset-0 bg-[radial-gradient(120%_75%_at_50%_100%,rgb(255_211_0/0.2)_0%,rgb(255_211_0/0.14)_45%,rgb(255_211_0/0.05)_75%,transparent_100%)]" />
