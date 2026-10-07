@@ -23,17 +23,18 @@ const socialIcons = {
 const Footer = () => {
   return (
     <footer className="zoom-viewport">
-      <Container className="pt-20 sm:pt-28">
+      {/* The last section's bottom padding sets the space above. */}
+      <Container>
         <FooterCta />
       </Container>
 
       {/* The page settles into a line, lit from below by the call to action. */}
-      <div aria-hidden className="relative mt-4 h-24">
+      <div aria-hidden className="relative h-9">
         <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent,rgb(255_211_0/0.07))]" />
         <div className="absolute inset-x-0 bottom-0 h-px bg-line-strong" />
       </div>
 
-      <Container className="flex flex-col gap-16 pt-16 pb-16">
+      <Container className="flex flex-col gap-16 pt-12 pb-16">
         <div className="grid gap-12 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,2fr)]">
           <div className="flex flex-col gap-6">
             <Image

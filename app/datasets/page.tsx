@@ -17,7 +17,7 @@ const DatasetsPage = () => {
       eyebrow="Datasets"
       title="Civic language data, built in context."
       lede="Explore open datasets capturing how communities speak about public services, government, rights, elections, and local priorities. Every source behind every model."
-      className="pb-20 sm:pb-28"
+      className="pb-(--section-pad)"
       after={
         <Container>
           <DatasetGrid />

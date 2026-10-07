@@ -27,7 +27,7 @@ const ModelsPage = () => {
         eyebrow="Model registry"
         title="Open models for civic language understanding."
         lede="Explore, evaluate, and use models built for transcription, translation, civic terminology mapping, and issue classification across languages beyond the mainstream."
-        className="pb-20 sm:pb-28"
+        className="pb-(--section-pad)"
         after={
           <Container id="registry" className="scroll-mt-24">
             <RegistryGrid entries={modelCatalog} tasks={modelTasks} />

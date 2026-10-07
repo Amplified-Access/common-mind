@@ -27,7 +27,7 @@ async function ModelCarousel() {
   const loop = [...cards.map((c) => ({ ...c, copy: false })), ...cards.map((c) => ({ ...c, copy: true }))];
 
   return (
-    <section className="zoom-viewport relative pt-20 sm:pt-28">
+    <section className="zoom-viewport relative pt-[calc(var(--section-pad)*2)]">
       <Container className="flex flex-col gap-16">
         <SectionHeader
           size="h1"

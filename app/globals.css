@@ -136,6 +136,13 @@
      and baseline as WatchTower and the ActionChallenge frontend. */
   --viewport-scale: clamp(1, calc(100vw / 80rem), 1.5);
 
+  /* Half the space between two sections; each section pads by this at both
+     ends. 60px at the baseline gives the ~120px gaps of the 2026-10 mocks. */
+  --section-pad: 3rem;
+  @media (width >= 40rem) {
+    --section-pad: 3.75rem;
+  }
+
   color-scheme: dark;
 }
 
