@@ -44,7 +44,18 @@ const Footer = () => {
               height={184}
               className="h-7 w-auto self-start"
             />
-            <p className="max-w-xs text-sm text-pretty text-subtle">{site.footer}</p>
+            <p className="max-w-xs text-sm text-pretty text-subtle">
+              An open civic AI infrastructure initiative by{" "}
+              <a
+                href={site.org.href}
+                target="_blank"
+                rel="noreferrer"
+                className="text-foreground/80 underline decoration-line-strong underline-offset-4 transition-colors hover:text-signal"
+              >
+                {site.org.name}
+              </a>
+              .
+            </p>
             <ul className="flex gap-2.5">
               {socialLinks.map((social) => (
                 <li key={social.id}>
@@ -76,16 +87,8 @@ const Footer = () => {
           </div>
         </div>
 
-        <p className="text-center text-[13px] text-subtle">
-          © {new Date().getFullYear()} CommonMind · An open civic AI initiative by{" "}
-          <a
-            href={site.org.href}
-            target="_blank"
-            rel="noreferrer"
-            className="text-foreground/80 underline decoration-line-strong underline-offset-4 transition-colors hover:text-signal"
-          >
-            {site.org.name}
-          </a>
+        <p className="text-center text-[13px] text-faint">
+          © {new Date().getFullYear()} CommonMind
         </p>
 
         <div className="flex flex-col gap-6 rounded-sm bg-[#1a1608] px-6 py-5 sm:flex-row sm:items-center sm:gap-12 sm:px-8">

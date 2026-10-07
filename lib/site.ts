@@ -17,8 +17,6 @@ export const site = {
     "CommonMind is an open AI infrastructure platform for building, evaluating, and deploying AI that understands civic speech, community reporting, and public discourse across languages beyond the mainstream.",
   short:
     "Open models, corpora, benchmarks, and tools for understanding civic speech in languages beyond the mainstream.",
-  footer:
-    "Open civic AI infrastructure for understanding how communities actually speak across languages beyond the mainstream.",
   org: { name: "Amplified Access", href: "https://amplifiedaccess.org" },
   links: {
     huggingface: "https://huggingface.co/AmplifiedAccess",
