@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { BarChart } from "@/components/benchmarks/bar-chart";
 import type { BenchmarkEntry } from "@/components/benchmarks/data";
+import { FRAME, FRAME_PANELS, HALO } from "@/components/system/framed-card";
 import { DirectionLabel, Segmented } from "@/components/system/segmented";
 import { cn } from "@/lib/utils";
 
@@ -27,10 +28,10 @@ const STACK_LAYERS = 3;
 const STEP_Y = 14;
 const STEP_SCALE = 0.04;
 
-// A card is a hairline-edged olive frame around two flush panels: the
-// model on the left (about a third of the width), its scores on the right.
-const CARD = "relative col-start-1 row-start-1 flex rounded-[3px] border border-[#1e1c19] bg-[#131000] p-1.5 sm:p-2";
-const PANELS = "grid flex-1 overflow-hidden rounded-[2px] lg:grid-cols-[minmax(0,0.55fr)_minmax(0,1fr)]";
+// A framed card with two flush panels: the model on the left (about a
+// third of the width), its scores on the right.
+const CARD = cn("relative col-start-1 row-start-1 flex", FRAME);
+const PANELS = cn("grid flex-1 lg:grid-cols-[minmax(0,0.55fr)_minmax(0,1fr)]", FRAME_PANELS);
 const MODEL_PANEL = "bg-surface-warm";
 const SCORE_PANEL = "bg-[#0b0a07]";
 
@@ -74,7 +75,7 @@ function ModelShowcase({ sets, className }: { sets: ShowcaseSet[]; className?: s
       }}
     >
       {/* A soft yellow halo around the whole stack. */}
-      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-8 bottom-0 -z-10 rounded-[3px] shadow-[0_0_90px_10px_rgb(255_211_0/0.14)]" />
+      <div aria-hidden className={cn(HALO, "inset-x-0 top-8 bottom-0")} />
 
       {Array.from({ length: Math.max(0, STACK_LAYERS - sets.length) }, (_, i) => {
         const depth = sets.length + i;
