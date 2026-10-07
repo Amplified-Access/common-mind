@@ -43,13 +43,27 @@ export const socialLinks = [
   { id: "youtube", label: "YouTube", href: "#" },
 ] as const;
 
-export const partners = [
+export type Partner = {
+  name: string;
+  /** Left out where we have no site to link to. */
+  href?: string;
+  logo: string;
+  width: number;
+  height: number;
+  /** Logo height class, tuned so the marks read at a similar weight. */
+  size: string;
+};
+
+// The collaborators on CommonMind, WatchTower's partners among them, in the
+// order WatchTower lists theirs.
+export const partners: Partner[] = [
   {
     name: "Amplified Access",
     href: site.org.href,
     logo: "/partners/amplified-access-white.svg",
     width: 574,
     height: 138,
+    size: "h-7",
   },
   {
     name: "WatchTower",
@@ -57,8 +71,31 @@ export const partners = [
     logo: "/partners/watchtower-white.svg",
     width: 219,
     height: 37,
+    size: "h-7",
   },
-] as const;
+  { name: "ACWJ", logo: "/partners/acwj-white.png", width: 195, height: 57, size: "h-5" },
+  {
+    name: "Makerere Institute of Social Research",
+    logo: "/partners/misr-white.png",
+    width: 539,
+    height: 149,
+    size: "h-9",
+  },
+  {
+    name: "Circular Design Hub",
+    logo: "/partners/circular-design-hub-white.png",
+    width: 164,
+    height: 156,
+    size: "h-9",
+  },
+  {
+    name: "Coalition for Grassroots Human Rights Defenders",
+    logo: "/partners/cghrds-white.png",
+    width: 1270,
+    height: 292,
+    size: "h-9",
+  },
+];
 
 export type FooterLink = { label: string; href: string };
 

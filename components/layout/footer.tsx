@@ -12,6 +12,7 @@ import { Container } from "@/components/common/container";
 import { FooterCta } from "@/components/layout/footer-cta";
 import { isExternalHref } from "@/components/system/primitives";
 import { footerColumns, partners, site, socialLinks } from "@/lib/site";
+import { cn } from "@/lib/utils";
 
 const socialIcons = {
   linkedin: Linkedin01Icon,
@@ -92,26 +93,35 @@ const Footer = () => {
         </p>
 
         <div className="flex flex-col gap-6 rounded-sm bg-[#1a1608] px-6 py-5 sm:flex-row sm:items-center sm:gap-12 sm:px-8">
-          <span className="shrink-0 text-[13px] text-foreground">Backed By:</span>
+          <span className="shrink-0 text-[13px] text-foreground">In collaboration with:</span>
           <ul className="flex flex-wrap items-center gap-x-12 gap-y-5">
-            {partners.map((partner) => (
-              <li key={partner.name}>
-                <a
-                  href={partner.href}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block opacity-90 transition-opacity hover:opacity-100"
-                >
-                  <Image
-                    src={partner.logo}
-                    alt={partner.name}
-                    width={partner.width}
-                    height={partner.height}
-                    className="h-7 w-auto"
-                  />
-                </a>
-              </li>
-            ))}
+            {partners.map((partner) => {
+              const logo = (
+                <Image
+                  src={partner.logo}
+                  alt={partner.name}
+                  width={partner.width}
+                  height={partner.height}
+                  className={cn("w-auto opacity-90 transition-opacity group-hover:opacity-100", partner.size)}
+                />
+              );
+              return (
+                <li key={partner.name}>
+                  {partner.href ? (
+                    <a
+                      href={partner.href}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="group block"
+                    >
+                      {logo}
+                    </a>
+                  ) : (
+                    logo
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </div>
       </Container>
