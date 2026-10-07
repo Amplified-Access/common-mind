@@ -71,7 +71,7 @@ const Footer = () => {
             </ul>
           </div>
 
-          <div className="grid grid-cols-2 gap-x-8 gap-y-12 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-x-8 gap-y-12 sm:flex sm:justify-between">
             {footerColumns.map((column) => (
               <div key={column.title} className="flex flex-col gap-4">
                 <span className="text-[13px] text-foreground">{column.title}</span>
