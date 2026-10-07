@@ -2,10 +2,11 @@
 
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { motion, useReducedMotion } from "motion/react";
+import { useReducedMotion } from "motion/react";
 import { useState } from "react";
+import { PolarAngleAxis, PolarGrid, PolarRadiusAxis, Radar, RadarChart as RechartsRadar } from "recharts";
 
-import { ContourField } from "@/components/system/contour-field";
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { FilterSelect } from "@/components/system/filters";
 
 import { radarAxes, type RadarScores } from "./civicbench-preview";
@@ -13,20 +14,11 @@ import { radarAxes, type RadarScores } from "./civicbench-preview";
 type RadarModel = { slug: string; name: string; scores: RadarScores };
 
 const SERIES = ["var(--signal)", "var(--teal)", "var(--ocean)", "var(--lilac)"];
-const SIZE = 420;
-const C = SIZE / 2;
-const R = 150;
 
-// Point on axis i at value v (0–100), starting from the top, clockwise.
-// Rounded so server and client markup match.
-function point(i: number, v: number): [number, number] {
-  const angle = -Math.PI / 2 + (i * 2 * Math.PI) / radarAxes.length;
-  const r = (v / 100) * R;
-  return [Math.round((C + r * Math.cos(angle)) * 10) / 10, Math.round((C + r * Math.sin(angle)) * 10) / 10];
-}
-
-const polygon = (values: number[]) => values.map((v, i) => point(i, v).join(",")).join(" ");
-
+// The models' scores across the CivicBench Africa tasks, on a shadcn
+// (Recharts) radar with its tooltip. Styled after the mock: a faint polygon
+// grid, white nodes at the outer corners, mono labels, and a pair of yellow
+// wireframe ribbons behind it.
 function RadarChart({ models, initial }: { models: RadarModel[]; initial: string[] }) {
   const [selected, setSelected] = useState(initial);
   const reduce = useReducedMotion();
@@ -34,6 +26,17 @@ function RadarChart({ models, initial }: { models: RadarModel[]; initial: string
     .map((slug) => models.find((m) => m.slug === slug))
     .filter((m): m is RadarModel => m !== undefined);
   const addable = models.filter((m) => !selected.includes(m.slug));
+
+  const colorOf = (m: RadarModel) => SERIES[selected.indexOf(m.slug)];
+  const config = Object.fromEntries(
+    shown.map((m) => [m.slug, { label: m.name, color: colorOf(m) }]),
+  ) satisfies ChartConfig;
+  // One row per task; `outer` traces the outermost ring to carry the nodes.
+  const data = radarAxes.map((axis) => ({
+    axis,
+    outer: 100,
+    ...Object.fromEntries(shown.map((m) => [m.slug, m.scores[axis]])),
+  }));
 
   return (
     <div className="flex flex-col gap-10">
@@ -62,64 +65,60 @@ function RadarChart({ models, initial }: { models: RadarModel[]; initial: string
         )}
       </div>
 
-      <div className="relative grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_16rem]">
-        <ContourField
-          className="absolute inset-x-0 top-1/4 -z-10 h-3/4 w-full opacity-30"
-          lines={34}
-          peak={0.45}
-          seed={3}
-        />
-        <svg viewBox={`-150 -10 ${SIZE + 300} ${SIZE + 50}`} className="mx-auto w-full max-w-3xl" role="img" aria-label="Radar chart of CivicBench Africa task scores">
-          {[20, 40, 60, 80, 100].map((ring) => (
-            <polygon
-              key={ring}
-              points={polygon(radarAxes.map(() => ring))}
-              fill="none"
-              stroke="white"
-              strokeOpacity={ring === 100 ? 0.18 : 0.08}
+      <div className="relative isolate grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_15rem]">
+        {/* The wireframe ribbons from the mock, rising behind either side. */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 hidden overflow-hidden mask-[linear-gradient(to_bottom,transparent,#000_20%,#000_75%,transparent)] lg:block">
+          <div className="absolute top-[24%] left-[8%] aspect-[1005/565] w-[30rem] -scale-x-100 bg-[url(/tour-ribbon.svg)] bg-contain bg-no-repeat opacity-35" />
+          <div className="absolute top-[8%] right-[-6%] aspect-[1005/565] w-[44rem] bg-[url(/tour-ribbon.svg)] bg-contain bg-no-repeat opacity-25" />
+        </div>
+
+        <ChartContainer
+          config={config}
+          role="img"
+          aria-label="Radar chart of CivicBench Africa task scores"
+          className="aspect-auto h-[26rem] w-full sm:h-[38rem] [&_.recharts-polar-grid_polygon]:stroke-white/10 [&_.recharts-surface]:overflow-visible"
+        >
+          <RechartsRadar data={data} outerRadius="82%" margin={{ top: 24, right: 24, bottom: 24, left: 24 }}>
+            <ChartTooltip
+              cursor={false}
+              content={<ChartTooltipContent className="min-w-56 gap-2 rounded-card border-line bg-surface-2 font-mono" />}
             />
-          ))}
-          {radarAxes.map((axis, i) => {
-            const [x, y] = point(i, 100);
-            const [lx, ly] = point(i, 122);
-            return (
-              <g key={axis}>
-                <line x1={C} y1={C} x2={x} y2={y} stroke="white" strokeOpacity={0.08} />
-                <circle cx={x} cy={y} r={4} fill="white" />
-                <text
-                  x={lx}
-                  y={ly + 4}
-                  textAnchor={Math.abs(lx - C) < 10 ? "middle" : lx > C ? "start" : "end"}
-                  className="fill-foreground font-mono text-[13px]"
-                >
-                  {axis}
-                </text>
-              </g>
-            );
-          })}
-          <circle cx={C} cy={C} r={3} fill="white" fillOpacity={0.7} />
-          {shown.map((m) => {
-            const color = SERIES[selected.indexOf(m.slug)];
-            return (
-              <motion.polygon
+            <PolarGrid gridType="polygon" />
+            <PolarRadiusAxis domain={[0, 100]} tickCount={6} tick={false} axisLine={false} />
+            <PolarAngleAxis
+              dataKey="axis"
+              tickLine={false}
+              tickSize={22}
+              tick={{ fill: "var(--foreground)", fontFamily: "var(--font-plex-mono)", fontSize: 15 }}
+            />
+            {/* The nodes on the outer ring; no line, no fill, no tooltip row. */}
+            <Radar
+              dataKey="outer"
+              stroke="none"
+              fill="none"
+              dot={{ r: 5, fill: "white", fillOpacity: 1, stroke: "none" }}
+              tooltipType="none"
+              isAnimationActive={false}
+            />
+            {shown.map((m) => (
+              <Radar
                 key={m.slug}
-                points={polygon(radarAxes.map((a) => m.scores[a]))}
-                fill={color}
-                fillOpacity={0.1}
-                stroke={color}
+                dataKey={m.slug}
+                stroke={`var(--color-${m.slug})`}
                 strokeWidth={2}
-                initial={reduce ? false : { opacity: 0, scale: 0.6 }}
-                animate={{ opacity: 1, scale: 1 }}
-                style={{ transformOrigin: `${C}px ${C}px` }}
-                transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                fill={`var(--color-${m.slug})`}
+                fillOpacity={0.1}
+                isAnimationActive={!reduce}
+                animationDuration={600}
               />
-            );
-          })}
-        </svg>
-        <ul className="flex flex-col gap-4">
+            ))}
+          </RechartsRadar>
+        </ChartContainer>
+
+        <ul className="flex flex-col gap-4 lg:pt-14">
           {shown.map((m) => (
             <li key={m.slug} className="flex items-center gap-3 font-mono text-base">
-              <span className="size-4 rounded-full" style={{ background: SERIES[selected.indexOf(m.slug)] }} />
+              <span className="size-4 shrink-0 rounded-full" style={{ background: colorOf(m) }} />
               {m.name}
             </li>
           ))}

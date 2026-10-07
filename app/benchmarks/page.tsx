@@ -41,12 +41,18 @@ const BenchmarksPage = () => {
         tags={["MULTILINGUAL", "OPEN EVALUATION", "CIVIC AI"]}
       />
 
-      <Section id="results" className="pt-6 sm:pt-8">
+      <Section id="results" className="isolate pt-6 sm:pt-8">
+        {/* The fine grid behind the panel's top, reaching up under the hero's
+            tags and fading down the gutters. */}
         <div
           aria-hidden
-          className="absolute inset-x-0 top-0 -z-10 h-64 bg-[radial-gradient(60%_100%_at_50%_0%,rgb(255_211_0/0.16),transparent_70%)]"
+          className="pointer-events-none absolute inset-x-0 -top-16 -z-10 h-[28rem] bg-grid [--grid-line:rgb(255_255_255/0.08)] mask-[linear-gradient(to_bottom,transparent,#000_25%,#000_45%,transparent)]"
         />
-        <Container>
+        <Container className="relative">
+          {/* The halo, as in the mock: a yellow glow rising ~65px off the
+              panel's top edge, and a faint wash down both sides. */}
+          <div aria-hidden className="pointer-events-none absolute inset-x-4 -top-16 -z-10 h-16 bg-linear-to-t from-signal/11 to-transparent md:inset-x-8 xl:inset-x-12" />
+          <div aria-hidden className="pointer-events-none absolute inset-x-4 top-0 bottom-0 -z-10 rounded-card shadow-[0_0_48px_rgb(255_211_0/0.07)] md:inset-x-8 xl:inset-x-12" />
           <Panel className="flex flex-col gap-20 px-6 py-12 sm:px-12 sm:py-14">
             <div className="flex flex-col gap-10">
               <SectionHeader
