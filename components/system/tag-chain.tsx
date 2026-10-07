@@ -30,10 +30,13 @@ function TagChain({
                 tone === "ink" ? "bg-background/60" : "bg-line-strong",
               )}
             >
+              {/* Centered on the previous tag's right edge: on its 1px
+                  border's midline for the outlined tags, on the edge itself
+                  for the borderless ink ones. */}
               <span
                 className={cn(
-                  "absolute top-1/2 left-0 size-1 -translate-y-1/2 rounded-full",
-                  tone === "ink" ? "bg-background/70" : "bg-line-strong",
+                  "absolute top-1/2 size-1 -translate-x-1/2 -translate-y-1/2 rounded-full",
+                  tone === "ink" ? "left-0 bg-background/70" : "left-[-0.5px] bg-line-strong",
                 )}
               />
             </span>
