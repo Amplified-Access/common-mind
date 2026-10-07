@@ -1,6 +1,10 @@
 "use client";
 
-import { Select } from "@base-ui/react/select";
+import { Menu } from "@base-ui/react/menu";
+import { Tick02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { useLenis } from "lenis/react";
+import { useRef } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -54,7 +58,14 @@ function FilterChips({
 /* Search                                                              */
 /* ------------------------------------------------------------------ */
 
-// Filters as you type; the button is there for people who expect one.
+// Space between the header's bottom edge and the search bar once it's
+// brought up, in screen pixels.
+const SEARCH_GAP = 16;
+
+// Filters as you type; the button is there for people who expect one. When
+// the field gains focus the page glides until the bar sits just under the
+// header, so the first results show beneath it as the reader types, even
+// with a phone's keyboard taking the lower half of the screen.
 function SearchField({
   value,
   onChange,
@@ -68,8 +79,26 @@ function SearchField({
   label: string;
   className?: string;
 }) {
+  const formRef = useRef<HTMLFormElement>(null);
+  const lenis = useLenis();
+
+  // Measured from the header itself, so it holds at any zoom.
+  const headerBottom = () => document.querySelector("header")?.getBoundingClientRect().bottom ?? 0;
+
+  const bringUp = () => {
+    const form = formRef.current;
+    if (!form) return;
+    const top = headerBottom() + SEARCH_GAP;
+    const distance = form.getBoundingClientRect().top - top;
+    if (Math.abs(distance) < 4) return;
+    const immediate = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (lenis) lenis.scrollTo(form, { offset: -top, duration: 0.8, immediate });
+    else window.scrollBy({ top: distance, behavior: immediate ? "instant" : "smooth" });
+  };
+
   return (
     <form
+      ref={formRef}
       role="search"
       onSubmit={(e) => e.preventDefault()}
       className={cn(
@@ -80,7 +109,13 @@ function SearchField({
       <input
         type="search"
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onFocus={bringUp}
+        onChange={(e) => {
+          onChange(e.target.value);
+          // Typing after scrolling the bar out of sight brings it back.
+          const rect = formRef.current?.getBoundingClientRect();
+          if (rect && (rect.top < headerBottom() || rect.bottom > window.innerHeight)) bringUp();
+        }}
         placeholder={placeholder}
         aria-label={label}
         className="min-w-0 flex-1 bg-transparent font-mono text-sm text-foreground outline-none placeholder:text-foreground/80 [&::-webkit-search-cancel-button]:hidden"
@@ -109,8 +144,9 @@ function Caret({ className }: { className?: string }) {
   );
 }
 
-// A labelled dropdown. Shows its label until something other than the
-// first ("all") option is chosen, then shows the choice.
+// A labelled dropdown, as a popover menu of choices. Shows its label until
+// something other than the first ("all") option is chosen, then shows the
+// choice. Non-modal, so the page keeps its scrollbar and never shifts.
 function FilterSelect({
   label,
   options,
@@ -130,17 +166,11 @@ function FilterSelect({
   const showLabel = !current || current.value === options[0]?.value;
 
   return (
-    <Select.Root
-      items={options}
-      value={value}
-      onValueChange={(next) => {
-        if (typeof next === "string") onChange(next);
-      }}
-    >
-      <Select.Trigger
-        aria-label={label}
+    <Menu.Root modal={false}>
+      <Menu.Trigger
+        aria-label={showLabel ? label : `${label}: ${current.label}`}
         className={cn(
-          "inline-flex cursor-pointer items-center gap-2 font-mono whitespace-nowrap text-signal outline-none transition-colors hover:text-foreground focus-visible:underline",
+          "group inline-flex cursor-pointer items-center gap-2 font-mono whitespace-nowrap text-signal outline-none transition-colors hover:text-foreground focus-visible:underline data-popup-open:text-foreground",
           variant === "text" && "text-sm",
           variant === "pill" &&
             "rounded-full border border-signal/60 bg-track/60 px-4 py-1 text-[10px] hover:border-signal",
@@ -148,27 +178,41 @@ function FilterSelect({
         )}
       >
         <span>{showLabel ? label : current.label}</span>
-        <Caret />
-      </Select.Trigger>
-      <Select.Portal>
-        <Select.Positioner alignItemWithTrigger={false} sideOffset={8} align="start" className="z-50 outline-none">
-          <Select.Popup className="zoom-viewport min-w-44 origin-(--transform-origin) rounded-lg border border-line bg-surface-2 py-1.5 shadow-2xl shadow-black/60 transition-[scale,opacity] duration-150 data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0">
-            <Select.List className="max-h-(--available-height) overflow-y-auto">
-              {options.map((option) => (
-                <Select.Item
-                  key={option.value}
-                  value={option.value}
-                  className="flex cursor-pointer items-center justify-between gap-6 px-4 py-2 font-mono text-xs text-foreground/80 outline-none select-none data-highlighted:bg-white/5 data-highlighted:text-foreground data-selected:text-signal"
-                >
-                  <Select.ItemText>{option.label}</Select.ItemText>
-                  <Select.ItemIndicator className="size-1.5 rounded-full bg-signal" />
-                </Select.Item>
-              ))}
-            </Select.List>
-          </Select.Popup>
-        </Select.Positioner>
-      </Select.Portal>
-    </Select.Root>
+        <Caret className="transition-transform group-data-popup-open:rotate-180" />
+      </Menu.Trigger>
+      <Menu.Portal>
+        <Menu.Positioner sideOffset={8} align="start" className="z-50 outline-none">
+          <Menu.Popup className="zoom-viewport min-w-48 origin-(--transform-origin) rounded-card border border-line bg-surface-2 p-1 shadow-2xl shadow-black/60 outline-none transition-[scale,opacity] duration-150 data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0">
+            {/* data-lenis-prevent: a long list scrolls itself, not the page. */}
+            <div data-lenis-prevent className="max-h-(--available-height) overflow-y-auto">
+              <Menu.RadioGroup
+                value={value}
+                onValueChange={(next) => {
+                  if (typeof next === "string") onChange(next);
+                }}
+              >
+                {options.map((option) => (
+                  <Menu.RadioItem
+                    key={option.value}
+                    value={option.value}
+                    closeOnClick
+                    className="flex cursor-pointer items-center justify-between gap-6 rounded-inset px-3 py-2 font-mono text-xs text-foreground/75 outline-none select-none data-checked:bg-signal/10 data-checked:text-signal data-highlighted:bg-white/5 data-highlighted:text-foreground data-checked:data-highlighted:bg-signal/15 data-checked:data-highlighted:text-signal"
+                  >
+                    {option.label}
+                    {/* Holds its width when empty, so rows line up. */}
+                    <span className="flex size-3.5 shrink-0 items-center justify-center">
+                      <Menu.RadioItemIndicator>
+                        <HugeiconsIcon icon={Tick02Icon} className="size-3.5" strokeWidth={2} />
+                      </Menu.RadioItemIndicator>
+                    </span>
+                  </Menu.RadioItem>
+                ))}
+              </Menu.RadioGroup>
+            </div>
+          </Menu.Popup>
+        </Menu.Positioner>
+      </Menu.Portal>
+    </Menu.Root>
   );
 }
 
