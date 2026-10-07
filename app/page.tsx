@@ -32,7 +32,7 @@ export default function Home() {
       benchmark: models.length ? "CivicBench Africa" : undefined,
       researchHref: research[0] && `/research/${research[0].slug}`,
       description: `Explore the models, civic speech resources, benchmarks, and research being developed to help AI understand ${language.name} in civic contexts.`,
-      sample: models[0]?.usage.code,
+      scores: [swahiliFlores, lugandaHeldOut].find((set) => set.code === language.code),
     };
   });
 

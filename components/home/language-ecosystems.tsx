@@ -4,6 +4,9 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import Link from "next/link";
 import { useState } from "react";
 
+import { BarChart } from "@/components/benchmarks/bar-chart";
+import type { BenchmarkEntry } from "@/components/benchmarks/data";
+import { FramedCard, HALO } from "@/components/system/framed-card";
 import { ArrowLink, StatusDot } from "@/components/system/primitives";
 import { cn } from "@/lib/utils";
 
@@ -15,13 +18,13 @@ export type Ecosystem = {
   benchmark?: string;
   researchHref?: string;
   description: string;
-  /** Code from one of its models, shown as texture. */
-  sample?: string;
+  /** Its CivicBench Africa results, once its models have been scored. */
+  scores?: { evalSet: string; entries: BenchmarkEntry[] };
 };
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
-// Pick a language, see everything built around it.
+// Pick a language, see everything built around it and how its models score.
 function LanguageEcosystems({ ecosystems }: { ecosystems: Ecosystem[] }) {
   const [active, setActive] = useState(ecosystems[0].code);
   const reduce = useReducedMotion();
@@ -75,9 +78,9 @@ function LanguageEcosystems({ ecosystems }: { ecosystems: Ecosystem[] }) {
         </Link>
       </div>
 
-      <div className="relative isolate overflow-hidden rounded-lg border border-line bg-[#0b0a07]">
-        <div aria-hidden className="absolute inset-x-0 -top-px -z-10 h-24 bg-[radial-gradient(50%_100%_at_30%_0%,rgb(255_211_0/0.14),transparent)]" />
-        <div className="grid lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1fr)]">
+      <div className="relative isolate">
+        <div aria-hidden className={cn(HALO, "inset-0")} />
+        <FramedCard panelsClassName="grid bg-[#0b0a07] lg:grid-cols-[minmax(0,0.7fr)_minmax(0,1fr)]">
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={current.code}
@@ -111,13 +114,18 @@ function LanguageEcosystems({ ecosystems }: { ecosystems: Ecosystem[] }) {
               </ArrowLink>
             </motion.div>
           </AnimatePresence>
-          <pre
-            aria-hidden
-            className="hidden overflow-hidden p-10 font-mono text-[10px] leading-relaxed whitespace-pre-wrap text-foreground/30 mask-[linear-gradient(to_bottom,#000_50%,transparent)] lg:block"
-          >
-            {current.sample}
-          </pre>
-        </div>
+          <div className="flex min-w-0 flex-col justify-center gap-8 p-8 sm:p-10">
+            {current.scores ? (
+              <>
+                {/* Keyed so the bars grow in again for each language. */}
+                <BarChart key={current.code} title="BLEU" entries={current.scores.entries} metric="bleu" />
+                <p className="font-mono text-[11px] text-faint">{current.scores.evalSet}</p>
+              </>
+            ) : (
+              <p className="font-mono text-xs text-faint">No CivicBench Africa scores for {current.name} yet.</p>
+            )}
+          </div>
+        </FramedCard>
       </div>
     </div>
   );
