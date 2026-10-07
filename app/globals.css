@@ -155,47 +155,48 @@
   }
 }
 
-/* Typography scale, authored at the 1280px baseline. Large screens are
-   handled by --viewport-scale, so sizes step up at breakpoints instead of
-   tracking vw (which zoom would scale a second time). Sora carries the
-   headings at its regular weight. */
+/* Typography scale, authored at the 1280px baseline and measured from the
+   2026-10 mocks: hero 40px, large titles 35px, section and page titles
+   26px. Large screens are handled by --viewport-scale, so sizes step up at
+   breakpoints instead of tracking vw (which zoom would scale a second
+   time). Sora carries the headings at its regular weight. */
 @utility text-display {
-  font-size: 2.25rem;
+  font-size: 2rem;
   line-height: 1.15;
   letter-spacing: -0.02em;
   font-weight: 400;
   @media (width >= 48rem) {
-    font-size: 2.75rem;
+    font-size: 2.5rem;
   }
 }
 
 @utility text-h1 {
-  font-size: 1.875rem;
+  font-size: 1.75rem;
   line-height: 1.2;
   letter-spacing: -0.02em;
   font-weight: 400;
   @media (width >= 48rem) {
-    font-size: 2.375rem;
+    font-size: 2.1875rem;
   }
 }
 
 @utility text-h2 {
-  font-size: 1.625rem;
+  font-size: 1.5rem;
   line-height: 1.2;
   letter-spacing: -0.015em;
   font-weight: 400;
   @media (width >= 48rem) {
-    font-size: 1.875rem;
+    font-size: 1.625rem;
   }
 }
 
 @utility text-h3 {
-  font-size: 1.375rem;
+  font-size: 1.25rem;
   line-height: 1.25;
   letter-spacing: -0.01em;
   font-weight: 400;
   @media (width >= 48rem) {
-    font-size: 1.5rem;
+    font-size: 1.375rem;
   }
 }
 

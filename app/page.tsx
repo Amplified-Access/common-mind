@@ -115,7 +115,7 @@ export default function Home() {
           <div className="grid gap-8 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)_minmax(0,0.6fr)] lg:gap-12">
             <div className="flex flex-col gap-3">
               <Eyebrow>CivicBench Africa</Eyebrow>
-              <h2 className="text-h1 text-balance">Measure what improves.</h2>
+              <h2 className="text-h2 text-balance">Measure what improves.</h2>
             </div>
             <div className="flex max-w-md flex-col gap-6 lg:pt-8">
               <p className="text-sm text-pretty text-foreground/85">
