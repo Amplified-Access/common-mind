@@ -2,20 +2,40 @@ import { BarChart } from "@/components/benchmarks/bar-chart";
 import { swahiliFlores } from "@/components/benchmarks/data";
 import { languages } from "@/components/languages/data";
 import { registryModels } from "@/components/models/registry";
-import { DotOrb } from "@/components/system/dot-orb";
+import { ParticleOrb } from "@/components/system/particle-orb";
+import { TagChain } from "@/components/system/tag-chain";
 import { cn } from "@/lib/utils";
 
-import { EvidencePipeline } from "./evidence-pipeline";
+import { SpeechOrb } from "./speech-orb";
 
-// Where each language's label sits around the orb, as % of the stage.
-const LABEL_SPOTS: [number, number][] = [
-  [30, 14],
-  [64, 15],
-  [16, 42],
-  [74, 46],
-  [20, 64],
-  [60, 66],
-];
+// The orb's radius as a share of half its box; the labels ring it at this.
+const ORB_SCALE = 0.8;
+
+// Each label's angle round the orb, in degrees clockwise from 3 o'clock, as
+// placed in the mock.
+const LABEL_ANGLES: Record<string, number> = {
+  lg: -108,
+  din: -77,
+  sw: -157,
+  om: -17,
+  luo: 156,
+  rw: 35,
+};
+
+// Pinned to the orb's rim: the point on the label nearest the orb's centre
+// sits on the rim, as in the mock.
+const labelPosition = (degrees: number): React.CSSProperties => {
+  const a = (degrees * Math.PI) / 180;
+  const x = Math.cos(a);
+  const y = Math.sin(a);
+  const r = ORB_SCALE * 50;
+  const round = (n: number) => Math.round(n * 100) / 100;
+  return {
+    left: `${round(50 + x * r)}%`,
+    top: `${round(50 + y * r)}%`,
+    transform: `translate(${round(-50 + 50 * x)}%, ${round(-50 + 50 * y)}%)`,
+  };
+};
 
 const CODE_SAMPLE = `quantization_config=BitsAndBytesConfig( load_in_4bit=True, bnb_4bit_quant_type="nf4",
 bnb_4bit_compute_dtype=torch.bfloat16, ), device_map={"": 0},)
@@ -26,21 +46,18 @@ eligibility, and even process applications offline."`;
 function LanguagesVisual() {
   return (
     <div className="relative size-full">
-      <div className="absolute top-[8%] left-1/2 w-[46%] max-w-72 -translate-x-1/2">
-        <DotOrb density={0.06} />
-      </div>
-      {languages.map((language, i) => {
-        const [x, y] = LABEL_SPOTS[i % LABEL_SPOTS.length];
-        return (
+      <div className="absolute top-[45%] left-1/2 aspect-square h-[62%] -translate-1/2">
+        <ParticleOrb variant="shell" settings={{ scale: ORB_SCALE }} className="aspect-auto size-full" />
+        {languages.map((language, i) => (
           <span
             key={language.code}
-            className="absolute border border-line-strong bg-tag px-3 py-1 text-base text-foreground"
-            style={{ left: `${x}%`, top: `${y}%` }}
+            className="absolute border border-line-strong bg-tag px-3 py-1 text-base whitespace-nowrap text-foreground"
+            style={labelPosition(LABEL_ANGLES[language.code] ?? i * 60)}
           >
             {language.endonym === "Kiswahili" ? "Kiswahili" : language.name}
           </span>
-        );
-      })}
+        ))}
+      </div>
       <pre aria-hidden className="absolute inset-x-[10%] bottom-[6%] font-mono text-[9px] leading-relaxed whitespace-pre-wrap text-foreground/45">
         {CODE_SAMPLE}
       </pre>
@@ -48,8 +65,33 @@ function LanguagesVisual() {
   );
 }
 
+const SPEECH_META = [
+  ["Language: Luganda", "Input: Speech"],
+  ["Domain: Public Services", "Confidence: -"],
+];
+
+const SPEECH_STAGES = ["Voice", "Transcription", "Expression", "Context"];
+
 function CivicSpeechVisual() {
-  return <EvidencePipeline className="size-full rounded-none bg-transparent" />;
+  return (
+    <div className="relative size-full">
+      {/* Centred a little above the middle, as in the mock. */}
+      <SpeechOrb className="absolute inset-x-0 -top-[7%] h-full" />
+      <div className="absolute inset-x-[7%] top-[7%] flex justify-between font-mono text-[10px] leading-[2] text-foreground/85">
+        {SPEECH_META.map((lines) => (
+          <p key={lines[0]} className="flex flex-col">
+            {lines.map((line) => (
+              <span key={line}>{line}</span>
+            ))}
+          </p>
+        ))}
+      </div>
+      <TagChain tags={SPEECH_STAGES} uppercase className="absolute inset-x-[7%] top-[70%] justify-center" />
+      <pre aria-hidden className="absolute inset-x-[7%] bottom-[6%] font-mono text-[9px] leading-relaxed whitespace-pre-wrap text-foreground/45">
+        {CODE_SAMPLE}
+      </pre>
+    </div>
+  );
 }
 
 function ModelsVisual() {
