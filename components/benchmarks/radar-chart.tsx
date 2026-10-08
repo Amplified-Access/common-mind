@@ -68,15 +68,17 @@ function RadarChart({ models, initial }: { models: RadarModel[]; initial: string
       <div className="relative isolate grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_15rem]">
         {/* The wireframe ribbons from the mock, rising behind either side. */}
         <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 hidden overflow-hidden mask-[linear-gradient(to_bottom,transparent,#000_20%,#000_75%,transparent)] lg:block">
-          <div className="absolute top-[24%] left-[8%] aspect-[1005/565] w-[30rem] -scale-x-100 bg-[url(/tour-ribbon.svg)] bg-contain bg-no-repeat opacity-35" />
-          <div className="absolute top-[8%] right-[-6%] aspect-[1005/565] w-[44rem] bg-[url(/tour-ribbon.svg)] bg-contain bg-no-repeat opacity-25" />
+          <div className="absolute top-[24%] left-[8%] aspect-[1005/565] w-[30rem] -scale-x-100 bg-[url(/tour-ribbon.svg)] bg-contain bg-no-repeat opacity-15" />
+          <div className="absolute top-[8%] right-[-6%] aspect-[1005/565] w-[44rem] bg-[url(/tour-ribbon.svg)] bg-contain bg-no-repeat opacity-10" />
         </div>
 
+        {/* The mock's height, capped at 62% of the screen's height (zoom
+            undone), so on large screens it still fits in view. */}
         <ChartContainer
           config={config}
           role="img"
           aria-label="Radar chart of CivicBench Africa task scores"
-          className="aspect-auto h-[26rem] w-full sm:h-[38rem] [&_.recharts-polar-grid_polygon]:stroke-white/10 [&_.recharts-surface]:overflow-visible"
+          className="aspect-auto h-[26rem] w-full sm:h-[min(31rem,calc(62dvh/var(--viewport-scale)))] [&_.recharts-polar-grid_polygon]:stroke-white/10 [&_.recharts-surface]:overflow-visible"
         >
           <RechartsRadar data={data} outerRadius="82%" margin={{ top: 24, right: 24, bottom: 24, left: 24 }}>
             <ChartTooltip
