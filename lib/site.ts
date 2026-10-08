@@ -26,6 +26,114 @@ export const site = {
   },
 } as const;
 
+// The site-wide announcement. Changing `id` shows it again to people who
+// dismissed the previous one.
+export const announcement = {
+  id: "civicbench-africa-2026-10",
+  message: "Introducing CivicBench Africa.",
+  linkLabel: "View CivicBench",
+  href: "/benchmarks#civicbench",
+} as const;
+
+// Placeholder profiles: replace each href with the real account URL.
+export const socialLinks = [
+  { id: "linkedin", label: "LinkedIn", href: "#" },
+  { id: "facebook", label: "Facebook", href: "#" },
+  { id: "instagram", label: "Instagram", href: "#" },
+  { id: "youtube", label: "YouTube", href: "#" },
+] as const;
+
+export type Partner = {
+  name: string;
+  /** Left out where we have no site to link to. */
+  href?: string;
+  logo: string;
+  width: number;
+  height: number;
+  /** Logo height class, tuned so the marks read at a similar weight. */
+  size: string;
+};
+
+// The collaborators on CommonMind, WatchTower's partners among them, in the
+// order WatchTower lists theirs.
+export const partners: Partner[] = [
+  {
+    name: "Amplified Access",
+    href: site.org.href,
+    logo: "/partners/amplified-access-white.svg",
+    width: 574,
+    height: 138,
+    size: "h-7",
+  },
+  {
+    name: "WatchTower",
+    href: site.links.watchtower,
+    logo: "/partners/watchtower-white.svg",
+    width: 219,
+    height: 37,
+    size: "h-7",
+  },
+  { name: "ACWJ", logo: "/partners/acwj-white.png", width: 195, height: 57, size: "h-5" },
+  {
+    name: "Makerere Institute of Social Research",
+    logo: "/partners/misr-white.png",
+    width: 539,
+    height: 149,
+    size: "h-9",
+  },
+  {
+    name: "Circular Design Hub",
+    logo: "/partners/circular-design-hub-white.png",
+    width: 164,
+    height: 156,
+    size: "h-9",
+  },
+  {
+    name: "Coalition for Grassroots Human Rights Defenders",
+    logo: "/partners/cghrds-white.png",
+    width: 1270,
+    height: 292,
+    size: "h-9",
+  },
+];
+
+export type FooterLink = { label: string; href: string };
+
+export const footerColumns: { title: string; links: FooterLink[] }[] = [
+  { title: "Platform", links: [...navItems] },
+  {
+    title: "Resources",
+    links: [
+      { label: "Documentation", href: "/build" },
+      { label: "Hugging Face", href: site.links.huggingface },
+      { label: "Ollama", href: site.links.ollama },
+      { label: "Kaggle", href: site.links.kaggle },
+      { label: "CivicBench Africa", href: "/benchmarks#civicbench" },
+      { label: "Civic Speech Corpus", href: "/research/civic-corpus" },
+      { label: "Terminology", href: "/research/civic-corpus#terminology" },
+      { label: "Datasets", href: "/datasets" },
+    ],
+  },
+  {
+    title: "Developers",
+    links: [
+      { label: "Get Started", href: "/build" },
+      { label: "API", href: "/build#api" },
+      { label: "Model Registry", href: "/models#registry" },
+      { label: "Deployment", href: "/build#paths" },
+      { label: "Releases", href: "/research#releases" },
+    ],
+  },
+  {
+    title: "Legal",
+    links: [
+      { label: "Privacy", href: "/privacy" },
+      { label: "Terms", href: "/terms" },
+      { label: "Licenses", href: "/licenses" },
+    ],
+  },
+];
+
 export function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }

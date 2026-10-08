@@ -1,26 +1,68 @@
+import { lugandaHeldOut, swahiliFlores } from "@/components/benchmarks/data";
 import { Container } from "@/components/common/container";
-import { LinkButton } from "@/components/system/primitives";
+import { getModel } from "@/components/models/registry";
+import { Backdrop } from "@/components/system/backdrop";
+import { ArrowLink } from "@/components/system/primitives";
 
-import { EvidencePipeline } from "./evidence-pipeline";
-import { HeroOrb } from "./hero-orb";
+import { ModelShowcase, type ShowcaseSet } from "./model-showcase";
+
+function showcaseModel(slug: string): ShowcaseSet["model"] {
+  const model = getModel(slug);
+  if (!model) throw new Error(`Unknown model slug: ${slug}`);
+  return {
+    slug: model.slug,
+    name: model.name,
+    tagline: model.tagline,
+    platforms: model.platforms,
+    overview: model.overview,
+  };
+}
 
 function HomeHero() {
   return (
-    <section className="relative overflow-hidden">
-      <Container className="relative grid gap-20 pt-20 pb-20 sm:pt-28 sm:pb-28 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:items-center lg:gap-24">
-        <HeroOrb>
-          <h1 className="text-[clamp(2.75rem,5.4vw,5.25rem)] leading-[1] font-medium tracking-[-0.04em] text-balance">
-            Open civic infrastructure for{" "}
-            <span className="text-signal">multilingual</span> AI.
+    <section className="zoom-viewport relative isolate overflow-hidden border-b border-line pt-(--header-height)">
+      <Backdrop wash warmGrain sweep glow />
+      <Container className="flex flex-col items-center gap-14 pt-20 sm:pt-24">
+        <div className="flex max-w-3xl flex-col items-center gap-6 text-center">
+          <h1 className="text-display text-balance">
+            Open civic infrastructure for 
+            <span className="text-signal"> multilingual</span> AI.
           </h1>
-          <div className="flex flex-wrap gap-3">
-            <LinkButton href="/models">Explore models</LinkButton>
-            <LinkButton href="/benchmarks" variant="secondary">
-              View benchmarks
-            </LinkButton>
+          <p className="max-w-lg text-sm text-pretty text-foreground/90">
+            CommonMind provides the open models, civic data, benchmarks,
+            research, and developer tools needed to understand community voice
+            across languages beyond the mainstream.
+          </p>
+          <div className="flex flex-wrap justify-center gap-x-10 gap-y-3 pt-4">
+            <ArrowLink href="/models" tone="foreground">
+              Explore Models
+            </ArrowLink>
+            <ArrowLink href="/models#try">Try a Model</ArrowLink>
           </div>
-        </HeroOrb>
-        <EvidencePipeline className="w-full max-w-xl lg:justify-self-end" />
+        </div>
+        {/* Runs past the section's bottom edge, which cuts the cards off so
+            they read as sitting behind the next section. */}
+        <ModelShowcase
+          className="-mb-5 sm:-mb-8"
+          sets={[
+            {
+              id: "sw",
+              from: "English",
+              to: "Swahili",
+              model: showcaseModel("swahili-gemma-1b-it"),
+              entries: swahiliFlores.entries,
+              evalSet: swahiliFlores.evalSet,
+            },
+            {
+              id: "lg",
+              from: "English",
+              to: "Luganda",
+              model: showcaseModel("luganda-gemma-1b-it"),
+              entries: lugandaHeldOut.entries,
+              evalSet: lugandaHeldOut.evalSet,
+            },
+          ]}
+        />
       </Container>
     </section>
   );

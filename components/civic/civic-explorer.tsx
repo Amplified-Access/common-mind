@@ -58,7 +58,7 @@ function CivicExplorer() {
         <div
           role="tablist"
           aria-label="Civic categories"
-          className="inline-flex gap-1 rounded-full bg-surface p-1 lg:flex lg:flex-col lg:rounded-3xl lg:p-1.5"
+          className="inline-flex gap-1 rounded-full border border-line bg-surface p-1 lg:flex lg:flex-col lg:rounded-card lg:p-1.5"
         >
           {civicCategories.map((category) => {
             const selected = category.id === current.id;
@@ -71,14 +71,14 @@ function CivicExplorer() {
                 aria-selected={selected}
                 onClick={() => setActive(category.id)}
                 className={cn(
-                  "relative shrink-0 cursor-pointer rounded-full px-4 py-2 text-left text-sm whitespace-nowrap transition-colors lg:rounded-2xl lg:px-4 lg:py-2.5",
+                  "relative shrink-0 cursor-pointer rounded-full px-4 py-2 text-left font-mono text-xs whitespace-nowrap transition-colors lg:rounded-inset lg:px-4 lg:py-2.5",
                   selected ? "text-background" : "text-subtle hover:text-foreground",
                 )}
               >
                 {selected && (
                   <motion.span
                     layoutId={pillId}
-                    className="absolute inset-0 overflow-hidden rounded-full bg-foreground lg:rounded-2xl"
+                    className="absolute inset-0 overflow-hidden rounded-full bg-signal lg:rounded-inset"
                     transition={{ duration: reduce ? 0 : 0.4, ease: EASE }}
                   >
                     {/* Time until the next category */}
@@ -110,7 +110,7 @@ function CivicExplorer() {
           className="grid gap-3 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]"
         >
           {/* What was said */}
-          <div className="relative flex min-h-80 flex-col justify-end overflow-hidden rounded-3xl bg-surface sm:min-h-96">
+          <div className="relative flex min-h-80 flex-col justify-end overflow-hidden rounded-card border border-line bg-surface sm:min-h-96">
             {current.image ? (
               <>
                 <Image
@@ -128,7 +128,7 @@ function CivicExplorer() {
               </div>
             )}
             <div className="relative flex flex-col gap-3 p-8">
-              <span className="text-xs text-subtle">{current.input.kind}</span>
+              <span className="font-mono text-xs text-signal">{current.input.kind}</span>
               <p className="max-w-lg text-xl tracking-tight text-pretty sm:text-2xl">
                 {current.input.text}
               </p>
@@ -136,7 +136,7 @@ function CivicExplorer() {
           </div>
 
           {/* How it is structured */}
-          <div className="flex flex-col justify-between gap-8 rounded-3xl bg-surface p-8">
+          <div className="flex flex-col justify-between gap-8 rounded-card border border-line bg-surface p-8">
             <dl className="flex flex-col gap-5 font-mono text-sm">
               {current.output.map(([key, value]) => (
                 <div key={key} className="flex flex-col gap-1">
@@ -145,7 +145,7 @@ function CivicExplorer() {
                 </div>
               ))}
             </dl>
-            <p className="text-sm text-subtle">{current.boundary}</p>
+            <p className="text-sm text-faint">{current.boundary}</p>
           </div>
         </motion.div>
       </AnimatePresence>
@@ -157,7 +157,8 @@ const BARS = 40;
 const bars = Array.from({ length: BARS }, (_, i) => {
   const v = Math.abs(Math.sin(i * 12.9898) * 43758.5453) % 1;
   const envelope = Math.sin((i / (BARS - 1)) * Math.PI);
-  return 0.2 + (0.35 + v * 0.45) * envelope;
+  // Rounded so the server and browser render identical heights.
+  return Math.round((0.2 + (0.35 + v * 0.45) * envelope) * 1e4) / 1e4;
 });
 
 // A drawing of the input itself, used until a photograph is supplied.

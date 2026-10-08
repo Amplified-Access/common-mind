@@ -1,11 +1,7 @@
 <svg width="480" height="480" viewBox="-240.05 -240.05 480.1 480.1" xmlns="http://www.w3.org/2000/svg">
 <style>
-  .s { stroke: #000; }
-  .f { fill: #000; }
-  @media (prefers-color-scheme: dark) {
-    .s { stroke: #fff; }
-    .f { fill: #fff; }
-  }
+  .s { stroke: #ffd300; }
+  .f { fill: #ffd300; }
 </style>
 <g fill="none" class="s" stroke-width="33.5"><path transform="rotate(0)" d="M-77.94 -45V-168.3A55 55 0 0 1 -22.94 -223.3H22.94A55 55 0 0 1 70.57 -195.8"/><path transform="rotate(60)" d="M-77.94 -45V-168.3A55 55 0 0 1 -22.94 -223.3H22.94A55 55 0 0 1 70.57 -195.8"/><path transform="rotate(120)" d="M-77.94 -45V-168.3A55 55 0 0 1 -22.94 -223.3H22.94A55 55 0 0 1 70.57 -195.8"/><path transform="rotate(180)" d="M-77.94 -45V-168.3A55 55 0 0 1 -22.94 -223.3H22.94A55 55 0 0 1 70.57 -195.8"/><path transform="rotate(240)" d="M-77.94 -45V-168.3A55 55 0 0 1 -22.94 -223.3H22.94A55 55 0 0 1 70.57 -195.8"/><path transform="rotate(300)" d="M-77.94 -45V-168.3A55 55 0 0 1 -22.94 -223.3H22.94A55 55 0 0 1 70.57 -195.8"/></g><g class="f"><circle transform="rotate(0)" cx="-77.94" cy="-45.0" r="32.5"/><circle transform="rotate(60)" cx="-77.94" cy="-45.0" r="32.5"/><circle transform="rotate(120)" cx="-77.94" cy="-45.0" r="32.5"/><circle transform="rotate(180)" cx="-77.94" cy="-45.0" r="32.5"/><circle transform="rotate(240)" cx="-77.94" cy="-45.0" r="32.5"/><circle transform="rotate(300)" cx="-77.94" cy="-45.0" r="32.5"/></g>
 </svg>

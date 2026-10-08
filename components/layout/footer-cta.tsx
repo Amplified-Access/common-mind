@@ -1,45 +1,43 @@
 "use client";
 
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 import { Grainient } from "@/components/system/grainient";
 import { LinkButton } from "@/components/system/primitives";
 
-// The models pages already put a model in front of the visitor, so the
-// closing call to try one would just point back at the page itself.
+// The model index already is the place "Explore Models" points to, so the
+// closing call to action would only point back at the page itself.
 function FooterCta() {
   const pathname = usePathname();
-  if (pathname === "/models" || pathname.startsWith("/models/")) return null;
+  if (pathname === "/models") return null;
 
   return (
-    <section className="relative overflow-hidden rounded-3xl bg-signal text-background">
+    <section className="relative isolate overflow-hidden rounded-card bg-signal text-background">
       <Grainient
         className="absolute! inset-0"
-        colors={["#fff46e", "#f6e800", "#bfb300"]}
-        blendAngle={-25}
-        contrast={1.05}
-        grainAmount={0.09}
+        colors={["#ffd300", "#d9b500", "#5c4c00"]}
+        blendAngle={-30}
+        warpAmplitude={60}
+        contrast={1.08}
+        grainAmount={0.16}
+        grainScale={2.4}
       />
-      <div className="relative flex min-h-112 flex-col justify-center gap-10 p-8 sm:p-14 lg:p-20">
-        <h2 className="text-h1 max-w-4xl font-semibold text-balance">
-          Build on the civic language layer.
+      <div className="relative flex min-h-100 flex-col items-center justify-center gap-5 px-6 py-20 text-center sm:px-14">
+        <h2 className="max-w-xl text-[2.25rem] leading-[1.2] font-semibold tracking-[-0.02em] text-balance md:text-[2.75rem]">
+          Build with the civic language layer.
         </h2>
-        <div className="flex flex-wrap gap-3">
-          <LinkButton href="/build" variant="ink">
-            Start building
+        <p className="max-w-md text-base text-pretty">
+          Use open models, data, benchmarks, and tools to build AI that understands
+          how communities actually speak.
+        </p>
+        <div className="flex flex-wrap justify-center gap-3 pt-3">
+          <LinkButton href="/build" variant="ink" arrow>
+            Start Building
           </LinkButton>
-          <LinkButton href="/models#try" variant="ink-secondary">
-            Try a model
+          <LinkButton href="/models" variant="bright" arrow>
+            Explore Models
           </LinkButton>
         </div>
-        <Image
-          src="/icon-black.svg"
-          alt=""
-          width={458}
-          height={480}
-          className="absolute right-8 bottom-8 h-10 w-auto sm:right-14 sm:bottom-14 lg:right-20 lg:bottom-20 lg:h-12"
-        />
       </div>
     </section>
   );

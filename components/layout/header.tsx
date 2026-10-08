@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu } from "@hugeicons/core-free-icons";
+import { Menu01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useLenis } from "lenis/react";
 import Image from "next/image";
@@ -8,10 +8,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
+import { buttonClasses } from "@/components/system/primitives";
 import { isActive, navItems, site } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
-import { Container } from "../common/container";
 import {
   Sheet,
   SheetContent,
@@ -20,38 +20,52 @@ import {
   SheetTrigger,
 } from "../ui/sheet";
 
-// Past this scroll offset the header hides on scroll-down and reappears on
-// scroll-up.
-const REVEAL_THRESHOLD = 96;
+// On the home page, past this scroll offset the header lifts off the page
+// into a floating pill; back above it, the header docks again. Every other
+// page keeps the pill throughout.
+const PIN_THRESHOLD = 80;
+
+// Shared by the bar and its wrapper so both halves of the morph move together.
+const MORPH =
+  "duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none";
 
 const Header = () => {
   const pathname = usePathname();
-  const [hidden, setHidden] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+  const [pinned, setPinned] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
-  useLenis(({ scroll, direction }) => {
-    const pastThreshold = scroll >= REVEAL_THRESHOLD;
-    setScrolled(scroll > 8);
-    if (!pastThreshold) {
-      setHidden(false);
-      return;
-    }
-    if (direction === 1) setHidden(true);
-    else if (direction === -1) setHidden(false);
+  useLenis(({ scroll }) => {
+    setPinned(scroll >= PIN_THRESHOLD);
   });
+  const home = pathname === "/";
+  const floating = !home || pinned;
 
+  // Docked: a full-width bar, 56px tall. Pinned: an 8px drop plus a 48px
+  // pill, still 56px, so the page below never shifts during the morph.
   return (
     <header
       className={cn(
-        "sticky top-0 z-50 transition-[transform,background-color] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
-        hidden ? "-translate-y-full" : "translate-y-0",
-        scrolled
-          ? "bg-background/80 backdrop-blur-xl"
-          : "bg-background",
+        // Takes no room, so the page's hero runs up behind it.
+        "zoom-viewport sticky top-0 z-50 -mb-(--header-height) transition-[padding]",
+        // Where the page's container content starts: the container's gutter,
+        // plus its centering margin once the screen outgrows it. Docked, the
+        // black strip runs edge to edge and pads in by this; floating, the
+        // pill draws in by it from both edges as it drops.
+        "[--gutter:1rem] md:[--gutter:2rem] xl:[--gutter:3rem]",
+        "[--inset:max(var(--gutter),calc((100%-90rem)/2+var(--gutter)))]",
+        MORPH,
+        floating && "pt-2",
       )}
     >
-      <Container className="flex h-16 items-center justify-between gap-6">
+      <div
+        className={cn(
+          "relative flex items-center justify-between gap-6 border transition-[height,margin,padding,background-color,border-color,border-radius,box-shadow,backdrop-filter]",
+          MORPH,
+          floating
+            ? "mx-(--inset) h-12 rounded-md border-line bg-background/70 px-3 shadow-[0_8px_30px_rgb(0_0_0/0.45)] backdrop-blur-xl"
+            : "mx-0 h-14 rounded-none border-transparent bg-background px-(--inset)",
+        )}
+      >
         <Link href="/" aria-label="CommonMind home" className="shrink-0">
           <Image
             src="/logo-white.svg"
@@ -59,11 +73,11 @@ const Header = () => {
             width={1039}
             height={184}
             priority
-            className="h-5.5 w-auto"
+            className="h-7 w-auto"
           />
         </Link>
 
-        <nav className="hidden items-center gap-1 md:flex">
+        <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-6 md:flex lg:gap-7">
           {navItems.map((item) => {
             const active = isActive(pathname, item.href);
             return (
@@ -72,10 +86,8 @@ const Header = () => {
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "rounded-full px-3.5 py-1.5 text-sm transition-colors",
-                  active
-                    ? "bg-white/6 text-foreground"
-                    : "text-subtle hover:text-foreground",
+                  "py-1.5 text-xs transition-colors",
+                  active ? "text-signal" : "text-foreground hover:text-signal",
                 )}
               >
                 {item.label}
@@ -84,29 +96,29 @@ const Header = () => {
           })}
         </nav>
 
-        <div className="hidden items-center gap-4 md:flex">
+        <div className="hidden items-center gap-2 md:flex">
           <a
             href={site.links.huggingface}
             target="_blank"
             rel="noreferrer"
-            className="font-mono text-xs text-subtle transition-colors hover:text-foreground"
+            className={buttonClasses("outline", "max-lg:px-3.5")}
           >
-            Hugging Face ↗
+            Hugging Face
           </a>
           <Link
             href="/build"
-            className="inline-flex h-8 items-center rounded-full bg-foreground px-4 text-sm font-medium text-background transition-colors hover:bg-foreground/85"
+            className={buttonClasses("signal", "max-lg:px-3.5")}
           >
-            Get started
+            Get Started
           </Link>
         </div>
 
         <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
           <SheetTrigger
             aria-label="Open menu"
-            className="cursor-pointer text-subtle transition-colors hover:text-foreground md:hidden"
+            className="cursor-pointer text-foreground transition-colors hover:text-signal md:hidden"
           >
-            <HugeiconsIcon icon={Menu} className="size-5" />
+            <HugeiconsIcon icon={Menu01Icon} className="size-6" />
           </SheetTrigger>
           <SheetContent side="right">
             <SheetHeader>
@@ -126,7 +138,7 @@ const Header = () => {
                     <span
                       className={cn(
                         "text-3xl tracking-tight",
-                        active ? "text-foreground" : "text-foreground/50",
+                        active ? "text-signal" : "text-foreground/60",
                       )}
                     >
                       {item.label}
@@ -139,22 +151,22 @@ const Header = () => {
               <Link
                 href="/build"
                 onClick={() => setMobileNavOpen(false)}
-                className="inline-flex h-11 items-center justify-center rounded-full bg-foreground text-sm font-medium text-background"
+                className={buttonClasses("signal", "h-11")}
               >
-                Get started
+                Get Started
               </Link>
               <a
                 href={site.links.huggingface}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex h-11 items-center justify-center rounded-full bg-white/6 text-sm"
+                className={buttonClasses("outline", "h-11")}
               >
-                Hugging Face ↗
+                Hugging Face
               </a>
             </div>
           </SheetContent>
         </Sheet>
-      </Container>
+      </div>
     </header>
   );
 };

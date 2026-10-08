@@ -41,7 +41,7 @@ function TerminologyViewer() {
               className={cn(
                 "w-full cursor-pointer rounded-full px-4 py-2 text-left font-mono text-sm whitespace-nowrap transition-colors lg:rounded-none lg:px-0 lg:py-1.5",
                 i === index
-                  ? "bg-signal text-background lg:bg-transparent lg:text-foreground"
+                  ? "bg-signal text-background lg:bg-transparent lg:text-signal"
                   : "bg-surface text-subtle hover:text-foreground lg:bg-transparent lg:text-faint",
               )}
             >

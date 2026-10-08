@@ -1,11 +1,12 @@
 "use client";
 
-import { Cancel } from "@hugeicons/core-free-icons";
+import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState, useSyncExternalStore } from "react";
 
-import { Chevron } from "@/components/system/chevron";
+import { Arrow } from "@/components/system/arrow";
 
 import { Container } from "../common/container";
 
@@ -24,39 +25,30 @@ const noopSubscribe = () => () => {};
 
 type AnnouncementBannerProps = {
   id: string;
-  label: string;
   message: string;
   linkLabel: string;
   href: string;
 };
 
-function AnnouncementBanner({
-  id,
-  label,
-  message,
-  linkLabel,
-  href,
-}: AnnouncementBannerProps) {
+// Shown on the home page only, for now.
+function AnnouncementBanner({ id, message, linkLabel, href }: AnnouncementBannerProps) {
+  const pathname = usePathname();
   const [dismissedNow, setDismissed] = useState(false);
   const storedId = useSyncExternalStore(noopSubscribe, readDismissed, () => null);
 
-  if (dismissedNow || storedId === id) return null;
+  if (pathname !== "/" || dismissedNow || storedId === id) return null;
 
   return (
-    <div className="relative bg-foreground text-background">
-      <Container className="flex items-center justify-center gap-3 py-2.5 pr-10 text-center text-xs sm:text-sm">
-        <span className="hidden h-5 shrink-0 items-center justify-center rounded-full bg-signal px-2 text-xs leading-none font-medium whitespace-nowrap text-background sm:inline-flex">
-          {label}
-        </span>
-        <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5">
-          <span className="hidden sm:inline">{message}</span>
-          <span className="sm:hidden">{label}: {message.split(":")[0]}</span>
+    <div className="zoom-viewport relative bg-[#0c0c0c] text-foreground">
+      <Container className="flex items-center justify-center py-2.5 pr-12 text-center text-xs sm:text-[13px]">
+        <p className="flex flex-wrap items-center justify-center gap-x-3 gap-y-0.5">
+          <span>{message}</span>
           <Link
             href={href}
-            className="inline-flex items-center gap-1 font-medium underline-offset-4 hover:underline"
+            className="group inline-flex items-center gap-2 font-mono text-xs text-signal transition-colors hover:text-foreground"
           >
             {linkLabel}
-            <Chevron />
+            <Arrow direction="right" className="transition-transform group-hover:translate-x-0.5" />
           </Link>
         </p>
       </Container>
@@ -71,9 +63,9 @@ function AnnouncementBanner({
           }
           setDismissed(true);
         }}
-        className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer rounded-full p-1.5 text-background/50 transition-colors hover:text-background"
+        className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer rounded-full p-1.5 text-foreground/80 transition-colors hover:text-foreground md:right-8 xl:right-12"
       >
-        <HugeiconsIcon icon={Cancel} className="size-3.5" />
+        <HugeiconsIcon icon={Cancel01Icon} className="size-4" />
       </button>
     </div>
   );

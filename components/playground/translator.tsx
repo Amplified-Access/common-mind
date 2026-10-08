@@ -1,7 +1,10 @@
 "use client";
 
+import { TranslateIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useMemo, useState } from "react";
 
+import { DirectionLabel, Segmented } from "@/components/system/segmented";
 import { cn } from "@/lib/utils";
 
 import { playgroundModels, type Example } from "./data";
@@ -10,7 +13,13 @@ type Status = "idle" | "loading" | "error";
 
 const MAX_CHARS = 500;
 
-function Translator({ initialModel }: { initialModel?: string }) {
+type TranslatorProps = {
+  initialModel?: string;
+  /** Pin the playground to one model: its name replaces the model picker. */
+  locked?: boolean;
+};
+
+function Translator({ initialModel, locked = false }: TranslatorProps) {
   const startModel =
     playgroundModels.find((m) => m.slug === initialModel) ?? playgroundModels[0];
   const [modelSlug, setModelSlug] = useState(startModel.slug);
@@ -88,55 +97,73 @@ function Translator({ initialModel }: { initialModel?: string }) {
   };
 
   return (
-    <div className="overflow-hidden rounded-3xl bg-surface">
+    <div className="relative isolate overflow-hidden rounded-card border border-line bg-surface">
+      {/* A faint grid behind the input, as on the design. */}
+      <div
+        aria-hidden
+        className="absolute inset-0 -z-10 bg-grid mask-[radial-gradient(40%_50%_at_40%_60%,#000_0%,transparent_100%)]"
+      />
+
       {/* Toolbar */}
-      <div className="flex flex-col gap-4 px-6 pt-6 sm:flex-row sm:items-center sm:justify-between sm:px-8">
-        <div className="scrollbar-none -mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-          {playgroundModels.map((m) => (
-            <button
-              key={m.slug}
-              type="button"
-              onClick={() => handleModelChange(m.slug)}
-              className={cn(
-                "shrink-0 cursor-pointer rounded-full px-3.5 py-1.5 text-sm transition-colors",
-                m.slug === model.slug
-                  ? "bg-signal font-medium text-background"
-                  : "bg-white/5 text-subtle hover:text-foreground",
-              )}
-            >
-              {m.name}
-            </button>
-          ))}
-        </div>
-        <div className="flex items-center gap-2">
-          {model.directions.map((d) => (
-            <button
-              key={d.code}
-              type="button"
-              onClick={() => {
-                setDirectionCode(d.code);
+      <div className="flex flex-col gap-5 px-5 pt-6 sm:px-7 lg:flex-row lg:items-center lg:justify-between">
+        {locked ? (
+          <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
+            <h3 className="text-h3">{model.name}</h3>
+            <DirectionToggle
+              directions={model.directions}
+              value={direction.code}
+              onChange={(code) => {
+                setDirectionCode(code);
                 reset();
               }}
-              disabled={model.directions.length === 1}
-              className={cn(
-                "cursor-pointer rounded-full px-3 py-1.5 text-sm transition-colors disabled:cursor-default",
-                d.code === direction.code
-                  ? "bg-white/8 text-foreground"
-                  : "text-faint hover:text-subtle",
-              )}
+            />
+          </div>
+        ) : (
+          <>
+            <div
+              role="radiogroup"
+              aria-label="Model"
+              className="scrollbar-none -mx-5 flex gap-3 overflow-x-auto px-5 sm:mx-0 sm:px-0"
             >
-              {d.label}
-            </button>
-          ))}
-        </div>
+              {playgroundModels.map((m) => {
+                const selected = m.slug === model.slug;
+                return (
+                  <button
+                    key={m.slug}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    onClick={() => handleModelChange(m.slug)}
+                    className={cn(
+                      "shrink-0 cursor-pointer rounded-full border px-4 py-1.5 font-mono text-xs transition-colors",
+                      selected
+                        ? "border-signal bg-signal text-background"
+                        : "border-signal/70 text-signal hover:bg-signal/10",
+                    )}
+                  >
+                    {m.name}
+                  </button>
+                );
+              })}
+            </div>
+            <DirectionToggle
+              directions={model.directions}
+              value={direction.code}
+              onChange={(code) => {
+                setDirectionCode(code);
+                reset();
+              }}
+            />
+          </>
+        )}
       </div>
 
       {/* Panes */}
-      <div className="grid md:grid-cols-2">
-        <div className="flex flex-col">
-          <div className="flex items-center justify-between px-6 pt-8 sm:px-8">
-            <span className="text-sm text-faint">{direction.from}</span>
-            <span className="font-mono text-[11px] text-faint tabular-nums">
+      <div className="grid gap-4 p-3 pt-4 md:grid-cols-2 md:gap-0 md:pt-6">
+        <div className="flex min-h-72 flex-col">
+          <div className="flex items-center justify-between px-3 pt-2 sm:px-4">
+            <span className="text-[13px]">{direction.from}</span>
+            <span className="text-[13px] text-foreground/80 tabular-nums">
               {input.length}/{MAX_CHARS}
             </span>
           </div>
@@ -146,70 +173,93 @@ function Translator({ initialModel }: { initialModel?: string }) {
             onKeyDown={(e) => {
               if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleTranslate();
             }}
-            placeholder={`Type a sentence in ${direction.from}…`}
-            rows={6}
-            className="w-full flex-1 resize-none bg-transparent px-6 py-4 text-xl text-foreground outline-none placeholder:text-faint sm:px-8"
+            placeholder={`Type a sentence in ${direction.from}`}
+            aria-label={`Text in ${direction.from}`}
+            rows={5}
+            className="w-full flex-1 resize-none bg-transparent px-3 py-5 text-2xl leading-snug text-foreground outline-none placeholder:text-foreground/25 sm:px-4 md:text-[1.75rem]"
           />
           {examples.length > 0 && (
-            <div className="flex flex-wrap gap-2 px-6 pb-6 sm:px-8">
+            <div className="flex flex-wrap gap-2.5 px-3 pb-2 sm:px-4">
               {examples.map((ex) => (
                 <button
                   key={ex.source}
                   type="button"
                   onClick={() => handleExampleClick(ex)}
-                  className="cursor-pointer rounded-full bg-white/5 px-3 py-1.5 text-xs text-subtle transition-colors hover:text-foreground"
+                  className="cursor-pointer rounded-inset bg-[#1b1b1b] px-2.5 py-1.5 font-mono text-[11px] text-faint transition-colors hover:text-foreground"
                 >
-                  {ex.source.length > 36 ? `${ex.source.slice(0, 36)}…` : ex.source}
+                  {ex.source.length > 40 ? `${ex.source.slice(0, 40)}…` : ex.source}
                 </button>
               ))}
             </div>
           )}
         </div>
 
-        <div className="m-2 flex min-h-48 flex-col rounded-[1.25rem] bg-background/60">
-          <div className="flex items-center justify-between px-6 pt-6 sm:px-8">
-            <span className="text-sm text-faint">{direction.to}</span>
+        <div className="flex min-h-64 flex-col rounded-inset border border-line bg-background">
+          <div className="flex items-center justify-between px-4 pt-5 sm:px-6">
+            <span className="text-[13px]">{direction.to}</span>
             {latency !== null && (
               <span className="font-mono text-[11px] text-faint tabular-nums">
                 {latency} ms
               </span>
             )}
           </div>
-          <div className="flex-1 px-6 py-4 sm:px-8" aria-live="polite">
+          <div className="flex-1 px-4 py-5 sm:px-6" aria-live="polite">
             {status === "loading" && (
-              <span className="flex items-center gap-2 text-sm text-faint">
+              <span className="flex items-center gap-2 font-mono text-sm text-faint">
                 <span className="size-1.5 animate-[cm-pulse_1s_ease-in-out_infinite] rounded-full bg-signal" />
                 Running {model.name}…
               </span>
             )}
             {status === "idle" && translation === null && (
-              <span className="text-sm text-faint">
-                The translation will appear here.
+              <span className="text-2xl leading-snug text-foreground/25 md:text-[1.75rem]">
+                The translation will appear here
               </span>
             )}
             {status === "idle" && translation !== null && (
-              <p className="text-xl text-foreground">{translation}</p>
+              <p className="text-2xl leading-snug text-foreground md:text-[1.75rem]">
+                {translation}
+              </p>
             )}
-            {status === "error" && (
-              <p className="text-sm text-destructive">{error}</p>
-            )}
+            {status === "error" && <p className="text-sm text-destructive">{error}</p>}
           </div>
         </div>
       </div>
 
       {/* Footer */}
-      <div className="flex justify-end px-6 pb-6 sm:px-8">
+      <div className="flex justify-end px-3 pb-5 sm:px-7">
         <button
           type="button"
           onClick={handleTranslate}
           disabled={!input.trim() || status === "loading"}
-          className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-full bg-foreground px-5 text-sm font-medium text-background transition-colors hover:bg-foreground/85 disabled:cursor-not-allowed disabled:opacity-40"
+          className="inline-flex h-11 cursor-pointer items-center justify-center gap-3 rounded-full bg-foreground px-5 text-lg text-background transition-colors hover:bg-signal disabled:cursor-not-allowed disabled:opacity-80 disabled:hover:bg-foreground"
         >
           {status === "loading" ? "Translating…" : "Translate"}
-          <kbd className="hidden font-mono text-[10px] opacity-60 sm:inline">⌘↵</kbd>
+          <HugeiconsIcon icon={TranslateIcon} className="size-5" />
         </button>
       </div>
     </div>
+  );
+}
+
+function DirectionToggle({
+  directions,
+  value,
+  onChange,
+}: {
+  directions: { code: string; from: string; to: string }[];
+  value: string;
+  onChange: (code: string) => void;
+}) {
+  return (
+    <Segmented
+      label="Direction"
+      value={value}
+      onChange={onChange}
+      items={directions.map((d) => ({
+        id: d.code,
+        label: <DirectionLabel from={d.from} to={d.to} />,
+      }))}
+    />
   );
 }
 

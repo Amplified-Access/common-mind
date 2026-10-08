@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 
 import { Container } from "@/components/common/container";
+import { datasets } from "@/components/datasets/data";
 import { languages } from "@/components/languages/data";
 import { ecosystemFor } from "@/components/languages/ecosystem";
-import { LanguageNetwork } from "@/components/languages/language-network";
-import { Chevron } from "@/components/system/chevron";
-import { PageHero } from "@/components/system/page-hero";
-import { Section } from "@/components/system/primitives";
-import { cn } from "@/lib/utils";
+import { LanguageGlobe } from "@/components/languages/language-globe";
+import { LanguageGrid } from "@/components/languages/language-grid";
+import { registryModels } from "@/components/models/registry";
+import { Backdrop } from "@/components/system/backdrop";
+import { Eyebrow, Section, SectionHeader } from "@/components/system/primitives";
 
 export const metadata: Metadata = {
   title: "Languages",
@@ -16,64 +16,67 @@ export const metadata: Metadata = {
 };
 
 const LanguagesPage = () => {
-  const entries = languages.map((language) => ({
-    language,
-    ...ecosystemFor(language),
-  }));
+  const entries = languages.map((language) => {
+    const { models } = ecosystemFor(language);
+    return {
+      code: language.code,
+      name: language.name,
+      endonym: language.endonym,
+      family: language.family,
+      branch: language.branch,
+      regions: language.regions,
+      tagline: language.tagline,
+      models: models.length,
+      datasets: datasets.filter((d) => d.languages.includes(language.name)).length,
+    };
+  });
+
+  const stats = [
+    { value: languages.length, label: "Languages" },
+    { value: new Set(languages.flatMap((l) => l.regions)).size, label: "Countries" },
+    { value: datasets.length, label: "Datasets" },
+    { value: registryModels.length, label: "Open models" },
+  ];
 
   return (
     <>
-      <PageHero
-        title="Start with the language."
-        lede="One language. An entire civic AI ecosystem."
-      />
-
-      <Section id="network" className="pt-8 sm:pt-12">
-        <Container>
-          <div className="rounded-3xl bg-surface px-4 py-10 sm:px-16 sm:py-16">
-            <LanguageNetwork
-              nodes={entries.map((e) => ({
-                language: e.language,
-                models: e.models.length,
-                corpora: e.corpora.length,
-              }))}
+      <section className="zoom-viewport relative isolate overflow-hidden border-b border-line pt-(--header-height)">
+        <Backdrop wash grain stars shade sideGrids />
+        <Container className="flex flex-col gap-10 pt-12 pb-14 sm:pt-13 sm:pb-16">
+          <Eyebrow className="self-center">Languages</Eyebrow>
+          {/* The copy and the globe sit as one centered pair. */}
+          <div className="flex flex-col items-center gap-14 lg:flex-row lg:justify-center lg:gap-25 lg:pl-10">
+            <div className="flex w-full flex-col gap-4 lg:w-75 lg:shrink-0">
+              <h1 className="max-w-62 text-h2">Explore civic AI by language.</h1>
+              <p className="max-w-75 text-[13px] leading-[1.2] text-pretty text-faint">
+                One language. An entire civic AI ecosystem. Explore the models, civic speech
+                resources, benchmarks, terminology, and research being built around each
+                supported language.
+              </p>
+              <dl className="grid grid-cols-[11rem_auto] gap-y-6 pt-4">
+                {stats.map((stat) => (
+                  <div key={stat.label} className="flex flex-col-reverse gap-1">
+                    <dt className="font-mono text-[13px]">{stat.label}</dt>
+                    <dd className="font-mono text-[1.625rem] leading-tight text-signal">{stat.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+            <LanguageGlobe
+              languages={languages.map(({ code, name, location }) => ({ code, name, location }))}
+              className="w-full max-w-md shrink-0 lg:w-md"
             />
           </div>
         </Container>
-      </Section>
+      </section>
 
-      <Section id="index" className="pt-0 sm:pt-0">
-        <Container>
-          <ul className="flex flex-col gap-2">
-            {entries.map((e) => {
-              const built = e.models.length > 0;
-              return (
-                <li key={e.language.code}>
-                  <Link
-                    href={`/languages/${e.language.code}`}
-                    className="group -mx-6 grid grid-cols-[1fr_auto] items-baseline gap-x-8 gap-y-2 rounded-2xl px-6 py-7 transition-colors hover:bg-surface md:grid-cols-[1.4fr_1fr_1fr_auto]"
-                  >
-                    <span className="flex items-baseline gap-4">
-                      <span
-                        className={cn(
-                          "size-2 shrink-0 -translate-y-1 rounded-full",
-                          built ? "bg-signal" : "bg-white/20",
-                        )}
-                      />
-                      <span className="text-3xl tracking-tight transition-colors group-hover:text-signal">
-                        {e.language.name}
-                      </span>
-                    </span>
-                    <span className="hidden text-subtle md:block">{e.language.branch}</span>
-                    <span className="hidden text-subtle md:block">
-                      {e.language.regions.slice(0, 2).join(", ")}
-                    </span>
-                    <Chevron className="text-faint transition-transform group-hover:translate-x-1" />
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+      <Section id="index">
+        <Container className="flex flex-col gap-12">
+          <SectionHeader
+            title="Explore Supported Languages"
+            lede="Each language connects to its own growing ecosystem of models, civic speech data, evaluation, terminology, and research."
+          />
+          <LanguageGrid entries={entries} />
         </Container>
       </Section>
     </>

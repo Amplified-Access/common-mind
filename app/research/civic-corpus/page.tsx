@@ -1,28 +1,16 @@
 import type { Metadata } from "next";
 
+import { CivicExplorer } from "@/components/civic/civic-explorer";
 import { TerminologyViewer } from "@/components/civic/terminology-viewer";
 import { Container } from "@/components/common/container";
 import { PageHero } from "@/components/system/page-hero";
-import { Section, SectionHeader } from "@/components/system/primitives";
+import { Panel, Section, SectionHeader } from "@/components/system/primitives";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Civic corpus",
   description: "The civic speech, data, and terminology behind CommonMind.",
 };
-
-const categories = [
-  "Community problems",
-  "Public services",
-  "Local government",
-  "Elections",
-  "Corruption & accountability",
-  "Civic rights",
-  "Public meetings",
-  "Political promises",
-  "Local development",
-  "Citizen feedback",
-];
 
 // Training mixtures as reported in each technical report.
 const mixtures = [
@@ -50,7 +38,7 @@ const mixtures = [
   },
 ];
 
-const shades = ["bg-signal", "bg-signal/55", "bg-white/40", "bg-white/25", "bg-white/14", "bg-white/8"];
+const shades = ["bg-signal", "bg-teal", "bg-ocean", "bg-lilac", "bg-other", "bg-white/25"];
 
 const principles = [
   ["Consent first", "People know how a recording will be used before it is made."],
@@ -63,44 +51,49 @@ const CivicCorpusPage = () => {
   return (
     <>
       <PageHero
+        eyebrow="Research / Civic Corpus"
         title="The civic speech behind the infrastructure."
-        lede="Civic language is highly contextual. It rarely translates literally."
+        lede="Civic language is highly contextual. It rarely translates literally. The corpus gathers the speech, data, and terminology AI needs to understand community voice."
+        tags={["CIVIC SPEECH", "TERMINOLOGY", "CONSENT FIRST"]}
       />
 
       <Section id="scope">
-        <Container className="flex flex-col gap-16">
-          <SectionHeader title="Ten categories of civic speech." />
-          <ul className="grid gap-x-10 gap-y-5 text-xl tracking-tight text-foreground/85 sm:grid-cols-2 lg:grid-cols-3">
-            {categories.map((c) => (
-              <li key={c}>{c}</li>
-            ))}
-          </ul>
+        <Container className="flex flex-col gap-14">
+          <SectionHeader
+            eyebrow="Scope"
+            title="Categories of civic speech."
+            lede="Civic speech is contextual. CommonMind turns what people say into structured records the right people can act on."
+            layout="split"
+          />
+          <CivicExplorer />
         </Container>
       </Section>
 
-      <Section id="terminology">
-        <Container className="flex flex-col gap-16">
+      <Section id="terminology" className="border-t border-line">
+        <Container className="flex flex-col gap-14">
           <SectionHeader
+            eyebrow="Terminology"
             title="Expression → English → civic concept."
             lede="The terminology layer keeps the context that literal translation loses."
+            layout="split"
           />
           <TerminologyViewer />
         </Container>
       </Section>
 
-      <Section id="composition">
-        <Container className="flex flex-col gap-16">
-          <SectionHeader title="What the models learned from." />
-          <div className="flex flex-col gap-14">
+      <Section id="composition" className="border-t border-line">
+        <Container className="flex flex-col gap-14">
+          <SectionHeader eyebrow="Composition" title="What the models learned from." />
+          <div className="grid gap-5 lg:grid-cols-2">
             {mixtures.map((mix) => {
               const sum = mix.parts.reduce((a, p) => a + p.value, 0);
               return (
-                <div key={mix.name} className="flex flex-col gap-5">
+                <Panel key={mix.name} className="flex flex-col gap-6 p-7 sm:p-8">
                   <div className="flex items-baseline justify-between gap-4">
-                    <span className="text-lg tracking-tight">{mix.name}</span>
-                    <span className="text-sm text-faint">{mix.total}</span>
+                    <span className="font-mono text-lg">{mix.name}</span>
+                    <span className="font-mono text-xs text-faint">{mix.total}</span>
                   </div>
-                  <div className="flex h-2 gap-1">
+                  <div className="flex h-2.5 gap-1">
                     {mix.parts.map((p, i) => (
                       <span
                         key={p.label}
@@ -109,29 +102,29 @@ const CivicCorpusPage = () => {
                       />
                     ))}
                   </div>
-                  <ul className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-faint">
+                  <ul className="flex flex-wrap gap-x-6 gap-y-2 font-mono text-xs text-faint">
                     {mix.parts.map((p, i) => (
                       <li key={p.label} className="flex items-center gap-2">
-                        <span className={cn("size-1.5 rounded-full", shades[i])} />
-                        {p.label}
+                        <span className={cn("size-2 rounded-full", shades[i])} />
+                        {p.label} · {p.value.toLocaleString("en-US")}
                       </li>
                     ))}
                   </ul>
-                </div>
+                </Panel>
               );
             })}
           </div>
         </Container>
       </Section>
 
-      <Section id="collection">
-        <Container className="flex flex-col gap-16">
-          <SectionHeader title="Trust is part of the infrastructure." />
-          <ul className="grid gap-12 sm:grid-cols-2 lg:grid-cols-4">
+      <Section id="collection" className="border-t border-line">
+        <Container className="flex flex-col gap-14">
+          <SectionHeader eyebrow="Collection" title="Trust is part of the infrastructure." />
+          <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {principles.map(([title, line]) => (
-              <li key={title} className="flex flex-col gap-3">
-                <span className="text-xl tracking-tight">{title}</span>
-                <span className="text-subtle">{line}</span>
+              <li key={title} className="flex flex-col gap-3 rounded-card border border-line bg-surface p-7">
+                <span className="font-mono text-lg">{title}</span>
+                <span className="text-sm text-faint">{line}</span>
               </li>
             ))}
           </ul>

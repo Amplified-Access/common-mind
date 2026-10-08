@@ -20,9 +20,12 @@ function EfficiencyChart({ entries }: { entries: BenchmarkEntry[] }) {
   const minP = Math.log10(0.5);
   const maxP = Math.log10(40);
   const maxB = 45;
+  // Rounded so server and browser agree: Math.log10 can differ in the last
+  // digit between engines, which breaks hydration.
+  const round = (n: number) => Math.round(n * 100) / 100;
   const x = (p: number) =>
-    pad.l + ((Math.log10(p) - minP) / (maxP - minP)) * (W - pad.l - pad.r);
-  const y = (b: number) => H - pad.b - (b / maxB) * (H - pad.t - pad.b);
+    round(pad.l + ((Math.log10(p) - minP) / (maxP - minP)) * (W - pad.l - pad.r));
+  const y = (b: number) => round(H - pad.b - (b / maxB) * (H - pad.t - pad.b));
 
   const xTicks = [0.5, 1, 2, 4, 10, 27];
   const yTicks = [0, 10, 20, 30, 40];
@@ -60,7 +63,7 @@ function EfficiencyChart({ entries }: { entries: BenchmarkEntry[] }) {
               x={pad.l - 10}
               y={y(t) + 3}
               textAnchor="end"
-              className="fill-[var(--faint)] font-mono text-[10px]"
+              className="fill-faint font-mono text-[10px]"
             >
               {t}
             </text>
@@ -79,7 +82,7 @@ function EfficiencyChart({ entries }: { entries: BenchmarkEntry[] }) {
               x={x(t)}
               y={H - pad.b + 18}
               textAnchor="middle"
-              className="fill-[var(--faint)] font-mono text-[10px]"
+              className="fill-faint font-mono text-[10px]"
             >
               {t}B
             </text>
@@ -89,11 +92,11 @@ function EfficiencyChart({ entries }: { entries: BenchmarkEntry[] }) {
           x={W - pad.r}
           y={H - 4}
           textAnchor="end"
-          className="fill-[var(--faint)] font-mono text-[10px]"
+          className="fill-faint font-mono text-[10px]"
         >
           parameters (log)
         </text>
-        <text x={pad.l} y={12} className="fill-[var(--faint)] font-mono text-[10px]">
+        <text x={pad.l} y={12} className="fill-faint font-mono text-[10px]">
           BLEU
         </text>
 
@@ -113,7 +116,7 @@ function EfficiencyChart({ entries }: { entries: BenchmarkEntry[] }) {
                 cy={y(p.bleu)}
                 r={p.isOurs ? 5 : 4}
                 className={cn(
-                  p.isOurs ? "fill-[var(--signal)]" : "fill-white/40",
+                  p.isOurs ? "fill-signal" : "fill-other",
                 )}
               />
               <text
@@ -122,7 +125,7 @@ function EfficiencyChart({ entries }: { entries: BenchmarkEntry[] }) {
                 textAnchor={anchor}
                 className={cn(
                   "font-mono text-[10.5px]",
-                  p.isOurs ? "fill-[var(--foreground)]" : "fill-[var(--subtle)]",
+                  p.isOurs ? "fill-foreground" : "fill-subtle",
                 )}
               >
                 {p.model} · {p.bleu.toFixed(1)}
@@ -131,7 +134,7 @@ function EfficiencyChart({ entries }: { entries: BenchmarkEntry[] }) {
           );
         })}
       </svg>
-      <figcaption className="text-xs text-faint">
+      <figcaption className="font-mono text-xs text-faint">
         GPT-5 Mini and Gemini 2.0 Flash not plotted: size undisclosed.
       </figcaption>
     </figure>
