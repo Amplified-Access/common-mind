@@ -25,8 +25,10 @@ function HomeHero() {
       <Container className="flex flex-col items-center gap-14 pt-20 sm:pt-24">
         <div className="flex max-w-3xl flex-col items-center gap-6 text-center">
           <h1 className="text-display text-balance">
-            Open civic infrastructure for 
-            <span className="text-signal"> multilingual</span> AI.
+            Civic discourse is <span className="text-signal">multilingual</span>.{" "}
+            <span className="sm:block">
+              <span className="text-signal">AI infrastructure</span> should be too.
+            </span>
           </h1>
           <p className="max-w-lg text-sm text-pretty text-foreground/90">
             CommonMind provides the open models, civic data, benchmarks,
