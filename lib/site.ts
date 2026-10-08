@@ -35,14 +35,6 @@ export const announcement = {
   href: "/benchmarks#civicbench",
 } as const;
 
-// Placeholder profiles: replace each href with the real account URL.
-export const socialLinks = [
-  { id: "linkedin", label: "LinkedIn", href: "#" },
-  { id: "facebook", label: "Facebook", href: "#" },
-  { id: "instagram", label: "Instagram", href: "#" },
-  { id: "youtube", label: "YouTube", href: "#" },
-] as const;
-
 export type Partner = {
   name: string;
   /** Left out where we have no site to link to. */
@@ -75,6 +67,12 @@ export const partners: Partner[] = [
 
 export type FooterLink = { label: string; href: string };
 
+export const legalLinks: FooterLink[] = [
+  { label: "Privacy", href: "/privacy" },
+  { label: "Terms", href: "/terms" },
+  { label: "Licenses", href: "/licenses" },
+];
+
 export const footerColumns: { title: string; links: FooterLink[] }[] = [
   { title: "Platform", links: [...navItems] },
   {
@@ -101,11 +99,10 @@ export const footerColumns: { title: string; links: FooterLink[] }[] = [
     ],
   },
   {
-    title: "Legal",
+    title: "Support",
     links: [
-      { label: "Privacy", href: "/privacy" },
-      { label: "Terms", href: "/terms" },
-      { label: "Licenses", href: "/licenses" },
+      { label: "Contact", href: "https://amplifiedaccess.org/contact-us" },
+      ...legalLinks,
     ],
   },
 ];
