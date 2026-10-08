@@ -17,7 +17,7 @@ function LegalDocument({
   return (
     <>
       <section className="zoom-viewport relative isolate overflow-hidden border-b border-line pt-(--header-height)">
-        <Backdrop wash grain grid stars />
+        <Backdrop wash grain stars sideGrids />
         <Container className="flex flex-col items-center gap-5 py-24 text-center sm:py-32">
           <h1 className="text-h2">{title}</h1>
           <p className="font-mono text-base text-signal sm:text-lg">Last updated: {updated}</p>

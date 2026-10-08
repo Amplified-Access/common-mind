@@ -261,7 +261,7 @@ function TabBody({ children, stacked }: { children: React.ReactNode; stacked?: b
     <section className="zoom-viewport relative isolate overflow-hidden py-16 sm:py-20">
       <div
         aria-hidden
-        className="absolute inset-0 -z-10 bg-grid mask-[linear-gradient(to_right,#000_0%,transparent_22%,transparent_78%,#000_100%)] opacity-70"
+        className="absolute inset-0 -z-10 bg-grid bg-grid-wide mask-[linear-gradient(to_right,#000_0%,transparent_22%,transparent_78%,#000_100%)] opacity-70"
       />
       <Container
         size="default"

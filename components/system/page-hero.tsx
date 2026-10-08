@@ -21,6 +21,8 @@ type PageHeroProps = {
   after?: React.ReactNode;
   /** A hairline closes the hero, for pages with tabs or a side rail below. */
   ruled?: boolean;
+  /** Faint grids at either edge of the hero. */
+  sideGrids?: boolean;
   className?: string;
 };
 
@@ -34,6 +36,7 @@ function PageHero({
   children,
   after,
   ruled,
+  sideGrids,
   className,
 }: PageHeroProps) {
   const centered = align === "center";
@@ -45,7 +48,7 @@ function PageHero({
         className,
       )}
     >
-      <Backdrop wash grain stars shade />
+      <Backdrop wash grain stars shade sideGrids={sideGrids} />
       <Container
         className={cn(
           "flex flex-col gap-6 pt-16 pb-14 sm:pt-20 sm:pb-16",

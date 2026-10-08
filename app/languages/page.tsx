@@ -41,13 +41,7 @@ const LanguagesPage = () => {
   return (
     <>
       <section className="zoom-viewport relative isolate overflow-hidden border-b border-line pt-(--header-height)">
-        <Backdrop wash grain stars shade />
-        {/* The fine grid, showing only toward the sides and
-            fading out before the bottom, as in the mock. */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[30rem] bg-grid [--grid-line:rgb(255_255_255/0.12)] [mask-composite:intersect] mask-[linear-gradient(to_right,#000,transparent_22%,transparent_78%,#000),linear-gradient(to_bottom,#000_55%,transparent)]"
-        />
+        <Backdrop wash grain stars shade sideGrids />
         <Container className="flex flex-col gap-10 pt-12 pb-14 sm:pt-13 sm:pb-16">
           <Eyebrow className="self-center">Languages</Eyebrow>
           {/* The copy and the globe sit as one centered pair. */}

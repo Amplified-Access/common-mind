@@ -71,6 +71,7 @@ const DatasetPage = async ({ params }: PageProps) => {
     <>
       <PageHero
         ruled
+        sideGrids
         eyebrow={`Datasets / ${dataset.kind}`}
         title={dataset.name}
         lede={dataset.description}

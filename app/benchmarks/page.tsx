@@ -46,7 +46,7 @@ const BenchmarksPage = () => {
             tags and fading down the gutters. */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 -top-16 -z-10 h-[28rem] bg-grid [--grid-line:rgb(255_255_255/0.08)] mask-[linear-gradient(to_bottom,transparent,#000_25%,#000_45%,transparent)]"
+          className="pointer-events-none absolute inset-x-0 -top-16 -z-10 h-[28rem] bg-grid bg-grid-wide [--grid-line:rgb(255_255_255/0.08)] mask-[linear-gradient(to_bottom,transparent,#000_25%,#000_45%,transparent)]"
         />
         <Container className="relative">
           {/* The halo, as in the mock: a yellow glow rising ~65px off the

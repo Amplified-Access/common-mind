@@ -23,6 +23,7 @@ const ResearchPage = () => {
         title="Understanding civic speech."
         lede="Research into the language, data, models, and evaluation methods needed to build AI that better understands civic expression across languages beyond the mainstream."
         tags={["CIVIC AI", "LANGUAGE", "OPEN RESEARCH"]}
+        sideGrids
         className="pb-(--section-pad)"
         after={
           <Container id="papers" className="scroll-mt-24">

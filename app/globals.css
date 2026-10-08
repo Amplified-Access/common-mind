@@ -261,13 +261,21 @@
 }
 
 /* A faint, fine grid of hairlines, for hero and panel backgrounds. Cells
-   are 34 by 30px, as in the 2026-10 mocks, and lines 5% white unless a
-   surface sets its own --grid-size or --grid-line. */
+   are 34 by 30px, as on the 2026-10 mocks' cards, and lines 5% white unless
+   a surface sets its own --grid-size or --grid-line. Cells hold their size
+   on screen instead of growing with a section's zoom, so wide screens show
+   more of them, not bigger ones. */
 @utility bg-grid {
   background-image:
     linear-gradient(to right, var(--grid-line, rgb(255 255 255 / 0.05)) var(--hairline), transparent var(--hairline)),
     linear-gradient(to bottom, var(--grid-line, rgb(255 255 255 / 0.05)) var(--hairline), transparent var(--hairline));
-  background-size: var(--grid-size, 34px 30px);
+  background-size: var(--grid-size, calc(34 * var(--screen-px)) calc(30 * var(--screen-px)));
+}
+
+/* The mocks' page-scale grid, behind heroes and down section edges: 64 by
+   57px cells, held at that size on screen. Pair with bg-grid. */
+@utility bg-grid-wide {
+  --grid-size: calc(64 * var(--screen-px)) calc(57 * var(--screen-px));
 }
 
 @utility scrollbar-none {

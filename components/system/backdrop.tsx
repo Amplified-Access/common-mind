@@ -18,6 +18,9 @@ type BackdropProps = {
   /** Warm, faintly yellow grain that runs the full height. */
   warmGrain?: boolean;
   grid?: boolean;
+  /** Grids at either edge, brightest at the edge and fading toward the
+      middle and the bottom. Drawn over the shade. */
+  sideGrids?: boolean;
   stars?: boolean;
   /** Darkness sweeping in from the top-right corner, fading out toward the
       bottom left so the wash and grain show through there. */
@@ -32,7 +35,18 @@ type BackdropProps = {
 
 // The atmosphere behind heroes and feature panels. Sits behind its parent's
 // content: give the parent `relative isolate`.
-function Backdrop({ wash, grain, warmGrain, grid, stars, sweep, glow, shade, className }: BackdropProps) {
+function Backdrop({
+  wash,
+  grain,
+  warmGrain,
+  grid,
+  sideGrids,
+  stars,
+  sweep,
+  glow,
+  shade,
+  className,
+}: BackdropProps) {
   return (
     <div aria-hidden className={cn("pointer-events-none absolute inset-0 -z-10 overflow-hidden", className)}>
       {wash && (
@@ -64,6 +78,16 @@ function Backdrop({ wash, grain, warmGrain, grid, stars, sweep, glow, shade, cla
       )}
       {shade && (
         <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent_4rem,#000_26rem),linear-gradient(to_right,rgb(0_0_0/0.5),rgb(0_0_0/0.85)_60%,rgb(0_0_0/0.95))]" />
+      )}
+      {sideGrids && (
+        <>
+          {/* Lit from the middle of each edge and gone a few cells in, the
+              way the model cards light theirs; the reach is in screen pixels,
+              so it covers the same few cells at any zoom. The right grid
+              runs half a row lower, as in the Research and Policy mocks. */}
+          <div className="absolute top-0 left-0 h-[30rem] w-[min(28rem,40%)] bg-grid bg-grid-wide [--grid-line:rgb(255_255_255/0.22)] mask-[radial-gradient(calc(300*var(--screen-px))_calc(170*var(--screen-px))_at_0%_50%,#000,rgb(0_0_0/0.45)_40%,rgb(0_0_0/0.12)_75%,transparent)] bg-position-[0_calc(30*var(--screen-px))]" />
+          <div className="absolute top-0 right-0 h-[30rem] w-[min(28rem,40%)] bg-grid bg-grid-wide [--grid-line:rgb(255_255_255/0.22)] mask-[radial-gradient(calc(300*var(--screen-px))_calc(170*var(--screen-px))_at_100%_50%,#000,rgb(0_0_0/0.45)_40%,rgb(0_0_0/0.12)_75%,transparent)] bg-position-[right_1px_top_0]" />
+        </>
       )}
       {glow && (
         <div className="absolute inset-0 bg-[radial-gradient(120%_75%_at_50%_100%,rgb(255_211_0/0.2)_0%,rgb(255_211_0/0.14)_45%,rgb(255_211_0/0.05)_75%,transparent_100%)]" />

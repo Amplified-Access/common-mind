@@ -14,6 +14,7 @@ const DatasetsPage = () => {
   return (
     <PageHero
       align="split"
+      sideGrids
       eyebrow="Datasets"
       title="Civic language data, built in context."
       lede="Explore open datasets capturing how communities speak about public services, government, rights, elections, and local priorities. Every source behind every model."
