@@ -54,16 +54,14 @@ export type Partner = {
   size: string;
 };
 
-// The collaborators on CommonMind, WatchTower's partners among them, in the
-// order WatchTower lists theirs.
+// The projects CommonMind powers or partners with, shown in the footer.
 export const partners: Partner[] = [
   {
-    name: "Amplified Access",
-    href: site.org.href,
-    logo: "/partners/amplified-access-white.svg",
-    width: 574,
-    height: 138,
-    size: "h-7",
+    name: "ActionChallenge",
+    logo: "/partners/action-challenge.svg",
+    width: 154,
+    height: 107,
+    size: "h-12",
   },
   {
     name: "WatchTower",
@@ -72,28 +70,6 @@ export const partners: Partner[] = [
     width: 219,
     height: 37,
     size: "h-7",
-  },
-  { name: "ACWJ", logo: "/partners/acwj-white.png", width: 195, height: 57, size: "h-5" },
-  {
-    name: "Makerere Institute of Social Research",
-    logo: "/partners/misr-white.png",
-    width: 539,
-    height: 149,
-    size: "h-9",
-  },
-  {
-    name: "Circular Design Hub",
-    logo: "/partners/circular-design-hub-white.png",
-    width: 164,
-    height: 156,
-    size: "h-9",
-  },
-  {
-    name: "Coalition for Grassroots Human Rights Defenders",
-    logo: "/partners/cghrds-white.png",
-    width: 1270,
-    height: 292,
-    size: "h-9",
   },
 ];
 
