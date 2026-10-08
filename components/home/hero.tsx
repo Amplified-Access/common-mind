@@ -20,7 +20,7 @@ function showcaseModel(slug: string): ShowcaseSet["model"] {
 
 function HomeHero() {
   return (
-    <section className="zoom-viewport relative isolate overflow-hidden border-b border-line">
+    <section className="zoom-viewport relative isolate overflow-hidden border-b border-line pt-(--header-height)">
       <Backdrop wash warmGrain sweep glow />
       <Container className="flex flex-col items-center gap-14 pt-20 sm:pt-24">
         <div className="flex max-w-3xl flex-col items-center gap-6 text-center">
