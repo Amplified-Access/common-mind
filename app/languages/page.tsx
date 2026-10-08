@@ -69,7 +69,7 @@ const LanguagesPage = () => {
               </dl>
             </div>
             <LanguageGlobe
-              markers={languages.map((l) => l.location)}
+              languages={languages.map(({ code, name, location }) => ({ code, name, location }))}
               className="w-full max-w-md shrink-0 lg:w-md"
             />
           </div>
