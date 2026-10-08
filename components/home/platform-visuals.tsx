@@ -37,16 +37,10 @@ const labelPosition = (degrees: number): React.CSSProperties => {
   };
 };
 
-const CODE_SAMPLE = `quantization_config=BitsAndBytesConfig( load_in_4bit=True, bnb_4bit_quant_type="nf4",
-bnb_4bit_compute_dtype=torch.bfloat16, ), device_map={"": 0},)
-model = PeftModel.from_pretrained(model, adapter_id) # Translate civic content English → Luganda
-prompt = "Translate to Luganda:\\nA community officer can help residents complete forms, check
-eligibility, and even process applications offline."`;
-
 function LanguagesVisual() {
   return (
     <div className="relative size-full">
-      <div className="absolute top-[45%] left-1/2 aspect-square h-[62%] -translate-1/2">
+      <div className="absolute top-1/2 left-1/2 aspect-square h-[74%] -translate-1/2">
         <ParticleOrb variant="shell" settings={{ scale: ORB_SCALE }} className="aspect-auto size-full" />
         {languages.map((language, i) => (
           <span
@@ -58,9 +52,6 @@ function LanguagesVisual() {
           </span>
         ))}
       </div>
-      <pre aria-hidden className="absolute inset-x-[10%] bottom-[6%] font-mono text-[9px] leading-relaxed whitespace-pre-wrap text-foreground/45">
-        {CODE_SAMPLE}
-      </pre>
     </div>
   );
 }
@@ -75,8 +66,9 @@ const SPEECH_STAGES = ["Voice", "Transcription", "Expression", "Context"];
 function CivicSpeechVisual() {
   return (
     <div className="relative size-full">
-      {/* Centred a little above the middle, as in the mock. */}
-      <SpeechOrb className="absolute inset-x-0 -top-[7%] h-full" />
+      {/* Centred a little above the middle, so the tag chain crosses its
+          lower half. */}
+      <SpeechOrb className="absolute inset-x-0 -top-[4%] h-full" />
       <div className="absolute inset-x-[7%] top-[7%] flex justify-between font-mono text-[10px] leading-[2] text-foreground/85">
         {SPEECH_META.map((lines) => (
           <p key={lines[0]} className="flex flex-col">
@@ -86,10 +78,7 @@ function CivicSpeechVisual() {
           </p>
         ))}
       </div>
-      <TagChain tags={SPEECH_STAGES} uppercase className="absolute inset-x-[7%] top-[70%] justify-center" />
-      <pre aria-hidden className="absolute inset-x-[7%] bottom-[6%] font-mono text-[9px] leading-relaxed whitespace-pre-wrap text-foreground/45">
-        {CODE_SAMPLE}
-      </pre>
+      <TagChain tags={SPEECH_STAGES} uppercase className="absolute inset-x-[7%] top-[74%] justify-center" />
     </div>
   );
 }

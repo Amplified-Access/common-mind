@@ -60,7 +60,7 @@ function SpeechOrb({ className }: { className?: string }) {
 
   return (
     <div ref={ref} className={cn("relative", className)}>
-      <ParticleOrb variant="rows" energy={energy} className="aspect-auto size-full" />
+      <ParticleOrb variant="rows" energy={energy} settings={{ scale: 0.62 }} className="aspect-auto size-full" />
       <span className="absolute top-1/2 left-1/2 inline-flex h-9 -translate-1/2 items-center gap-2 rounded-full border border-line-strong bg-[#12110d]/90 px-4 text-lg leading-none text-foreground tabular-nums">
         <HugeiconsIcon icon={Mic01Icon} className="size-4.5" />
         {clock(seconds)}
