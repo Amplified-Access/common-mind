@@ -1,10 +1,11 @@
-import { lugandaHeldOut, swahiliFlores } from "@/components/benchmarks/data";
+import { lugandaHeldOut, swahiliFlores, type LanguageBenchmark } from "@/components/benchmarks/data";
 import { Container } from "@/components/common/container";
-import { getModel } from "@/components/models/registry";
+import { getModel, registryModels } from "@/components/models/registry";
 import { Backdrop } from "@/components/system/backdrop";
 import { ArrowLink } from "@/components/system/primitives";
 
-import { ModelShowcase, type ShowcaseSet } from "./model-showcase";
+import type { Outcome } from "./funnel";
+import { HeroDeck, type ShowcaseSet } from "./hero-deck";
 
 function showcaseModel(slug: string): ShowcaseSet["model"] {
   const model = getModel(slug);
@@ -16,6 +17,35 @@ function showcaseModel(slug: string): ShowcaseSet["model"] {
     platforms: model.platforms,
     overview: model.overview,
   };
+}
+
+const byBleu = (set: LanguageBenchmark) => [...set.entries].sort((a, b) => b.bleu - a.bleu);
+
+// What comes out of the whole platform, flipped through on the funnel's
+// CommonMind card; every figure is read from the benchmark data.
+function outcomes(): Outcome[] {
+  const swahili = byBleu(swahiliFlores);
+  const ours = swahili.find((e) => e.isOurs)!;
+  const rival = swahili.find((e) => !e.isOurs)!;
+  const luganda = byBleu(lugandaHeldOut);
+  const largest = registryModels.reduce((a, b) => (b.base.paramsNumeric > a.base.paramsNumeric ? b : a));
+  return [
+    {
+      value: ours.bleu.toFixed(2),
+      label: `BLEU on English→Swahili, above ${rival.model}`,
+      href: "/benchmarks#results",
+    },
+    {
+      value: `≤${largest.base.params}`,
+      label: "parameters. Built to run on modest hardware",
+      href: "/benchmarks#efficiency",
+    },
+    {
+      value: `${luganda.at(-1)!.bleu}→${luganda[0].bleu}`,
+      label: "BLEU on Luganda after civic adaptation",
+      href: "/models/luganda-gemma-1b-it",
+    },
+  ];
 }
 
 function HomeHero() {
@@ -42,7 +72,8 @@ function HomeHero() {
         </div>
         {/* Runs past the section's bottom edge, which cuts the cards off so
             they read as sitting behind the next section. */}
-        <ModelShowcase
+        <HeroDeck
+          outcomes={outcomes()}
           className="-mb-5 sm:-mb-8"
           sets={[
             {
@@ -52,14 +83,6 @@ function HomeHero() {
               model: showcaseModel("swahili-gemma-1b-it"),
               entries: swahiliFlores.entries,
               evalSet: swahiliFlores.evalSet,
-            },
-            {
-              id: "lg",
-              from: "English",
-              to: "Luganda",
-              model: showcaseModel("luganda-gemma-1b-it"),
-              entries: lugandaHeldOut.entries,
-              evalSet: lugandaHeldOut.evalSet,
             },
           ]}
         />
