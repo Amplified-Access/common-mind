@@ -62,7 +62,7 @@ const BenchmarksPage = () => {
             <div className="flex flex-col gap-10">
               <SectionHeader
                 title="Compare Model Performance."
-                lede="Explore how models perform across languages, metrics, and evaluation sets. Every third-party figure links to its published source."
+                lede="Explore and compare model performance across languages, tasks, and evaluation metrics, with transparent results and references to public sources."
               />
               <ComparePanel
                 sets={[
@@ -86,10 +86,11 @@ const BenchmarksPage = () => {
                     Sample data
                   </span>
                 </div>
-                <p className="max-w-xl text-sm text-faint">
-                  Select models to compare their performance across the same tasks. Translation
-                  shows each model&apos;s measured chrF++; the other tasks show sample values until
-                  CivicBench Africa results are published.
+                <p className="max-w-2xl text-sm text-faint">
+                  Compare selected models across evaluation tasks and metrics.
+                  Translation results reflect measured chrF++ scores, while
+                  other tasks use illustrative values pending publication of
+                  CivicBench Africa results.
                 </p>
               </div>
               <RadarChart models={radarModels} initial={radarModels.slice(0, 3).map((m) => m.slug)} />
