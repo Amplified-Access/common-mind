@@ -42,8 +42,8 @@ const BuildPage = () => {
         <Container className="grid gap-12 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-20">
           <SectionHeader
             eyebrow="Quickstart"
-            title="Translate in a few lines."
-            lede="Load an adapter on its base model with Transformers and PEFT, and translate civic text into Swahili."
+            title="From code to inference in minutes."
+            lede="Load an open model with Transformers and PEFT to run English-to-Swahili translation locally."
           />
           <Code code={quickstart} language="python" title="quickstart.py" />
         </Container>
