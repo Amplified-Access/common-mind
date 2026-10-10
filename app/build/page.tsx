@@ -27,8 +27,8 @@ const BuildPage = () => {
         tile
         eyebrow="Build"
         title="Build with CommonMind."
-        lede="From first prompt to production. Open models, APIs, and deployment options for civic applications."
-        tags={["OPEN MODELS", "API", "DEPLOYMENT"]}
+        lede="From experimentation to production. Open models, APIs, and deployment tools for building multilingual AI applications grounded in civic discourse."
+        tags={["OPEN MODELS", "APIs", "DEPLOYMENT"]}
       >
         <div className="flex flex-wrap justify-center gap-3">
           <LinkButton href="#journey">Get Started</LinkButton>
