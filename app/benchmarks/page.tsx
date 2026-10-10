@@ -178,25 +178,18 @@ const BenchmarksPage = () => {
         <Container className="flex flex-col gap-14">
           <SectionHeader eyebrow="Methodology" title="How we measure." />
           <div className="grid gap-5 md:grid-cols-3">
-            <MethodNote title="Metrics">
-              BLEU for exact overlap. chrF++ for character-level accuracy, fairer to rich
-              morphology.
+            <MethodNote title="Evaluation Metrics">
+              BLEU measures n-gram overlap with reference translations, while chrF++ captures
+              character- and word-level similarity, providing additional sensitivity to
+              morphological variation.
             </MethodNote>
-            <MethodNote title="Shared test sets">
-              Models are only compared on the same set. Swahili on FLORES-200; Luganda on a
-              held-out split.
+            <MethodNote title="Standardised Evaluation">
+              Models are compared using shared evaluation sets. Swahili models are evaluated on
+              FLORES-200, while Luganda models use a held-out test set.
             </MethodNote>
-            <MethodNote title="Cited sources">
-              Third-party figures are published by{" "}
-              <a
-                href="https://huggingface.co/CraneAILabs"
-                target="_blank"
-                rel="noreferrer"
-                className="text-foreground hover:text-signal"
-              >
-                Crane AI Labs
-              </a>{" "}
-              and linked from every chart row.
+            <MethodNote title="Reproducible Results">
+              Evaluation methods, datasets, and model configurations are documented to support
+              transparent, consistent, and reproducible comparisons.
             </MethodNote>
           </div>
         </Container>
