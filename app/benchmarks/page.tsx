@@ -16,8 +16,10 @@ import { registryModels } from "@/components/models/registry";
 import { Translator } from "@/components/playground/translator";
 import { Arrow } from "@/components/system/arrow";
 import { CountUp } from "@/components/system/count-up";
+import { FramedCard, HALO } from "@/components/system/framed-card";
 import { PageHero } from "@/components/system/page-hero";
 import { Eyebrow, Panel, Section, SectionHeader } from "@/components/system/primitives";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Benchmarks",
@@ -48,13 +50,15 @@ const BenchmarksPage = () => {
           aria-hidden
           className="pointer-events-none absolute inset-x-0 -top-16 -z-10 h-[28rem] bg-grid bg-grid-wide [--grid-line:rgb(255_255_255/0.08)] mask-[linear-gradient(to_bottom,transparent,#000_25%,#000_45%,transparent)]"
         />
-        <Container className="relative">
-          {/* The halo, as in the mock: a yellow glow all round the panel,
-              about 6% yellow at its edge and gone ~40px out, rising
-              brighter off the top edge for ~65px. */}
-          <div aria-hidden className="pointer-events-none absolute inset-x-4 -top-16 -z-10 h-16 bg-linear-to-t from-signal/11 to-transparent md:inset-x-8 xl:inset-x-12" />
-          <div aria-hidden className="pointer-events-none absolute inset-x-4 top-0 bottom-0 -z-10 rounded-card shadow-[0_0_44px_10px_rgb(255_211_0/0.1)] md:inset-x-8 xl:inset-x-12" />
-          <Panel className="flex flex-col gap-20 px-6 py-12 sm:px-12 sm:py-14">
+        <Container className="relative isolate">
+          <div
+            aria-hidden
+            className={cn(
+              HALO,
+              "inset-x-4 inset-y-0 md:inset-x-8 xl:inset-x-12",
+            )}
+          />
+          <FramedCard panelsClassName="flex flex-col gap-20 bg-[#0b0a07] px-6 py-12 sm:px-12 sm:py-14">
             <div className="flex flex-col gap-10">
               <SectionHeader
                 title="Compare Model Performance."
@@ -90,7 +94,7 @@ const BenchmarksPage = () => {
               </div>
               <RadarChart models={radarModels} initial={radarModels.slice(0, 3).map((m) => m.slug)} />
             </div>
-          </Panel>
+          </FramedCard>
         </Container>
       </Section>
 
