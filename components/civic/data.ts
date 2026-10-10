@@ -291,7 +291,7 @@ export const terminology: TermMapping[] = [
     sentence: "Emiruka ena mu Arua gijja kwetaba mu pulojekiti.",
     reference: "Four sub-counties in Arua will participate in the project.",
     context:
-      "Administrative terms shift with region and register: omuluka commonly means parish in Buganda's hierarchy, and this reference renders it as sub-county. The layer records each mapping with its context.",
+      "Administrative terminology varies across regions and contexts. While omuluka commonly refers to a parish in Buganda's administrative structure, this reference translates emiruka as sub-counties. The terminology layer preserves these distinctions rather than imposing a single interpretation.",
   },
   {
     expression: "Embalirira",

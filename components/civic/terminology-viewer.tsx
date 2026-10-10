@@ -73,7 +73,7 @@ function TerminologyViewer() {
               {highlight(term.sentence, term.expression)}
             </p>
             <p className="text-subtle">
-              {term.reference} <span className="text-faint">· Sunbird SALT</span>
+              {term.reference} <span className="text-faint">· Source: Sunbird SALT</span>
             </p>
           </div>
 

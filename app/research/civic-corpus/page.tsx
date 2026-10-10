@@ -74,8 +74,8 @@ const CivicCorpusPage = () => {
         <Container className="flex flex-col gap-14">
           <SectionHeader
             eyebrow="Terminology"
-            title="Expression → English → civic concept."
-            lede="The terminology layer keeps the context that literal translation loses."
+            title="Beyond literal translation."
+            lede="The terminology layer connects local expressions to shared civic concepts while preserving the linguistic and institutional context that gives them meaning."
             layout="split"
           />
           <TerminologyViewer />
