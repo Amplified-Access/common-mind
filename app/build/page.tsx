@@ -75,8 +75,8 @@ const BuildPage = () => {
         <Container className="flex flex-col gap-12">
           <SectionHeader
             eyebrow="Deployment"
-            title="Use the stack you already have."
-            lede="Every model ships to the tools developers already use, from a notebook to a CPU at the edge."
+            title="Built for your infrastructure."
+            lede="Integrate CommonMind models into existing development environments, from local experimentation to production systems."
           />
           <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {paths.map((p, i) => (

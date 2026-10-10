@@ -88,7 +88,7 @@ export const paths = [
   {
     id: "python",
     label: "Python",
-    copy: "Transformers + PEFT.",
+    copy: "Model inference using Transformers and PEFT.",
     lang: "python",
     title: "translate.py",
     code: quickstart,
@@ -96,7 +96,7 @@ export const paths = [
   {
     id: "huggingface",
     label: "Hugging Face",
-    copy: "Weights and model cards on the Hub.",
+    copy: "Open weights, adapters, and model documentation.",
     lang: "bash",
     title: "terminal",
     code: `# Download weights for offline / air-gapped use
@@ -109,7 +109,7 @@ open https://huggingface.co/AmplifiedAccess`,
   {
     id: "ollama",
     label: "Ollama",
-    copy: "Quantized builds for laptops and CPUs.",
+    copy: "Local inference for compatible quantized models.",
     lang: "bash",
     title: "terminal",
     code: `ollama pull amplifiedaccessorg/Swahili-gemma-1b-it
@@ -120,7 +120,7 @@ ollama run amplifiedaccessorg/Luganda-gemma-1b-it`,
   {
     id: "api",
     label: "API",
-    copy: "One endpoint for every model.",
+    copy: "Programmatic access through supported endpoints.",
     lang: "bash",
     title: "POST /translate",
     code: `curl -X POST "$COMMONMIND_URL/translate" \\
@@ -136,7 +136,7 @@ ollama run amplifiedaccessorg/Luganda-gemma-1b-it`,
   {
     id: "local",
     label: "Local",
-    copy: "Your machine or a single GPU.",
+    copy: "Deployment on personal machines or dedicated GPUs.",
     lang: "bash",
     title: "terminal",
     code: `pip install fastapi uvicorn transformers peft accelerate sentencepiece bitsandbytes
@@ -148,7 +148,7 @@ HF_TOKEN=<hf-token> TRANSLATE_API_KEY=dev \\
   {
     id: "edge",
     label: "Edge",
-    copy: "Under 1 GB, offline after first pull.",
+    copy: "Lightweight inference for compatible models in resource-constrained environments.",
     lang: "bash",
     title: "terminal",
     code: `# CPU-only device, offline after first pull
