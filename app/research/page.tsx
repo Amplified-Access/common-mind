@@ -36,8 +36,8 @@ const ResearchPage = () => {
         <Container className="flex flex-col gap-14">
           <SectionHeader
             eyebrow="Releases"
-            title="Every release, in order."
-            lede="Civic language requires its own approach to AI. Each model ships with its weights, its evaluation, and a report on how it was built."
+            title="Open progress, documented."
+            lede="Every release contributes to a growing foundation for multilingual civic AI, with accessible model artifacts, evaluation results, and technical documentation."
           />
           <ol className="flex flex-col border-t border-line">
             {releases.map((release) => (

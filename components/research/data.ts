@@ -188,21 +188,21 @@ export const releases: Release[] = [
     date: "2026-09-03",
     title: "Swahili-nllb-1.3B and Swahili-nllb-600M",
     description:
-      "Two LoRA-tuned NLLB-200 models for English→Swahili translation, both beating our previous Swahili-Gemma benchmark reference.",
+      "Two LoRA-adapted translation models demonstrating the effectiveness of specialised architectures for English-to-Swahili translation.",
     href: "/models/swahili-nllb-1-3b",
   },
   {
     date: "2026-08-11",
     title: "Swahili-gemma-1B-it",
     description:
-      "Continued-pretrained and instruction-tuned Gemma 3 1B for English→Swahili translation and general Swahili instruction-following.",
+      "A continued-pretrained and instruction-tuned model supporting Swahili translation and language understanding.",
     href: "/models/swahili-gemma-1b-it",
   },
   {
     date: "2026-05-23",
     title: "Luganda-gemma-1B-it",
     description:
-      "Our first release: a QLoRA adapter for bidirectional English↔Luganda translation and Luganda conversation.",
+      "CommonMind's first open model release, establishing a foundation for English–Luganda translation through parameter-efficient adaptation.",
     href: "/models/luganda-gemma-1b-it",
   },
 ];
