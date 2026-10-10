@@ -66,7 +66,12 @@ const BenchmarksPage = () => {
               />
               <ComparePanel
                 sets={[
-                  { id: "sw", from: "English", to: "Swahili", primary: swahiliFlores },
+                  {
+                    id: "sw",
+                    from: "English",
+                    to: "Swahili",
+                    primary: swahiliFlores,
+                  },
                   {
                     id: "lg",
                     from: "English",
@@ -93,7 +98,10 @@ const BenchmarksPage = () => {
                   CivicBench Africa results.
                 </p>
               </div>
-              <RadarChart models={radarModels} initial={radarModels.slice(0, 3).map((m) => m.slug)} />
+              <RadarChart
+                models={radarModels}
+                initial={radarModels.slice(0, 3).map((m) => m.slug)}
+              />
             </div>
           </FramedCard>
         </Container>
@@ -109,18 +117,30 @@ const BenchmarksPage = () => {
           />
           <ol className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {civicBench.map((c, i) => (
-              <li key={c.id} className="flex flex-col gap-4 rounded-card border border-line bg-surface p-7">
-                <span className="font-mono text-xs text-faint">{String(i + 1).padStart(2, "0")}</span>
+              <li
+                key={c.id}
+                className="flex flex-col gap-4 rounded-card border border-line bg-surface p-7"
+              >
+                <span className="font-mono text-xs text-faint">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
                 <span className="text-xl tracking-tight">{c.name}</span>
                 <span className="text-sm text-faint">{c.measures}</span>
                 <div className="mt-auto flex items-center justify-between gap-4 pt-2">
-                  <span className="font-mono text-xs text-signal">{c.metric}</span>
+                  <span className="font-mono text-xs text-signal">
+                    {c.metric}
+                  </span>
                   {c.results ? (
-                    <Link href={c.results} className="inline-flex items-center gap-2 font-mono text-xs text-foreground hover:text-signal">
+                    <Link
+                      href={c.results}
+                      className="inline-flex items-center gap-2 font-mono text-xs text-foreground hover:text-signal"
+                    >
                       Results <Arrow />
                     </Link>
                   ) : (
-                    <span className="font-mono text-xs text-faint">In development</span>
+                    <span className="font-mono text-xs text-faint">
+                      In development
+                    </span>
                   )}
                 </div>
               </li>
@@ -144,7 +164,11 @@ const BenchmarksPage = () => {
                 className="group flex flex-col gap-4 rounded-card border border-line bg-surface p-8 transition-colors hover:border-signal/60"
               >
                 <span className="flex items-baseline gap-4 font-mono tabular-nums">
-                  <CountUp value={m.evaluation.baseBleu!} delay={i * 0.1} className="text-2xl text-faint" />
+                  <CountUp
+                    value={m.evaluation.baseBleu!}
+                    delay={i * 0.1}
+                    className="text-2xl text-faint"
+                  />
                   <span className="text-2xl text-faint">→</span>
                   <CountUp
                     value={m.evaluation.bleu}
