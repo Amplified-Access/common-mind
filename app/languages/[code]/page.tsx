@@ -58,8 +58,8 @@ const LanguagePage = async ({ params }: PageProps) => {
         <Container className="grid gap-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:gap-20">
           <SectionHeader
             eyebrow="Language"
-            title={`${language.name} in civic contexts.`}
-            lede={`The models, civic speech resources, benchmarks, and research being developed to help AI understand ${language.name}.`}
+            title={`${language.name} in civic contexts`}
+            lede={`Explore the open models, civic discourse datasets, benchmarks, and research advancing AI capabilities for ${language.name}.`}
             action={research[0] && <ArrowLink href={`/research/${research[0].slug}`}>How it was built</ArrowLink>}
           />
           <InfoTable
@@ -70,7 +70,7 @@ const LanguagePage = async ({ params }: PageProps) => {
               { label: "Family", value: `${language.family} · ${language.branch}` },
               { label: "Script", value: language.script },
               { label: "Regions", value: language.regions.join(", ") },
-              { label: "Models", value: built ? String(models.length).padStart(2, "0") : undefined },
+              { label: "Open models", value: built ? String(models.length).padStart(2, "0") : undefined },
               { label: "Datasets", value: languageData.length ? String(languageData.length).padStart(2, "0") : undefined },
             ]}
           />
@@ -81,7 +81,7 @@ const LanguagePage = async ({ params }: PageProps) => {
         <>
           <Section id="models" className="pt-0 sm:pt-0">
             <Container className="flex flex-col gap-12">
-              <SectionHeader eyebrow="Models" title={`Models for ${language.name}.`} />
+              <SectionHeader eyebrow="Models" title={`Open models for ${language.name}`} />
               <ul className="grid gap-5 lg:grid-cols-2">
                 {models.map((m) => (
                   <li key={m.slug} className="flex">
@@ -94,7 +94,7 @@ const LanguagePage = async ({ params }: PageProps) => {
 
           <Section id="corpus" className="pt-0 sm:pt-0">
             <Container className="flex flex-col gap-12">
-              <SectionHeader eyebrow="Data" title={`Datasets for ${language.name}.`} />
+              <SectionHeader eyebrow="Data" title={`Datasets for ${language.name}`} />
               <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
                 {languageData.map((d, i) => (
                   <li key={d.slug} className="flex">
