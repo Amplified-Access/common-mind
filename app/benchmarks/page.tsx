@@ -133,8 +133,8 @@ const BenchmarksPage = () => {
         <Container className="flex flex-col gap-16">
           <SectionHeader
             eyebrow="Adaptation"
-            title="Same base model. Different language."
-            lede="Gemma 3 1B, before and after civic adaptation."
+            title="One foundation. Different language capabilities."
+            lede="Compare Gemma 3 1B before and after language-specific adaptation for multilingual civic AI."
           />
           <div className="grid gap-5 md:grid-cols-2">
             {adapted.map((m, i) => (
