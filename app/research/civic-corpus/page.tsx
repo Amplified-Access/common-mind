@@ -9,7 +9,8 @@ import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Civic corpus",
-  description: "The civic speech, data, and terminology behind CommonMind.",
+  description:
+    "Language data, local terminology, and contextual knowledge that help AI interpret civic discourse in context.",
 };
 
 // Training mixtures as reported in each technical report.
@@ -52,9 +53,9 @@ const CivicCorpusPage = () => {
     <>
       <PageHero
         eyebrow="Research / Civic Corpus"
-        title="The civic speech behind the infrastructure."
-        lede="Civic language is highly contextual. It rarely translates literally. The corpus gathers the speech, data, and terminology AI needs to understand community voice."
-        tags={["CIVIC SPEECH", "TERMINOLOGY", "CONSENT FIRST"]}
+        title="Understanding civic language in context."
+        lede="Civic discourse is shaped by language, place, and lived experience. The Civic Corpus brings together language data, local terminology, and contextual knowledge to help AI systems interpret community expression beyond literal translation."
+        tags={["CIVIC DISCOURSE", "TERMINOLOGY", "RESPONSIBLE DATA"]}
       />
 
       <Section id="scope">
