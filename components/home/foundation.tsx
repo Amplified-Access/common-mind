@@ -17,8 +17,7 @@ function Foundation() {
         </Eyebrow>
         <p className="max-w-4xl text-h2 text-pretty lg:max-w-[75%]">
           <span className="text-signal">Building open AI infrastructure</span> that connects
-          language data, models, benchmarks, and research to help AI better understand civic
-          speech across communities.
+           datasets, models, benchmarks, and research to advance civic AI in languages underserved by the mainstream.
         </p>
         <ArrowLink href="#platform" arrow="up-right" className="text-sm">
           See What We&apos;re Building
