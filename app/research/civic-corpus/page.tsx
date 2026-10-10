@@ -62,8 +62,8 @@ const CivicCorpusPage = () => {
         <Container className="flex flex-col gap-14">
           <SectionHeader
             eyebrow="Scope"
-            title="Categories of civic speech."
-            lede="Civic speech is contextual. CommonMind turns what people say into structured records the right people can act on."
+            title="The dimensions of civic discourse."
+            lede="From everyday concerns to public decision-making, civic discourse reflects the issues, institutions, and experiences that shape community life."
             layout="split"
           />
           <CivicExplorer />

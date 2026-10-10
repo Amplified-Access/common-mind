@@ -19,7 +19,7 @@ export type CivicCategory = {
 export const civicCategories: CivicCategory[] = [
   {
     id: "community-problems",
-    label: "Community problems",
+    label: "Community concerns",
     medium: "voice",
     input: {
       kind: "Voice note · Luganda",
@@ -82,19 +82,19 @@ export const civicCategories: CivicCategory[] = [
   },
   {
     id: "accountability",
-    label: "Corruption & accountability",
+    label: "Public accountability",
     medium: "voice",
     input: {
       kind: "Voice report",
-      text: "A citizen describes being asked for an unofficial payment at a public office.",
+      text: "A resident describes being asked for an unofficial payment at a public office.",
     },
     output: [
-      ["service", "extracted"],
-      ["office", "extracted"],
-      ["request_type", "unofficial_payment"],
-      ["record", "accountability"],
+      ["service", "Public services"],
+      ["office", "Public office"],
+      ["request_type", "Unofficial payment"],
+      ["record", "Public accountability"],
     ],
-    boundary: "Structures the account as a factual record.",
+    boundary: "Structures the report into a consistent record for further analysis and verification.",
   },
   {
     id: "priorities",
@@ -144,7 +144,7 @@ export const civicCategories: CivicCategory[] = [
   },
   {
     id: "promises",
-    label: "Political promises",
+    label: "Political commitments",
     medium: "voice",
     input: {
       kind: "Campaign recording",
