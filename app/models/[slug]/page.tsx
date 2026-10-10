@@ -241,8 +241,11 @@ const ModelPage = async ({ params }: PageProps) => {
             <Eyebrow>Playground</Eyebrow>
             <div className="flex flex-col gap-4 md:flex-row md:items-end md:gap-12">
               <h2 className="text-h2">Try the Model</h2>
-              <p className="max-w-56 text-sm text-foreground/85">
-                See how the model processes {languages.join(" and ")} civic speech
+              <p className="max-w-xs text-sm text-foreground/85">
+                Explore how the model translates civic discourse{" "}
+                {model.directions.length > 1
+                  ? `between English and ${languages.join(", ")}`
+                  : `from English to ${languages.join(", ")}`}
               </p>
             </div>
           </div>
