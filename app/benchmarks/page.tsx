@@ -39,7 +39,7 @@ const BenchmarksPage = () => {
         tile
         eyebrow="Benchmarks"
         title="Measure what improves."
-        lede="A benchmark for evaluating how well AI models understand civic speech across languages, tasks, and community contexts."
+        lede="Open reproducible benchmarks for evaluating multilingual AI performance across languages, civic discourse tasks, and community contexts."
         tags={["MULTILINGUAL", "OPEN EVALUATION", "CIVIC AI"]}
       />
 
