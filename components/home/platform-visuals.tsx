@@ -9,10 +9,8 @@ import { LanguageTypewriter } from "./language-typewriter";
 import { SpeechOrb } from "./speech-orb";
 
 // The languages WatchTower translates into, each in its own name and
-// script, as its language selector lists them.
+// script, in its language selector's order, leaving out English and French.
 const TRANSLATION_LANGUAGES = [
-  "English",
-  "Français",
   "Kiswahili",
   "Luganda",
   "Kinyarwanda",
