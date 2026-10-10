@@ -32,8 +32,8 @@ async function ModelCarousel() {
         <SectionHeader
           size="h1"
           layout="split"
-          title="Open models for civic language understanding."
-          lede="Explore, evaluate, and use models built for transcription, translation, civic terminology, and issue classification."
+          title="Open models for multilingual civic AI"
+          lede="Explore, evaluate, and build with open models for transcription, translation, civic discourse analysis, and issue classification."
           action={<ArrowLink href="/models">Explore Models</ArrowLink>}
         />
       </Container>
