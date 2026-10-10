@@ -49,9 +49,7 @@ const LanguagesPage = () => {
             <div className="flex w-full flex-col gap-4 lg:w-75 lg:shrink-0">
               <h1 className="max-w-62 text-h2">Explore civic AI by language.</h1>
               <p className="max-w-75 text-[13px] leading-[1.2] text-pretty text-faint">
-                One language. An entire civic AI ecosystem. Explore the models, civic speech
-                resources, benchmarks, terminology, and research being built around each
-                supported language.
+                Each language is an ecosystem of its own, expore the open models, civic discourse datasets, benchmarks, terminology, and research supporting AI development across languages beyond the mainstream.
               </p>
               <dl className="grid grid-cols-[11rem_auto] gap-y-6 pt-4">
                 {stats.map((stat) => (
@@ -74,7 +72,7 @@ const LanguagesPage = () => {
         <Container className="flex flex-col gap-12">
           <SectionHeader
             title="Explore Supported Languages"
-            lede="Each language connects to its own growing ecosystem of models, civic speech data, evaluation, terminology, and research."
+            lede="Each language has a growing ecosystem of open models, civic discourse datasets, benchmarks, terminology resources, and research."
           />
           <LanguageGrid entries={entries} />
         </Container>
