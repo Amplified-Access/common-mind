@@ -24,7 +24,7 @@ export const models: Model[] = [
     slug: "luganda-gemma-1b-it",
     name: "Luganda-gemma-1B-it",
     tagline:
-      "Fine-tuned Gemma 3 1B Instruct for English to Luganda and Luganda to English translation",
+      "A Gemma 3 1B Instruct model adapted using QLoRA for English to Luganda and Luganda to English translation",
     platforms: ["HuggingFace", "Kaggle", "Ollama"],
     languages: ["lg"],
     overview:
@@ -89,7 +89,7 @@ print(response)`,
   {
     slug: "swahili-gemma-1b-it",
     name: "Swahili-gemma-1B-it",
-    tagline: "Fine-tuned Gemma 3 1B for English to Swahili translation",
+    tagline: "A Gemma 3 1B model adapted using LoRA for English to Swahili translation",
     platforms: ["HuggingFace", "Kaggle", "Ollama"],
     languages: ["sw"],
     overview:
@@ -136,7 +136,7 @@ print(response.strip())`,
   {
     slug: "swahili-nllb-1-3b",
     name: "Swahili-nllb-1.3B",
-    tagline: "LoRA fine-tune of NLLB-200 1.3B for English to Swahili translation",
+    tagline: "An NLLB-200 1.3B model adapted using LoRA for English to Swahili translation",
     platforms: ["HuggingFace"],
     languages: ["sw"],
     overview:
@@ -183,7 +183,7 @@ print(tokenizer.batch_decode(outputs, skip_special_tokens=True)[0])`,
   {
     slug: "swahili-nllb-600m",
     name: "Swahili-nllb-600M",
-    tagline: "LoRA fine-tune of NLLB-200 600M for English to Swahili translation",
+    tagline: "An NLLB-200 600M model adapted using LoRA for English to Swahili translation",
     platforms: ["HuggingFace"],
     languages: ["sw"],
     overview:
