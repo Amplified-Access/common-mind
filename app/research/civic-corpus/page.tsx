@@ -43,10 +43,16 @@ const mixtures = [
 const shades = ["bg-signal", "bg-teal", "bg-ocean", "bg-lilac", "bg-other", "bg-white/25"];
 
 const principles = [
-  ["Consent first", "People know how a recording will be used before it is made."],
-  ["Purpose-bound", "Collected to help AI understand civic speech."],
-  ["Anonymous", "Speaker identity is held apart from what was said."],
-  ["Community-reviewed", "Speakers of each language review its terminology."],
+  ["Informed consent", "People understand how their contributions will be collected, used, and shared."],
+  ["Purpose limitation", "Data is collected and used for clearly defined research and development purposes."],
+  [
+    "Privacy protection",
+    "Personal information is minimised and protected, with additional safeguards for sensitive contributions.",
+  ],
+  [
+    "Community validation",
+    "Language speakers and local experts help review terminology, interpretation, and contextual meaning.",
+  ],
 ];
 
 const CivicCorpusPage = () => {
