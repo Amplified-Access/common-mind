@@ -18,8 +18,12 @@ import { languages } from "@/components/languages/data";
 import { ecosystemFor } from "@/components/languages/ecosystem";
 import { researchItems } from "@/components/research/items";
 import { cardColor, ColorCard } from "@/components/system/color-card";
-import { ArrowLink, Eyebrow, Section, SectionHeader } from "@/components/system/primitives";
-import { site } from "@/lib/site";
+import {
+  ArrowLink,
+  Eyebrow,
+  Section,
+  SectionHeader,
+} from "@/components/system/primitives";
 
 export default function Home() {
   const ecosystems = languages.map((language) => {
@@ -28,11 +32,14 @@ export default function Home() {
       code: language.code,
       name: language.name,
       models: models.length,
-      datasets: datasets.filter((d) => d.languages.includes(language.name)).length,
+      datasets: datasets.filter((d) => d.languages.includes(language.name))
+        .length,
       benchmark: models.length ? "CivicBench Africa" : undefined,
       researchHref: research[0] && `/research/${research[0].slug}`,
       description: `Explore the models, civic speech resources, benchmarks, and research being developed to help AI understand ${language.name} in civic contexts.`,
-      scores: [swahiliFlores, lugandaHeldOut].find((set) => set.code === language.code),
+      scores: [swahiliFlores, lugandaHeldOut].find(
+        (set) => set.code === language.code,
+      ),
     };
   });
 
@@ -44,42 +51,48 @@ export default function Home() {
       <section id="platform" className="zoom-viewport relative scroll-mt-16">
         <PlatformTour
           heading="The infrastructure layer for civic AI."
-          intro="Languages, civic data, models, and evaluation are deeply connected. CommonMind brings them together in one open ecosystem so researchers and developers can build AI that understands civic speech beyond the mainstream."
+          intro="Language data, open models, research, and benchmarks are deeply connected. CommonMind brings them together in one open ecosystem so researchers and developers can build AI that understands civic discourse in languages beyond the mainstream."
           panels={[
             {
               id: "languages",
               title: "Languages",
               subtitle: "Start with the language.",
-              body: "Every language carries its own civic vocabulary. Understanding begins with how communities actually describe public issues, services, government, and local priorities.",
+              body: "Languages shape how communities describe public issues, access services, engage with institutions, and express local priorities. Undersranding these differences is the foundation of inclusive civic AI.",
               href: "/languages",
               cta: "Explore Languages",
               visual: <LanguagesVisual />,
             },
             {
-              id: "civic-speech",
-              title: "Civic Speech",
-              subtitle: "Understand how communities speak.",
-              body: "Real civic speech provides the language, terminology, and context AI needs to understand community voice beyond translation: voice becomes a transcript, a translation, and a civic record.",
+              id: "civic-discourse",
+              title: "Civic Discourse",
+              subtitle: "Understand how communities communicate.",
+              body: "Real civic discourse captures the language, expressions, and context communities use to discuss public issues, services, governance, and local priorities. Common mind transforms this into structured resources for deveoping and evaluating AI systems.",
               href: "/research/civic-corpus",
               cta: "Explore the Civic Corpus",
               visual: <CivicSpeechVisual />,
             },
             {
-              id: "models",
-              title: "Models",
+              id: "open-models",
+              title: "Open models",
               subtitle: "Small, open, adapted.",
-              body: "Small, open models adapted for civic language, built to run on modest hardware and released with their weights and evaluation.",
-              proof: { value: "≤1.37B", label: "parameters. Built to run on modest hardware." },
+              body: "Small, open models adapted for multilingual civic applications. Designed for efficient deployment with accessible model weights and documented evaluations.",
+              proof: {
+                value: "≤1.37B",
+                label: "parameters. Built to run on modest hardware.",
+              },
               href: "/models",
               cta: "Explore Models",
               visual: <ModelsVisual />,
             },
             {
-              id: "evaluation",
-              title: "Evaluation",
+              id: "benchmarks",
+              title: "Benchmarks",
               subtitle: "Measure what improves.",
-              body: "Reproducible measurement of civic understanding, on shared test sets with every third-party figure cited.",
-              proof: { value: "38.74", label: "BLEU on English→Swahili, above Gemini 2.0 Flash." },
+              body: "Open benchmarks and reproducible evaluations measure model performance across languages and tasks, making progress transparent, comparable and verifiable.",
+              proof: {
+                value: "38.74",
+                label: "BLEU on English→Swahili, above Gemini 2.0 Flash.",
+              },
               href: "/benchmarks",
               cta: "View Benchmarks",
               visual: <EvaluationVisual />,
@@ -87,10 +100,10 @@ export default function Home() {
             {
               id: "applications",
               title: "Civic Applications",
-              subtitle: "From community voice to evidence.",
-              body: "WatchTower, our reference application, turns community voice into structured evidence. Deployed in Kenya with a human rights partner to map reported incidents of technology-facilitated gender-based violence.",
-              href: site.links.watchtower,
-              cta: "thewatchtower.tech",
+              subtitle: "From civic discourse to real world impact.",
+              body: "CommonMind enables developers and organisations to build multilingual AI applications that turn civic discourse into meaningful insights, expand access to public information and services, strengthen community participation, and support more informed public decisions.",
+              href: "/applications",
+              cta: "Explore Applications",
               visual: <ApplicationsVisual />,
             },
           ]}
@@ -104,7 +117,7 @@ export default function Home() {
           <SectionHeader
             eyebrow="Language Ecosystems"
             title="Start with the language."
-            lede="Every language carries its own civic vocabulary. Explore the models, civic corpora, benchmarks, and research being built around each language."
+            lede="Every language carries its own expressions, context, and civic vocabulary. Explore the open models, datasets, benchmarks, and research that support civic AI development across languages."
           />
           <LanguageEcosystems ecosystems={ecosystems} />
         </Container>
@@ -115,24 +128,34 @@ export default function Home() {
           <div className="grid gap-8 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)_minmax(0,0.6fr)] lg:gap-12">
             <div className="flex flex-col gap-3">
               <Eyebrow>CivicBench Africa</Eyebrow>
-              <h2 className="text-h2 text-balance">Measure what improves.</h2>
+              <h2 className="text-h2 text-balance">Measure what improves</h2>
             </div>
             <div className="flex max-w-md flex-col gap-6 lg:pt-8">
               <p className="text-sm text-pretty text-foreground/85">
-                Reliable evaluation for civic AI. CivicBench Africa compares how models
-                understand civic speech across languages, terminology, code switching,
-                translation, and issue classification.
+                Reliable, reproducible evaluation for multilingual civic AI. CivicBench Africa measures model performance across languages, civic terminology, code-switching, translation, and issue classification, making progress transparent and comparable.
               </p>
               <ArrowLink href="/benchmarks">Explore Benchmarks</ArrowLink>
             </div>
             <p className="max-w-52 font-mono text-xs text-signal lg:pt-9">
-              If it cannot be measured, it cannot be improved.
+              What gets measured can be improved.
             </p>
           </div>
           <BenchShowcase
             sets={[
-              { id: "sw", from: "English", to: "Swahili", entries: swahiliFlores.entries, evalSet: swahiliFlores.evalSet },
-              { id: "lg", from: "English", to: "Luganda", entries: lugandaHeldOut.entries, evalSet: lugandaHeldOut.evalSet },
+              {
+                id: "sw",
+                from: "English",
+                to: "Swahili",
+                entries: swahiliFlores.entries,
+                evalSet: swahiliFlores.evalSet,
+              },
+              {
+                id: "lg",
+                from: "English",
+                to: "Luganda",
+                entries: lugandaHeldOut.entries,
+                evalSet: lugandaHeldOut.evalSet,
+              },
             ]}
           />
         </Container>
@@ -142,8 +165,8 @@ export default function Home() {
         <Container className="flex flex-col gap-14">
           <SectionHeader
             eyebrow="Research"
-            title="Understanding civic speech."
-            lede="Explore the civic corpus, terminology mappings, and research shaping how AI understands civic speech across languages beyond the mainstream."
+            title="Understanding civic discourse"
+            lede="Explore the civic corpus, terminology mappings, and research that advance AI's ability to interpret civic discourse, language, and context across communities beyond the mainstream."
             layout="split"
           />
           <div className="scrollbar-none -mx-4 overflow-x-auto px-4 md:mx-0 md:px-0 lg:mask-[linear-gradient(to_right,transparent,#000_6%,#000_94%,transparent)]">
@@ -165,7 +188,11 @@ export default function Home() {
                 ))}
             </ul>
           </div>
-          <ArrowLink href="/research" arrow="right" className="self-end text-sm">
+          <ArrowLink
+            href="/research"
+            arrow="right"
+            className="self-end text-sm"
+          >
             Read More
           </ArrowLink>
         </Container>
