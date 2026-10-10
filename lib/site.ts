@@ -51,6 +51,7 @@ export type Partner = {
 export const partners: Partner[] = [
   {
     name: "ActionChallenge",
+    href: site.links.actionchallenge,
     logo: "/partners/action-challenge.svg",
     width: 154,
     height: 107,
