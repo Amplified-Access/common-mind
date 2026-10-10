@@ -9,10 +9,18 @@ export type ResultRow = {
   after: string;
 };
 
+/** How an entry reads as a card on the research index. */
+export type IndexCard = {
+  title?: string;
+  description: string;
+  tags: string[];
+};
+
 export type Publication = {
   slug: string;
   title: string;
   dek: string;
+  card: IndexCard;
   date: string;
   tags: string[];
   sections: PublicationSection[];
@@ -41,6 +49,12 @@ export const publications: Publication[] = [
     slug: "luganda-gemma-qlora",
     title: "Fine-tuning Gemma 3 1B for Luganda: from 0.06 to 13.85 BLEU",
     dek: "QLoRA on a single T4 GPU turns a model with essentially no working Luganda into a functional bidirectional translator, using data derived almost entirely from one source.",
+    card: {
+      title: "Adapting Gemma 3 1B for Luganda translation",
+      description:
+        "A study of parameter-efficient language adaptation, improving English–Luganda translation from 0.06 to 13.85 BLEU using QLoRA and limited computational resources.",
+      tags: ["Luganda", "QLoRA"],
+    },
     date: "2026-05-23",
     tags: ["Luganda", "QLoRA", "Low-resource NLP"],
     sections: [
@@ -94,6 +108,12 @@ export const publications: Publication[] = [
     slug: "swahili-gemma-cpt-sft",
     title: "Continued pretraining before translation: the Swahili-Gemma-1B recipe",
     dek: "Swahili isn't as underrepresented as Luganda, but a two-stage pipeline (teach the model to read Swahili first, then teach it to translate) still meaningfully outperformed going straight to instruction tuning.",
+    card: {
+      title: "Continued pretraining for Swahili language adaptation",
+      description:
+        "An investigation into how continued pretraining followed by supervised fine-tuning improves translation performance compared with direct instruction tuning.",
+      tags: ["Swahili", "Model Adaptation"],
+    },
     date: "2026-08-11",
     tags: ["Swahili", "Continued pretraining", "Instruction tuning"],
     sections: [
@@ -132,6 +152,12 @@ export const publications: Publication[] = [
     slug: "nllb-lora-vs-chat-llms",
     title: "Purpose-built beats general-purpose: NLLB LoRA vs. instruction-tuned LLMs for Swahili",
     dek: "A small LoRA adapter on Meta's translation-specific NLLB-200 outscored every instruction-tuned chat model we compared it against on the same benchmark, including some many times its size.",
+    card: {
+      title: "Purpose-built vs. general-purpose models for Swahili translation",
+      description:
+        "A comparative evaluation of translation-specific architectures and instruction-tuned language models, demonstrating the performance advantages of targeted adaptation on shared benchmarks.",
+      tags: ["Swahili", "Model Evaluation"],
+    },
     date: "2026-09-03",
     tags: ["Swahili", "NLLB", "Model architecture"],
     sections: [
@@ -181,6 +207,7 @@ export type Release = {
   title: string;
   description: string;
   href: string;
+  card: IndexCard & { cta: string };
 };
 
 export const releases: Release[] = [
@@ -190,6 +217,12 @@ export const releases: Release[] = [
     description:
       "Two LoRA-adapted translation models demonstrating the effectiveness of specialised architectures for English-to-Swahili translation.",
     href: "/models/swahili-nllb-1-3b",
+    card: {
+      description:
+        "Two LoRA-adapted NLLB-200 models advancing English-to-Swahili translation through efficient, task-specific fine-tuning.",
+      tags: ["Swahili", "Translation"],
+      cta: "Explore the Models",
+    },
   },
   {
     date: "2026-08-11",
@@ -197,6 +230,12 @@ export const releases: Release[] = [
     description:
       "A continued-pretrained and instruction-tuned model supporting Swahili translation and language understanding.",
     href: "/models/swahili-gemma-1b-it",
+    card: {
+      description:
+        "A Gemma 3 1B model adapted through continued pretraining and instruction tuning for English-to-Swahili translation and Swahili instruction-following.",
+      tags: ["Swahili", "Language Modelling"],
+      cta: "Explore the Model",
+    },
   },
   {
     date: "2026-05-23",
@@ -204,5 +243,11 @@ export const releases: Release[] = [
     description:
       "CommonMind's first open model release, establishing a foundation for English–Luganda translation through parameter-efficient adaptation.",
     href: "/models/luganda-gemma-1b-it",
+    card: {
+      description:
+        "A QLoRA-adapted Gemma 3 1B model supporting bidirectional English–Luganda translation and Luganda-language interaction.",
+      tags: ["Luganda", "Translation"],
+      cta: "Explore the Model",
+    },
   },
 ];

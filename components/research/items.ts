@@ -27,10 +27,10 @@ export function researchItems(): ResearchItem[] {
     const topics = p.tags.filter((t) => !LANGUAGES.includes(t));
     return {
       id: `report-${p.slug}`,
-      title: p.title,
+      title: p.card.title ?? p.title,
       kind: "Technical Report",
-      description: p.dek,
-      tags: [...languages, topics[0]].filter(Boolean).slice(0, 2),
+      description: p.card.description,
+      tags: p.card.tags,
       languages,
       topics,
       date: p.date,
@@ -44,15 +44,15 @@ export function researchItems(): ResearchItem[] {
     const languages = getModel(slug)?.languageNames.filter((l) => l !== "English") ?? [];
     return {
       id: `release-${r.date}`,
-      title: r.title,
+      title: r.card.title ?? r.title,
       kind: "Model Release",
-      description: r.description,
-      tags: [...languages, "Release"],
+      description: r.card.description,
+      tags: r.card.tags,
       languages,
       topics: ["Model releases"],
       date: r.date,
       href: r.href,
-      cta: "View the Model",
+      cta: r.card.cta,
     };
   });
 
@@ -60,7 +60,8 @@ export function researchItems(): ResearchItem[] {
     id: "civic-corpus",
     title: "The Civic Corpus",
     kind: "Research",
-    description: "Olukiiko → council → local_government.body. The speech, data, and terminology behind the infrastructure.",
+    description:
+      "An open foundation for multilingual civic understanding, connecting local expressions, civic terminology, and structured language data to shared concepts across communities.",
     tags: ["Luganda", "Terminology"],
     languages: ["Luganda"],
     topics: ["Terminology"],
@@ -70,14 +71,14 @@ export function researchItems(): ResearchItem[] {
 
   const datasetIndex: ResearchItem = {
     id: "datasets",
-    title: "Datasets",
+    title: "Open Language Datasets",
     kind: "Datasets",
-    description: `Every source behind every model: ${datasets.length} open datasets.`,
-    tags: ["Swahili", "Luganda"],
+    description: `Explore ${datasets.length} open datasets supporting multilingual model development, training, and evaluation across Luganda and Swahili.`,
+    tags: ["Multilingual", "Open Data"],
     languages: LANGUAGES,
     topics: ["Datasets"],
     href: "/datasets",
-    cta: "Browse the Datasets",
+    cta: "Browse Datasets",
   };
 
   const dated = [...reports, ...releaseItems].sort((a, b) =>
