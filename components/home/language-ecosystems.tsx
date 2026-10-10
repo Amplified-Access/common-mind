@@ -94,7 +94,7 @@ function LanguageEcosystems({ ecosystems }: { ecosystems: Ecosystem[] }) {
                 <span className="text-[2rem] leading-none">{current.name}</span>
                 <span className="rounded-full border border-signal/40 bg-track px-2.5 py-0.5">
                   <StatusDot
-                    label={built ? "Active" : "Planned"}
+                    label={built ? "Active" : "In progress"}
                     tone={built ? "signal" : "muted"}
                     className={built ? "text-signal" : undefined}
                   />
