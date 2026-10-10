@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 
 import { cardColor, ColorCard } from "@/components/system/color-card";
 import { FilterChips, FilterSelect, SearchField } from "@/components/system/filters";
+import { SectionHeader } from "@/components/system/primitives";
 
 import { datasets, type DatasetKind } from "./data";
 
@@ -38,7 +39,7 @@ function DatasetGrid() {
           <SearchField
             value={query}
             onChange={setQuery}
-            placeholder="Search datasets..."
+            placeholder="Search datasets by name, language, or application."
             label="Search datasets"
             className="lg:max-w-md"
           />
@@ -58,12 +59,14 @@ function DatasetGrid() {
           </div>
         </div>
         <FilterChips
-          label="Data type"
+          label="Dataset type"
           value={kind}
           onChange={setKind}
           chips={[{ id: ALL, label: "All" }, ...kinds.map((k) => ({ id: k, label: k }))]}
         />
       </div>
+
+      <SectionHeader eyebrow="Dataset Catalogue" title="The open data foundations behind our models." />
 
       {visible.length > 0 ? (
         <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
