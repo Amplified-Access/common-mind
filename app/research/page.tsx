@@ -20,8 +20,8 @@ const ResearchPage = () => {
     <>
       <PageHero
         eyebrow="Research"
-        title="Understanding civic speech."
-        lede="Research into the language, data, models, and evaluation methods needed to build AI that better understands civic expression across languages beyond the mainstream."
+        title="Understanding civic discourse."
+        lede="Open research advancing the language resources, models, and evaluation methods needed to build AI that understands civic discourse across languages and communities beyond the mainstream."
         tags={["CIVIC AI", "LANGUAGE", "OPEN RESEARCH"]}
         sideGrids
         className="pb-(--section-pad)"
