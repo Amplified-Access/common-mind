@@ -200,9 +200,9 @@ const BenchmarksPage = () => {
           <div className="flex flex-col gap-4">
             <Eyebrow>Playground</Eyebrow>
             <div className="flex flex-col gap-4 md:flex-row md:items-end md:gap-12">
-              <h2 className="text-h2">Try the Model</h2>
+              <h2 className="text-h2">Explore the models in action.</h2>
               <p className="max-w-60 text-sm text-foreground/85">
-                See how the models process civic speech in Luganda and Swahili
+                Test how models translate civic discourse between English, Luganda, and Swahili.
               </p>
             </div>
           </div>
