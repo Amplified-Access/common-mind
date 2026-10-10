@@ -27,11 +27,12 @@ const ModelsPage = () => {
         eyebrow="Model registry"
         title={
           <>
-            Open models for civic
-            <br className="max-sm:hidden" /> language understanding.
+            Open models
+            <br className="max-sm:hidden" />
+            for multilingual civic AI.
           </>
         }
-        lede="Explore, evaluate, and use models built for transcription, translation, civic terminology mapping, and issue classification across languages beyond the mainstream."
+        lede="Explore, evaluate, and build with open models for transcription, translation, civic terminology mapping, and issue classification in languages beyond the mainstream."
         className="pb-(--section-pad)"
         after={
           <Container id="registry" className="scroll-mt-24">
@@ -45,7 +46,7 @@ const ModelsPage = () => {
           <SectionHeader
             eyebrow="Playground"
             title="See the model in action."
-            lede="Choose a model, provide an input, and explore how it processes civic speech across supported languages."
+            lede="Choose a model, provide an input, and explore how it processes and interprets civic discourse across supported languages."
           />
           <Translator />
         </Container>
