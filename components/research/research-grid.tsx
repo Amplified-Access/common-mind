@@ -45,8 +45,8 @@ function ResearchGrid({ items }: { items: ResearchItem[] }) {
         <SearchField
           value={query}
           onChange={setQuery}
-          placeholder="Search Research"
-          label="Search research"
+          placeholder="Explore Research"
+          label="Explore research"
           className="max-w-md"
         />
         <FilterChips
