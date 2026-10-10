@@ -13,11 +13,12 @@ export const metadata: Metadata = {
     "Language data, local terminology, and contextual knowledge that help AI interpret civic discourse in context.",
 };
 
-// Training mixtures as reported in each technical report.
+// Training mixtures as reported in each technical report. Totals are the sum
+// of the listed sources.
 const mixtures = [
   {
     name: "Swahili-gemma-1B-it",
-    total: "159,311 examples",
+    unit: "listed examples",
     parts: [
       { label: "Rogendo", value: 58052 },
       { label: "MAFAND-MT", value: 32414 },
@@ -29,7 +30,7 @@ const mixtures = [
   },
   {
     name: "Swahili-nllb",
-    total: "145,707 pairs",
+    unit: "listed sentence pairs",
     parts: [
       { label: "Rogendo", value: 60000 },
       { label: "MAFAND-MT", value: 32414 },
@@ -84,7 +85,12 @@ const CivicCorpusPage = () => {
 
       <Section id="composition" className="border-t border-line">
         <Container className="flex flex-col gap-14">
-          <SectionHeader eyebrow="Composition" title="What the models learned from." />
+          <SectionHeader
+            eyebrow="Composition"
+            title="The data behind the models."
+            lede="Explore the language datasets used to develop and adapt CommonMind models, from parallel translation corpora to instruction-tuning resources."
+            layout="split"
+          />
           <div className="grid gap-5 lg:grid-cols-2">
             {mixtures.map((mix) => {
               const sum = mix.parts.reduce((a, p) => a + p.value, 0);
@@ -92,7 +98,9 @@ const CivicCorpusPage = () => {
                 <Panel key={mix.name} className="flex flex-col gap-6 p-7 sm:p-8">
                   <div className="flex items-baseline justify-between gap-4">
                     <span className="font-mono text-lg">{mix.name}</span>
-                    <span className="font-mono text-xs text-faint">{mix.total}</span>
+                    <span className="font-mono text-xs text-faint">
+                      {sum.toLocaleString("en-US")} {mix.unit}
+                    </span>
                   </div>
                   <div className="flex h-2.5 gap-1">
                     {mix.parts.map((p, i) => (
