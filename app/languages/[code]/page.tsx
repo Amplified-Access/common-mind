@@ -5,9 +5,9 @@ import { Container } from "@/components/common/container";
 import { datasets } from "@/components/datasets/data";
 import { getLanguage, languages } from "@/components/languages/data";
 import { ecosystemFor } from "@/components/languages/ecosystem";
+import { LanguagePlayground } from "@/components/languages/language-playground";
 import { modelCardData } from "@/components/models/catalog";
 import { ModelCard } from "@/components/models/model-card";
-import { Translator } from "@/components/playground/translator";
 import { cardColor, ColorCard } from "@/components/system/color-card";
 import { InfoTable } from "@/components/system/info-table";
 import { PageHero } from "@/components/system/page-hero";
@@ -115,8 +115,7 @@ const LanguagePage = async ({ params }: PageProps) => {
 
           <Section id="try" className="border-t border-line">
             <Container className="flex flex-col gap-14">
-              <SectionHeader eyebrow="Playground" title={`Try ${language.name}.`} />
-              <Translator initialModel={models[0].slug} />
+              <LanguagePlayground initialModel={models[0].slug} />
             </Container>
           </Section>
         </>

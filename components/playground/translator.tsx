@@ -17,9 +17,10 @@ type TranslatorProps = {
   initialModel?: string;
   /** Pin the playground to one model: its name replaces the model picker. */
   locked?: boolean;
+  onModelChange?: (slug: string) => void;
 };
 
-function Translator({ initialModel, locked = false }: TranslatorProps) {
+function Translator({ initialModel, locked = false, onModelChange }: TranslatorProps) {
   const startModel =
     playgroundModels.find((m) => m.slug === initialModel) ?? playgroundModels[0];
   const [modelSlug, setModelSlug] = useState(startModel.slug);
@@ -54,6 +55,7 @@ function Translator({ initialModel, locked = false }: TranslatorProps) {
     setModelSlug(nextModel.slug);
     setDirectionCode(nextModel.directions[0].code);
     reset();
+    onModelChange?.(nextModel.slug);
   };
 
   const handleExampleClick = (example: Example) => {
