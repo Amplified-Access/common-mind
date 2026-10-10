@@ -24,11 +24,11 @@ function FooterCta() {
       />
       <div className="relative flex min-h-100 flex-col items-center justify-center gap-5 px-6 py-20 text-center sm:px-14">
         <h2 className="max-w-xl text-[2.25rem] leading-[1.2] font-semibold tracking-[-0.02em] text-balance md:text-[2.75rem]">
-          Build with the civic language layer.
+          Build with open civic AI infrastructure.
         </h2>
-        <p className="max-w-md text-base text-pretty">
-          Use open models, data, benchmarks, and tools to build AI that understands
-          how communities actually speak.
+        <p className="max-w-lg text-base text-pretty">
+          Use open models, datasets, benchmarks, and developer tools to build AI applications that understands
+          civic discourse across languages and communities.
         </p>
         <div className="flex flex-wrap justify-center gap-3 pt-3">
           <LinkButton href="/build" variant="ink" arrow>
