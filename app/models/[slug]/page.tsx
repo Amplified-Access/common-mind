@@ -38,12 +38,14 @@ const ModelPage = async ({ params }: PageProps) => {
   const evaluation = model.evaluation;
   const hf = model.availability.find((a) => a.label === "Hugging Face");
   const trainedOn = datasets.filter((d) => d.usedBy.includes(model.name));
+  // "English to Swahili" for one direction, "English and Luganda" for both.
+  const pair = `English ${model.directions.length > 1 ? "and" : "to"} ${languages.join(", ")}`;
 
   const overview = (
     <TabBody>
       <div className="flex flex-col gap-5">
         <Eyebrow uppercase={false}>About this model</Eyebrow>
-        <h2 className="text-h2 text-balance">Built for civic speech understanding.</h2>
+        <h2 className="text-h2 text-balance">Advancing {pair} translation</h2>
         <p className="text-sm text-pretty text-faint">{model.overview}</p>
         <ul className="flex flex-col gap-2 pt-2 text-sm text-subtle">
           {model.capabilities.map((capability) => (
