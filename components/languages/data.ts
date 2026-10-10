@@ -93,6 +93,45 @@ export const languages: Language[] = [
       "The national language of Rwanda, used across government, media, and education, and closely related to Kirundi across the Great Lakes.",
     tags: ["Kinyarwanda"],
   },
+  {
+    code: "am",
+    name: "Amharic",
+    endonym: "አማርኛ",
+    family: "Afroasiatic",
+    branch: "Semitic",
+    script: "Ge'ez (Ethiopic)",
+    regions: ["Ethiopia"],
+    location: [11.59, 37.39],
+    tagline:
+      "Ethiopia's federal working language, written in the Ge'ez script and used across government, courts, media, and schools nationwide.",
+    tags: ["Amharic"],
+  },
+  {
+    code: "ki",
+    name: "Kikuyu",
+    endonym: "Gĩkũyũ",
+    family: "Niger-Congo",
+    branch: "Bantu",
+    script: "Latin",
+    regions: ["Kenya"],
+    location: [-0.42, 36.95],
+    tagline:
+      "One of Kenya's most widely spoken languages, at home in the central highlands around Mount Kenya and heard daily in local radio and markets.",
+    tags: ["Kikuyu"],
+  },
+  {
+    code: "suk",
+    name: "Sukuma",
+    endonym: "Kisukuma",
+    family: "Niger-Congo",
+    branch: "Bantu",
+    script: "Latin",
+    regions: ["Tanzania"],
+    location: [-2.52, 32.9],
+    tagline:
+      "Tanzania's most widely spoken community language, used south of Lake Victoria around Mwanza and Shinyanga.",
+    tags: ["Sukuma"],
+  },
 ];
 
 export function getLanguage(code: string) {
