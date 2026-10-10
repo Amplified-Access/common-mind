@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { journey, paths, quickstart } from "@/components/build/snippets";
+import { apiResponse, journey, paths, quickstart } from "@/components/build/snippets";
 import { Container } from "@/components/common/container";
 import { Code } from "@/components/system/code";
 import { CodeTabs } from "@/components/system/code-tabs";
@@ -15,9 +15,9 @@ export const metadata: Metadata = {
 };
 
 const requestFields = [
-  { label: "model_slug", value: "Which model to run" },
-  { label: "text", value: "Up to 500 characters" },
-  { label: "direction", value: "en-lg or lg-en, Luganda only" },
+  { label: "model_slug", value: "Identifier of the model to run" },
+  { label: "text", value: "Input text, up to 500 characters" },
+  { label: "direction", value: "Translation direction for supported models" },
 ];
 
 const BuildPage = () => {
@@ -93,11 +93,18 @@ const BuildPage = () => {
       <Section id="api" className="border-t border-line">
         <Container className="grid gap-12 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-20">
           <div className="flex flex-col gap-10">
-            <SectionHeader eyebrow="API" title="POST /translate" lede="One endpoint for every model." />
-            <InfoTable title="Request" ruled rows={requestFields} />
-            <ArrowLink href={site.links.huggingface}>Model cards on Hugging Face</ArrowLink>
+            <SectionHeader
+              eyebrow="API"
+              title="One interface. Multiple models."
+              lede="Access multilingual translation through a consistent API, with simple requests for model selection, text input, and language direction."
+            />
+            <InfoTable title="POST /translate" ruled rows={requestFields} />
+            <ArrowLink href={site.links.huggingface}>Explore Model Cards</ArrowLink>
           </div>
-          <Code title="request" language="bash" code={paths.find((p) => p.id === "api")!.code} />
+          <div className="flex min-w-0 flex-col gap-5">
+            <Code title="Request" language="bash" code={paths.find((p) => p.id === "api")!.code} />
+            <Code title="Example response" language="json" code={apiResponse} />
+          </div>
         </Container>
       </Section>
     </>

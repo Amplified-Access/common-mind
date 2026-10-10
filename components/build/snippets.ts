@@ -84,6 +84,11 @@ curl localhost:8000/health
   },
 ];
 
+export const apiResponse = `{
+  "translation": "...",
+  "model_slug": "swahili-nllb-1-3b"
+}`;
+
 export const paths = [
   {
     id: "python",
@@ -129,9 +134,7 @@ ollama run amplifiedaccessorg/Luganda-gemma-1b-it`,
   -d '{
     "model_slug": "swahili-nllb-1-3b",
     "text": "Residents report that the borehole has been broken since March."
-  }'
-
-# {"translation": "...", "model_slug": "swahili-nllb-1-3b"}`,
+  }'`,
   },
   {
     id: "local",
