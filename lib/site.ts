@@ -86,7 +86,6 @@ export const footerColumns: { title: string; links: FooterLink[] }[] = [
       { label: "Kaggle", href: site.links.kaggle },
       { label: "CivicBench Africa", href: "/benchmarks#civicbench" },
       { label: "Civic Speech Corpus", href: "/research/civic-corpus" },
-      { label: "Terminology", href: "/research/civic-corpus#terminology" },
       { label: "Datasets", href: "/datasets" },
     ],
   },
