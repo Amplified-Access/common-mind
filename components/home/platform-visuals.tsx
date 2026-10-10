@@ -1,56 +1,41 @@
 import { BarChart } from "@/components/benchmarks/bar-chart";
 import { swahiliFlores } from "@/components/benchmarks/data";
-import { languages } from "@/components/languages/data";
 import { registryModels } from "@/components/models/registry";
 import { ParticleOrb } from "@/components/system/particle-orb";
 import { TagChain } from "@/components/system/tag-chain";
-import { cn } from "@/lib/utils";
 
+import { ApplicationFlipper } from "./application-flipper";
+import { LanguageTypewriter } from "./language-typewriter";
 import { SpeechOrb } from "./speech-orb";
 
-// The orb's radius as a share of half its box; the labels ring it at this.
-const ORB_SCALE = 0.8;
-
-// Each label's angle round the orb, in degrees clockwise from 3 o'clock, as
-// placed in the mock.
-const LABEL_ANGLES: Record<string, number> = {
-  lg: -108,
-  din: -77,
-  sw: -157,
-  om: -17,
-  luo: 156,
-  rw: 35,
-};
-
-// Pinned to the orb's rim: the point on the label nearest the orb's centre
-// sits on the rim, as in the mock.
-const labelPosition = (degrees: number): React.CSSProperties => {
-  const a = (degrees * Math.PI) / 180;
-  const x = Math.cos(a);
-  const y = Math.sin(a);
-  const r = ORB_SCALE * 50;
-  const round = (n: number) => Math.round(n * 100) / 100;
-  return {
-    left: `${round(50 + x * r)}%`,
-    top: `${round(50 + y * r)}%`,
-    transform: `translate(${round(-50 + 50 * x)}%, ${round(-50 + 50 * y)}%)`,
-  };
-};
+// The languages WatchTower translates into, each in its own name and
+// script, as its language selector lists them.
+const TRANSLATION_LANGUAGES = [
+  "English",
+  "Français",
+  "Kiswahili",
+  "Luganda",
+  "Kinyarwanda",
+  "አማርኛ",
+  "ਪੰਜਾਬੀ",
+  "اردو",
+  "Kikuyu",
+  "Sukuma",
+  "Dholuo",
+  "Afaan Oromoo",
+  "Thuɔŋjäŋ",
+];
 
 function LanguagesVisual() {
   return (
     <div className="relative size-full">
-      <div className="absolute top-1/2 left-1/2 aspect-square h-[74%] -translate-1/2">
-        <ParticleOrb variant="shell" settings={{ scale: ORB_SCALE }} className="aspect-auto size-full" />
-        {languages.map((language, i) => (
-          <span
-            key={language.code}
-            className="absolute border border-line-strong bg-tag px-3 py-1 text-base whitespace-nowrap text-foreground"
-            style={labelPosition(LABEL_ANGLES[language.code] ?? i * 60)}
-          >
-            {language.endonym === "Kiswahili" ? "Kiswahili" : language.name}
-          </span>
-        ))}
+      <div className="absolute top-1/2 left-1/2 flex aspect-square h-[74%] -translate-1/2 items-center justify-center">
+        <ParticleOrb variant="shell" settings={{ scale: 0.8 }} className="absolute inset-0 aspect-auto size-full" />
+        {/* One language at a time, typed out in the middle of the orb. */}
+        <LanguageTypewriter
+          names={TRANSLATION_LANGUAGES}
+          className="relative text-[1.75rem] leading-none tracking-[-0.01em] text-foreground"
+        />
       </div>
     </div>
   );
@@ -114,49 +99,10 @@ function EvaluationVisual() {
   );
 }
 
-// Deterministic dot field for an abstract map: no real geography and no
-// real reports.
-const GRID = 40;
-const CLUSTERS: [number, number, number][] = [
-  [12, 14, 5.5],
-  [28, 10, 4.4],
-  [24, 28, 4.8],
-  [9, 30, 3.6],
-  [34, 23, 3.2],
-];
-const DOTS = Array.from({ length: GRID * GRID }, (_, i) => {
-  const x = i % GRID;
-  const y = Math.floor(i / GRID);
-  const n = Math.abs(Math.sin(x * 7.13 + y * 3.71) * 9301.17) % 1;
-  const cluster = CLUSTERS.some(([cx, cy, r]) => Math.hypot(x - cx, y - cy) < r);
-  return { x, y, lit: cluster && n > 0.35, dim: n > 0.55, delay: Math.round((i % 13) * 27) / 100 };
-});
-
-const FLOW = ["Community reports", "CommonMind", "Structured evidence", "Live map"];
-
 function ApplicationsVisual() {
   return (
-    <div className="flex size-full flex-col items-center justify-center gap-6 p-8">
-      <svg aria-hidden viewBox={`0 0 ${GRID} ${GRID}`} className="aspect-square h-[70%] max-h-80">
-        {DOTS.map((dot, i) => (
-          <circle
-            key={i}
-            cx={dot.x + 0.5}
-            cy={dot.y + 0.5}
-            r={0.26}
-            className={cn(dot.lit ? "fill-signal" : dot.dim ? "fill-white/12" : "fill-white/5")}
-            style={dot.lit ? { animation: `cm-pulse 3.2s ease-in-out ${dot.delay}s infinite` } : undefined}
-          />
-        ))}
-      </svg>
-      <ol className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 font-mono text-xs">
-        {FLOW.map((step, i) => (
-          <li key={step} className="flex items-center gap-3">
-            <span className={step === "CommonMind" ? "text-signal" : "text-subtle"}>{step}</span>
-            {i < FLOW.length - 1 && <span className="text-faint">→</span>}
-          </li>
-        ))}
-      </ol>
+    <div className="flex size-full items-center justify-center p-8">
+      <ApplicationFlipper className="w-[72%] max-w-md" />
     </div>
   );
 }
