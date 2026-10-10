@@ -5,11 +5,25 @@ import { usePathname } from "next/navigation";
 import { Grainient } from "@/components/system/grainient";
 import { LinkButton } from "@/components/system/primitives";
 
+const defaultCopy = {
+  title: "Build with open civic AI infrastructure.",
+  lede: "Use open models, datasets, benchmarks, and developer tools to build AI applications that understands civic discourse across languages and communities.",
+};
+
+// Pages whose closing call to action speaks to what is on them.
+const pageCopy: Record<string, typeof defaultCopy> = {
+  "/datasets": {
+    title: "Build with open language data.",
+    lede: "Bring open datasets, models, and evaluation resources into your multilingual AI applications.",
+  },
+};
+
 // The model index already is the place "Explore Models" points to, so the
 // closing call to action would only point back at the page itself.
 function FooterCta() {
   const pathname = usePathname();
   if (pathname === "/models") return null;
+  const copy = pageCopy[pathname] ?? defaultCopy;
 
   return (
     <section className="relative isolate overflow-hidden rounded-card bg-signal text-background">
@@ -24,11 +38,10 @@ function FooterCta() {
       />
       <div className="relative flex min-h-100 flex-col items-center justify-center gap-5 px-6 py-20 text-center sm:px-14">
         <h2 className="max-w-xl text-[2.25rem] leading-[1.2] font-semibold tracking-[-0.02em] text-balance md:text-[2.75rem]">
-          Build with open civic AI infrastructure.
+          {copy.title}
         </h2>
         <p className="max-w-lg text-base text-pretty">
-          Use open models, datasets, benchmarks, and developer tools to build AI applications that understands
-          civic discourse across languages and communities.
+          {copy.lede}
         </p>
         <div className="flex flex-wrap justify-center gap-3 pt-3">
           <LinkButton href="/build" variant="ink" arrow>
