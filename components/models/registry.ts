@@ -15,6 +15,8 @@ export type Evaluation = {
   set: string;
   /** Short label for tables. */
   short: string;
+  /** One sentence for the benchmarks tab. */
+  summary: string;
   bleu: number;
   chrf: number;
   baseBleu?: number;
@@ -70,6 +72,8 @@ export const registry: Record<string, RegistryMeta> = {
     evaluation: {
       set: "Held-out SALT-derived test split (100 examples, English↔Luganda)",
       short: "SALT held-out",
+      summary:
+        "Evaluated on 100 English–Luganda examples from a held-out split of the Sunbird SALT corpus, measuring translation quality on sentences the model never saw in training.",
       bleu: 13.85,
       chrf: 46.59,
       baseBleu: 0.06,
@@ -104,6 +108,8 @@ export const registry: Record<string, RegistryMeta> = {
     evaluation: {
       set: "FLORES-200 devtest (1,012 sentence pairs, English→Swahili)",
       short: "FLORES-200",
+      summary:
+        "Evaluated on 1,012 English–Swahili sentence pairs from the FLORES-200 devtest benchmark, providing a reproducible measure of translation quality.",
       bleu: 28.86,
       chrf: 54.77,
       baseBleu: 0.41,
@@ -136,6 +142,8 @@ export const registry: Record<string, RegistryMeta> = {
     evaluation: {
       set: "FLORES-200 devtest (1,012 sentence pairs, English→Swahili)",
       short: "FLORES-200",
+      summary:
+        "Evaluated on 1,012 English–Swahili sentence pairs from the FLORES-200 devtest benchmark, providing a reproducible measure of translation quality.",
       bleu: 38.74,
       chrf: 63.37,
       flores: true,
@@ -166,6 +174,8 @@ export const registry: Record<string, RegistryMeta> = {
     evaluation: {
       set: "FLORES-200 devtest (1,012 sentence pairs, English→Swahili)",
       short: "FLORES-200",
+      summary:
+        "Evaluated on 1,012 English–Swahili sentence pairs from the FLORES-200 devtest benchmark, providing a reproducible measure of translation quality.",
       bleu: 35.97,
       chrf: 61.26,
       flores: true,

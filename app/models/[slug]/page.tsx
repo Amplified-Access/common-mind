@@ -94,10 +94,7 @@ const ModelPage = async ({ params }: PageProps) => {
       <div className="flex flex-col gap-5">
         <Eyebrow uppercase={false}>Performance</Eyebrow>
         <h2 className="text-h2 text-balance">Performance, measured openly.</h2>
-        <p className="text-sm text-pretty text-faint">
-          Evaluation set: {evaluation.set}.
-          {evaluation.baseBleu !== undefined && " The base model is shown beside it for comparison."}
-        </p>
+        <p className="text-sm text-pretty text-faint">{evaluation.summary}</p>
         <div className="flex flex-col gap-3 pt-3">
           <ArrowLink href="/benchmarks#methodology">View full benchmark methodology</ArrowLink>
           {evaluation.flores && (
