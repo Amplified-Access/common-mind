@@ -25,15 +25,13 @@ function HomeHero() {
       <Container className="flex flex-col items-center gap-14 pt-20 sm:pt-24">
         <div className="flex max-w-3xl flex-col items-center gap-6 text-center">
           <h1 className="text-display text-balance">
-            Civic discourse is <span className="text-signal">multilingual</span>.{" "}
+            Civic discourse is <span className="text-signal">multilingual</span>{" "}
             <span className="sm:block">
-              <span className="text-signal">AI infrastructure</span> should be too.
+              <span className="text-signal">AI infrastructure</span> should be too
             </span>
           </h1>
           <p className="max-w-lg text-sm text-pretty text-foreground/90">
-            CommonMind provides the open models, civic data, benchmarks,
-            research, and developer tools needed to understand community voice
-            across languages beyond the mainstream.
+            CommonMind develops open modes, datasets, benchmarks, research, and developer tools that make multilingual AI more accessible for civic and public interest applications.
           </p>
           <div className="flex flex-wrap justify-center gap-x-10 gap-y-3 pt-4">
             <ArrowLink href="/models" tone="foreground">
