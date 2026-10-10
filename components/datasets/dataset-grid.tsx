@@ -8,7 +8,7 @@ import { FilterChips, FilterSelect, SearchField } from "@/components/system/filt
 import { datasets, type DatasetKind } from "./data";
 
 const ALL = "all";
-const kinds: DatasetKind[] = ["Parallel", "Monolingual", "Instruction", "Question answering", "Evaluation"];
+const kinds: DatasetKind[] = ["Parallel", "Monolingual", "Instruction", "Question Answering", "Evaluation"];
 const unique = (values: string[]) => Array.from(new Set(values)).sort();
 
 function DatasetGrid() {

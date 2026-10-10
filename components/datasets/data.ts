@@ -1,7 +1,7 @@
 export type DatasetKind =
   | "Parallel"
   | "Instruction"
-  | "Question answering"
+  | "Question Answering"
   | "Monolingual"
   | "Evaluation";
 
@@ -105,7 +105,7 @@ export const datasets: Dataset[] = [
   {
     slug: "kenswquad",
     name: "KenSwQuAD",
-    kind: "Question answering",
+    kind: "Question Answering",
     languages: ["Swahili"],
     domains: ["News"],
     source: "HuggingFace",
