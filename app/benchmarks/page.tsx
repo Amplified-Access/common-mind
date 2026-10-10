@@ -165,8 +165,8 @@ const BenchmarksPage = () => {
         <Container className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.7fr)] lg:items-center lg:gap-20">
           <SectionHeader
             eyebrow="Efficiency"
-            title="Small models, measured."
-            lede="A 615M-parameter model outscores Gemma 3 27B on English→Swahili."
+            title="Smaller models. Measurable gains."
+            lede="A 615M-parameter model outperforms Gemma 3 27B on English-to-Swahili translation, demonstrating that model size alone does not determine performance."
           />
           <Panel className="p-6 sm:p-10">
             <EfficiencyChart entries={swahiliFlores.entries} />
