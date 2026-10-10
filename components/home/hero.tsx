@@ -60,8 +60,8 @@ function HomeHero() {
               <span className="text-signal">AI infrastructure</span> should be too
             </span>
           </h1>
-          <p className="max-w-lg text-sm text-pretty text-foreground/90">
-            CommonMind develops open modes, datasets, benchmarks, research, and developer tools that make multilingual AI more accessible for civic and public interest applications.
+          <p className="max-w-xl text-sm text-pretty text-foreground/90">
+            CommonMind develops open models, datasets, benchmarks, research, and developer tools that make AI more accessible for civic and public interest applications in languages underserved by the mainstream.
           </p>
           <div className="flex flex-wrap justify-center gap-x-10 gap-y-3 pt-4">
             <ArrowLink href="/models" tone="foreground">
