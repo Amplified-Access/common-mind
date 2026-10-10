@@ -103,8 +103,8 @@ const BenchmarksPage = () => {
         <Container className="flex flex-col gap-14">
           <SectionHeader
             eyebrow="CivicBench Africa"
-            title="Nine tests of civic understanding."
-            lede="What gets measured gets improved. CivicBench Africa measures how well a model understands civic speech, one task at a time."
+            title="Nine dimensions of civic understanding"
+            lede="Civic bench Africa establishes a framework for evaluating how AI models interprete, process, and respond to civic discourse across languages and community contexts."
             layout="split"
           />
           <ol className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
