@@ -3,11 +3,12 @@ import type { Metadata } from "next";
 import { Container } from "@/components/common/container";
 import { DatasetGrid } from "@/components/datasets/dataset-grid";
 import { PageHero } from "@/components/system/page-hero";
+import { LinkButton } from "@/components/system/primitives";
 
 export const metadata: Metadata = {
   title: "Datasets",
   description:
-    "Open datasets capturing how communities speak about public services, government, rights, elections, and local priorities.",
+    "Explore the open datasets supporting language model development, training, and evaluation across languages beyond the mainstream.",
 };
 
 const DatasetsPage = () => {
@@ -16,15 +17,20 @@ const DatasetsPage = () => {
       align="split"
       sideGrids
       eyebrow="Datasets"
-      title="Civic language data, built in context."
-      lede="Explore open datasets capturing how communities speak about public services, government, rights, elections, and local priorities. Every source behind every model."
+      title="Language data for multilingual AI."
+      lede="Explore the open datasets supporting language model development, training, and evaluation across languages beyond the mainstream."
+      tags={["OPEN DATA", "MULTILINGUAL AI", "RESEARCH"]}
       className="pb-(--section-pad)"
       after={
-        <Container>
+        <Container id="catalogue" className="scroll-mt-24">
           <DatasetGrid />
         </Container>
       }
-    />
+    >
+      <div>
+        <LinkButton href="#catalogue">Explore Datasets</LinkButton>
+      </div>
+    </PageHero>
   );
 };
 
