@@ -61,7 +61,7 @@ function PageHero({
           <div className="flex max-w-2xl flex-col items-center gap-5">
             {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
             <h1 className="text-h2 text-balance">{title}</h1>
-            {lede && <p className="max-w-md text-[13px] leading-[1.2] text-pretty text-faint">{lede}</p>}
+            {lede && <p className="max-w-lg text-[13px] leading-[1.2] text-pretty text-faint">{lede}</p>}
           </div>
         ) : (
           <div className="flex w-full flex-col gap-5">
