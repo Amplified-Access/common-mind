@@ -23,7 +23,7 @@ export const journey = [
   {
     id: "discover",
     label: "Discover",
-    copy: "Every model is public and queryable.",
+    copy: "Explore available models, supported languages, capabilities, and evaluation results.",
     lang: "bash",
     title: "terminal",
     code: `curl -s "https://huggingface.co/api/models?author=AmplifiedAccess" \\
@@ -32,7 +32,7 @@ export const journey = [
   {
     id: "install",
     label: "Install",
-    copy: "Standard open-source tooling.",
+    copy: "Access model weights, adapters, and dependencies through familiar developer tools.",
     lang: "bash",
     title: "terminal",
     code: `pip install transformers peft torch sentencepiece accelerate
@@ -42,7 +42,7 @@ pip install bitsandbytes`,
   {
     id: "run",
     label: "Run",
-    copy: "One command. Runs on CPU.",
+    copy: "Test model inference locally with your own inputs.",
     lang: "bash",
     title: "terminal",
     code: `ollama run amplifiedaccessorg/Swahili-gemma-1b-it`,
@@ -50,7 +50,7 @@ pip install bitsandbytes`,
   {
     id: "build",
     label: "Build",
-    copy: "Call it from your reporting tool or platform.",
+    copy: "Integrate language capabilities into applications and workflows.",
     lang: "ts",
     title: "app/report.ts",
     code: `const res = await fetch(\`\${process.env.COMMONMIND_URL}/translate\`, {
@@ -71,7 +71,7 @@ const { translation } = await res.json();`,
   {
     id: "deploy",
     label: "Deploy",
-    copy: "All four models on one 16 GB GPU, on your infrastructure.",
+    copy: "Run models in production using infrastructure suited to your application.",
     lang: "bash",
     title: "inference/server.py",
     code: `pip install fastapi uvicorn transformers peft accelerate sentencepiece bitsandbytes

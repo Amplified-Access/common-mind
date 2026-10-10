@@ -51,7 +51,11 @@ const BuildPage = () => {
 
       <Section id="journey" className="border-t border-line">
         <Container className="flex flex-col gap-12">
-          <SectionHeader eyebrow="Journey" title="Discover. Install. Run. Build. Deploy." />
+          <SectionHeader
+            eyebrow="Developer Journey"
+            title="Discover. Install. Run. Build. Deploy."
+            lede="A clear path from exploring open models to integrating multilingual capabilities into real-world applications."
+          />
           <CodeTabs
             tabs={journey.map((step) => ({
               id: step.id,
