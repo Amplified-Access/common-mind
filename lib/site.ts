@@ -21,7 +21,7 @@ export const site = {
   links: {
     huggingface: "https://huggingface.co/AmplifiedAccess",
     ollama: "https://ollama.com/amplifiedaccessorg",
-    kaggle: "https://www.kaggle.com/gracenoble",
+    kaggle: "https://www.kaggle.com/amplifiedaccess/models",
     watchtower: "https://thewatchtower.tech",
     actionchallenge: "https://www.theactionchallenge.org",
   },
