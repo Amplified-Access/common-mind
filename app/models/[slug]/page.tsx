@@ -170,7 +170,7 @@ const ModelPage = async ({ params }: PageProps) => {
       <div className="grid gap-5 md:grid-cols-[minmax(0,22rem)_minmax(0,20rem)] md:gap-16">
         <h2 className="text-h2 text-balance">Build with {model.name}</h2>
         <p className="text-sm text-pretty text-faint md:pt-2">
-          Use the model through the deployment path that fits your application.
+          Integrate the model into your applications using the deployment option that best suits your needs.
         </p>
       </div>
       <CodeTabs
