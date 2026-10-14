@@ -8,6 +8,7 @@ import { SmoothScroll } from "@/components/common/smooth-scroll";
 import Footer from "@/components/layout/footer";
 import Header from "@/components/layout/header";
 import { HideOnStandalone } from "@/components/layout/hide-on-standalone";
+import { Toaster } from "@/components/ui/toaster";
 
 const sora = Sora({
   variable: "--font-sora",
@@ -50,6 +51,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <HideOnStandalone>
             <Footer />
           </HideOnStandalone>
+          <Toaster />
         </SmoothScroll>
       </body>
     </html>

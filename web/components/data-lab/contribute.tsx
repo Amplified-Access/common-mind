@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 import { civicCategories } from "@/components/civic/data";
 import { FramedCard } from "@/components/system/framed-card";
@@ -32,7 +33,6 @@ function Contribute({ language }: { language: string }) {
   const [text, setText] = useState("");
   const [pasted, setPasted] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(0);
   const editor = useRef<HTMLTextAreaElement>(null);
 
@@ -64,14 +64,12 @@ function Contribute({ language }: { language: string }) {
   const next = async () => {
     setText("");
     setPasted(false);
-    setError(null);
     setView({ status: "loading" });
     setView(await fetchTask());
   };
 
   const submit = async (task: Task) => {
     setBusy(true);
-    setError(null);
     try {
       await dataLabApi.contribute(await getToken(), {
         item_id: task.item_id,
@@ -82,7 +80,7 @@ function Contribute({ language }: { language: string }) {
       setSubmitted((n) => n + 1);
       await next();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      toast.error(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
       setBusy(false);
     }
@@ -194,11 +192,6 @@ function Contribute({ language }: { language: string }) {
                   </button>
                 ))}
               </div>
-            )}
-            {error && (
-              <p role="alert" className="text-sm text-destructive">
-                {error}
-              </p>
             )}
             <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
               <button type="button" onClick={next} disabled={busy} className={quietButton}>

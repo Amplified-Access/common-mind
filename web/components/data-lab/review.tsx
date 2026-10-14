@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 
 import { civicCategories } from "@/components/civic/data";
 import { FramedCard } from "@/components/system/framed-card";
@@ -39,7 +40,6 @@ function Review({ language }: { language: string }) {
   const [reason, setReason] = useState<RejectReason | null>(null);
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [reviewed, setReviewed] = useState(0);
 
   const target = languages.find((l) => l.code === language);
@@ -69,7 +69,6 @@ function Review({ language }: { language: string }) {
 
   const decide = async (item: ReviewItem, decision: "accept" | "reject") => {
     setBusy(true);
-    setError(null);
     try {
       await dataLabApi.review(await getToken(), {
         contribution_id: item.contribution_id,
@@ -80,7 +79,7 @@ function Review({ language }: { language: string }) {
     } catch (err) {
       // Someone else reviewed it first: move on rather than stopping the reviewer.
       if (!(err instanceof ApiError && err.code === "already_reviewed")) {
-        setError(err instanceof Error ? err.message : "Something went wrong.");
+        toast.error(err instanceof Error ? err.message : "Something went wrong.");
         setBusy(false);
         return;
       }
@@ -189,11 +188,6 @@ function Review({ language }: { language: string }) {
                   />
                 </label>
               </fieldset>
-            )}
-            {error && (
-              <p role="alert" className="text-sm text-destructive">
-                {error}
-              </p>
             )}
             <div className="flex flex-wrap items-center justify-end gap-2">
               {rejecting ? (

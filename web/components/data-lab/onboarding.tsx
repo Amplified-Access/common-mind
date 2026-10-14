@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { toast } from "sonner";
 
 import { FramedCard } from "@/components/system/framed-card";
 import { Eyebrow } from "@/components/system/primitives";
@@ -27,7 +28,6 @@ function Onboarding({ languages, volunteer, onDone }: OnboardingProps) {
   const [chosen, setChosen] = useState<Set<string>>(new Set(joined));
   const [agreed, setAgreed] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const toggle = (code: string) =>
     setChosen((prev) => {
@@ -40,7 +40,6 @@ function Onboarding({ languages, volunteer, onDone }: OnboardingProps) {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
-    setError(null);
     try {
       await dataLabApi.onboard(await getToken(), {
         name,
@@ -49,7 +48,7 @@ function Onboarding({ languages, volunteer, onDone }: OnboardingProps) {
       });
       onDone();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      toast.error(err instanceof Error ? err.message : "Something went wrong.");
       setBusy(false);
     }
   };
@@ -124,11 +123,6 @@ function Onboarding({ languages, volunteer, onDone }: OnboardingProps) {
           </label>
         </div>
 
-        {error && (
-          <p role="alert" className="text-sm text-destructive">
-            {error}
-          </p>
-        )}
 
         <button type="submit" disabled={busy || chosen.size === 0 || !agreed} className={cn(primaryButton, "self-start")}>
           {volunteer ? "Save" : "Join the Data Lab"}

@@ -2,6 +2,7 @@
 
 import { FirebaseError } from "firebase/app";
 import { useState } from "react";
+import { toast } from "sonner";
 
 import { FramedCard } from "@/components/system/framed-card";
 import { Eyebrow } from "@/components/system/primitives";
@@ -26,16 +27,14 @@ function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const run = async (action: () => Promise<void>) => {
     setBusy(true);
-    setError(null);
     try {
       await action();
     } catch (err) {
       const code = err instanceof FirebaseError ? err.code : "";
-      setError(messages[code] ?? "Sign-in didn't work. Please try again.");
+      toast.error(messages[code] ?? "Sign-in didn't work. Please try again.");
     } finally {
       setBusy(false);
     }
@@ -103,11 +102,6 @@ function SignIn() {
           </button>
         </form>
 
-        {error && (
-          <p role="alert" className="text-sm text-destructive">
-            {error}
-          </p>
-        )}
 
         <button
           type="button"
