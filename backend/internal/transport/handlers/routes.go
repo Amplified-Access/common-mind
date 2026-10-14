@@ -83,6 +83,11 @@ func (h *Handler) RegisterRoutes(rps float64, burst int, sentryDSN string, allow
 		api.Use(middleware.FirebaseAuth(h.verifier))
 	}
 	api.GET("/me", h.MeHandler)
+
+	lab := api.Group("/data-lab")
+	lab.GET("/me", h.DataLabMeHandler)
+	lab.POST("/onboarding", h.OnboardHandler)
+
 	if h.userRepo != nil {
 		api.PATCH("/me", h.UpdateMeHandler)
 		api.DELETE("/me", h.DeleteMeHandler)

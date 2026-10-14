@@ -6,7 +6,10 @@ sources:
   - internal/usecase/datalab.go
   - internal/infrastructure/database/postgres/datalab_repository.go
   - internal/transport/handlers/datalab_handler.go
+  - internal/usecase/datalab_errors.go
+  - internal/transport/handlers/datalab_errors.go
   - internal/infrastructure/database/migrations/20261014060632_add_languages.sql
+  - internal/infrastructure/database/migrations/20261014060907_add_language_members_and_consents.sql
 ---
 
 # Data Lab
@@ -26,8 +29,29 @@ The volunteer platform for creating, annotating, and verifying civic language da
 
 `languages` is reference data seeded by its migration: the nine target languages (BCP-47 codes shared with Watchtower) and English and French as source languages. Each row carries its ISO 15924 `script` and the `extra_characters` a standard keyboard lacks, which the web editor offers as a palette. Disable a language with `enabled = false`; never delete rows other tables reference.
 
+## Volunteers, levels, and consent
+
+A volunteer is a `users` row plus `language_members` (one row per language, with a `level`) and `consents` (one row per consent version accepted).
+
+- **Onboarding** (`DataLab.Onboard`) takes a name, target languages, and the consent version the volunteer accepted. The version must equal `domain.CurrentConsentVersion`, or it fails with `ErrConsentOutdated`. Calling it again adds languages; `ON CONFLICT DO NOTHING` keeps any existing level.
+- **Levels** are per language: `contributor` → `reviewer` → `lead`. New memberships start at `contributor`; promotion is manual for now.
+- **Consent**: bump `CurrentConsentVersion` when the consent text changes. Volunteers then accept again (by onboarding) before contributing.
+
+## Errors
+
+Use cases return the sentinel errors in `usecase/datalab_errors.go`. `handlers.dataLabError` is the one place they become HTTP responses, with stable `code` values the web app branches on:
+
+| Error | Status | `code` |
+|---|---|---|
+| `ErrNotOnboarded` | 403 | `onboarding_required` |
+| `ErrConsentOutdated` | 403 | `consent_required` |
+| `ErrInvalidInput` (via `invalid(msg)`) | 400 | `invalid_input` — message shown to the volunteer |
+| anything else | 500 | `internal_error` — logged, detail hidden |
+
 ## Routes
 
 | Method | Path | Auth | Handler |
 |---|---|---|---|
 | GET | `/api/v1/data-lab/languages` | none | `ListLanguagesHandler` — enabled languages, targets first |
+| GET | `/api/v1/data-lab/me` | Firebase | `DataLabMeHandler` — profile, or 403 `onboarding_required` |
+| POST | `/api/v1/data-lab/onboarding` | Firebase | `OnboardHandler` — join or add languages |

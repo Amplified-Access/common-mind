@@ -88,6 +88,115 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/data-lab/me": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns the volunteer's languages, levels, and consent. 403 onboarding_required when they have not joined yet.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "data-lab"
+                ],
+                "summary": "Get my Data Lab profile",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.VolunteerAlias"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/data-lab/onboarding": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Records the volunteer's name, languages, and acceptance of the current consent. Calling it again adds languages and never lowers a level.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "data-lab"
+                ],
+                "summary": "Join the Data Lab or add languages",
+                "parameters": [
+                    {
+                        "description": "Onboarding",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.onboardingRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.VolunteerAlias"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "consent_required",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/me": {
             "get": {
                 "security": [
@@ -403,6 +512,17 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "domain.Membership": {
+            "type": "object",
+            "properties": {
+                "language_code": {
+                    "type": "string"
+                },
+                "level": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.FirebaseToken": {
             "type": "object",
             "properties": {
@@ -507,6 +627,47 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.VolunteerAlias": {
+            "type": "object",
+            "properties": {
+                "consent_version": {
+                    "description": "latest accepted, \"\" if none",
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "languages": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.Membership"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.onboardingRequest": {
+            "type": "object",
+            "properties": {
+                "consent_version": {
+                    "type": "string"
+                },
+                "languages": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "name": {
                     "type": "string"
                 }
             }
