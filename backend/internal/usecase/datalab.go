@@ -65,6 +65,7 @@ type ReviewInput struct {
 	Decision       string
 	Reason         string
 	Note           string
+	CorrectedText  string // for DecisionCorrect
 }
 
 // ReviewRecord is a validated review, ready to persist.
@@ -74,6 +75,7 @@ type ReviewRecord struct {
 	Decision       string
 	Reason         string // "" when accepted
 	Note           string
+	CorrectedText  string // "" unless corrected
 	Status         string // the contribution's new status
 }
 
@@ -281,6 +283,15 @@ func (d *dataLab) Review(ctx context.Context, tok *FirebaseToken, in ReviewInput
 	switch in.Decision {
 	case domain.DecisionAccept:
 		rec.Status = domain.StatusVerified
+	case domain.DecisionCorrect:
+		rec.CorrectedText = strings.TrimSpace(in.CorrectedText)
+		if rec.CorrectedText == "" {
+			return invalid("write the corrected text")
+		}
+		if utf8.RuneCountInString(rec.CorrectedText) > domain.MaxContributionLength {
+			return invalid("keep it under 2,000 characters")
+		}
+		rec.Status = domain.StatusVerified
 	case domain.DecisionReject:
 		if !slices.Contains(domain.RejectReasons, in.Reason) {
 			return invalid("choose a reason for rejecting")
@@ -288,7 +299,7 @@ func (d *dataLab) Review(ctx context.Context, tok *FirebaseToken, in ReviewInput
 		rec.Reason = in.Reason
 		rec.Status = domain.StatusRejected
 	default:
-		return invalid("decision must be accept or reject")
+		return invalid("decision must be accept, correct, or reject")
 	}
 
 	ref, err := d.store.GetContributionRef(ctx, in.ContributionID)
@@ -304,6 +315,9 @@ func (d *dataLab) Review(ctx context.Context, tok *FirebaseToken, in ReviewInput
 	}
 	if ref.Status != domain.StatusPending {
 		return ErrAlreadyReviewed
+	}
+	if rec.Decision == domain.DecisionCorrect && rec.CorrectedText == strings.TrimSpace(ref.Text) {
+		return invalid("the correction is the same as the original; choose Accept instead")
 	}
 	rec.ReviewerID = v.ID
 	if err := d.store.SaveReview(ctx, rec); err != nil {

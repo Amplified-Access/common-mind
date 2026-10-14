@@ -296,7 +296,7 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "Accept verifies the contribution; reject needs a reason (inaccurate, incomplete, machine_translated, off_topic, other) and reopens the item for others.",
+                "description": "Accept verifies the contribution. Correct verifies it with the reviewer's corrected_text, keeping the original on the contribution. Reject needs a reason (inaccurate, incomplete, machine_translated, off_topic, other) and reopens the item for others.",
                 "consumes": [
                     "application/json"
                 ],
@@ -1105,6 +1105,9 @@
             "properties": {
                 "contribution_id": {
                     "type": "integer"
+                },
+                "corrected_text": {
+                    "type": "string"
                 },
                 "decision": {
                     "type": "string"

@@ -211,8 +211,8 @@ func (r *dataLabRepository) NextPendingContribution(ctx context.Context, reviewe
 func (r *dataLabRepository) GetContributionRef(ctx context.Context, id int64) (*domain.ContributionRef, error) {
 	ref := &domain.ContributionRef{}
 	err := r.db.QueryRowContext(ctx, `
-        SELECT id, language_code, contributor_id, status FROM contributions WHERE id = $1`, id).
-		Scan(&ref.ID, &ref.LanguageCode, &ref.ContributorID, &ref.Status)
+        SELECT id, language_code, contributor_id, status, text FROM contributions WHERE id = $1`, id).
+		Scan(&ref.ID, &ref.LanguageCode, &ref.ContributorID, &ref.Status, &ref.Text)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, usecase.ErrNotFound
 	}
@@ -242,9 +242,9 @@ func (r *dataLabRepository) SaveReview(ctx context.Context, rec usecase.ReviewRe
 	}
 
 	if _, err := tx.ExecContext(ctx, `
-        INSERT INTO reviews (contribution_id, reviewer_id, decision, reason, note)
-        VALUES ($1, $2, $3, NULLIF($4, ''), $5)`,
-		rec.ContributionID, rec.ReviewerID, rec.Decision, rec.Reason, rec.Note); err != nil {
+        INSERT INTO reviews (contribution_id, reviewer_id, decision, reason, note, corrected_text)
+        VALUES ($1, $2, $3, NULLIF($4, ''), $5, NULLIF($6, ''))`,
+		rec.ContributionID, rec.ReviewerID, rec.Decision, rec.Reason, rec.Note, rec.CorrectedText); err != nil {
 		return fmt.Errorf("datalab repository: insert review: %w", err)
 	}
 

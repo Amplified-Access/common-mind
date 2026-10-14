@@ -186,17 +186,21 @@ func swahiliReviewer() *domain.Volunteer {
 func TestReview_EnforcesReviewerRulesAndReasons(t *testing.T) {
 	tok := &FirebaseToken{UID: "uid-7"}
 	pending := func() *domain.ContributionRef {
-		return &domain.ContributionRef{ID: 3, LanguageCode: "sw", ContributorID: 99, Status: domain.StatusPending}
+		return &domain.ContributionRef{ID: 3, LanguageCode: "sw", ContributorID: 99, Status: domain.StatusPending, Text: "Kisima kimeharibika."}
 	}
 
 	tests := []struct {
-		name       string
-		volunteer  *domain.Volunteer
-		ref        *domain.ContributionRef
-		in         ReviewInput
-		wantErr    error
-		wantStatus string
+		name          string
+		volunteer     *domain.Volunteer
+		ref           *domain.ContributionRef
+		in            ReviewInput
+		wantErr       error
+		wantStatus    string
+		wantCorrected string
 	}{
+		{name: "correct", volunteer: swahiliReviewer(), ref: pending(), in: ReviewInput{ContributionID: 3, Decision: "correct", CorrectedText: "  Kisima kimeharibika kwa wiki mbili. "}, wantStatus: domain.StatusVerified, wantCorrected: "Kisima kimeharibika kwa wiki mbili."},
+		{name: "correct with blank text", volunteer: swahiliReviewer(), ref: pending(), in: ReviewInput{ContributionID: 3, Decision: "correct", CorrectedText: "  "}, wantErr: ErrInvalidInput},
+		{name: "correct without changing anything", volunteer: swahiliReviewer(), ref: pending(), in: ReviewInput{ContributionID: 3, Decision: "correct", CorrectedText: "Kisima kimeharibika. "}, wantErr: ErrInvalidInput},
 		{name: "accept", volunteer: swahiliReviewer(), ref: pending(), in: ReviewInput{ContributionID: 3, Decision: "accept"}, wantStatus: domain.StatusVerified},
 		{name: "reject with reason", volunteer: swahiliReviewer(), ref: pending(), in: ReviewInput{ContributionID: 3, Decision: "reject", Reason: "machine_translated"}, wantStatus: domain.StatusRejected},
 		{name: "reject without reason", volunteer: swahiliReviewer(), ref: pending(), in: ReviewInput{ContributionID: 3, Decision: "reject"}, wantErr: ErrInvalidInput},
@@ -221,6 +225,9 @@ func TestReview_EnforcesReviewerRulesAndReasons(t *testing.T) {
 					t.Error("review saved despite the error")
 				}
 				return
+			}
+			if store.reviewed.CorrectedText != tt.wantCorrected {
+				t.Errorf("corrected text = %q, want %q", store.reviewed.CorrectedText, tt.wantCorrected)
 			}
 			if store.reviewed.Status != tt.wantStatus || store.reviewed.ReviewerID != 7 {
 				t.Errorf("saved review = %+v, want status %s by reviewer 7", store.reviewed, tt.wantStatus)

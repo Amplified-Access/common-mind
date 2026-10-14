@@ -222,12 +222,13 @@ type reviewRequest struct {
 	Decision       string `json:"decision" binding:"required"`
 	Reason         string `json:"reason"`
 	Note           string `json:"note"`
+	CorrectedText  string `json:"corrected_text"`
 }
 
 // ReviewHandler godoc
 //
 //	@Summary		Review a contribution
-//	@Description	Accept verifies the contribution; reject needs a reason (inaccurate, incomplete, machine_translated, off_topic, other) and reopens the item for others.
+//	@Description	Accept verifies the contribution. Correct verifies it with the reviewer's corrected_text, keeping the original on the contribution. Reject needs a reason (inaccurate, incomplete, machine_translated, off_topic, other) and reopens the item for others.
 //	@Tags			data-lab
 //	@Accept			json
 //	@Security		BearerAuth
@@ -251,6 +252,7 @@ func (h *Handler) ReviewHandler(c *gin.Context) {
 		Decision:       req.Decision,
 		Reason:         req.Reason,
 		Note:           req.Note,
+		CorrectedText:  req.CorrectedText,
 	})
 	if err != nil {
 		dataLabError(c, err)

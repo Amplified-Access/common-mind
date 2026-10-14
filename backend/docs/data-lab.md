@@ -13,6 +13,7 @@ sources:
   - internal/infrastructure/database/migrations/20261014061144_add_items_and_contributions.sql
   - internal/infrastructure/database/migrations/20261014061424_add_reviews.sql
   - internal/infrastructure/database/migrations/20261014061844_add_items_unique_text.sql
+  - internal/infrastructure/database/migrations/20261014100628_add_review_corrections.sql
   - internal/usecase/datalab_import.go
   - internal/infrastructure/database/postgres/datalab_import_repository.go
   - cmd/datalab/main.go
@@ -40,7 +41,7 @@ The volunteer platform for creating, annotating, and verifying civic language da
 A volunteer is a `users` row plus `language_members` (one row per language, with a `level`) and `consents` (one row per consent version accepted).
 
 - **Onboarding** (`DataLab.Onboard`) takes a name, target languages, and the consent version the volunteer accepted. The version must equal `domain.CurrentConsentVersion`, or it fails with `ErrConsentOutdated`. Calling it again adds languages; `ON CONFLICT DO NOTHING` keeps any existing level.
-- **Levels** are per language: `contributor` → `reviewer` → `lead`. New memberships start at `contributor`; promotion is manual for now.
+- **Levels** are per language: `contributor` → `reviewer` → `lead`. New memberships start at `contributor`. Promotion is manual and done by the team with `make datalab-promote` (see Admin); there is no in-app promotion yet.
 - **Consent**: bump `CurrentConsentVersion` when the consent text changes. Volunteers then accept again (by onboarding) before contributing.
 
 ## Items, tasks, and contributions
@@ -57,6 +58,7 @@ Contributing (`NextTask`, `Contribute`) requires, in order: onboarded, current c
 A reviewer (level `reviewer` or `lead` in the language) takes the oldest pending contribution written by someone else (`NextPendingContribution`), then accepts or rejects it (`Review`):
 
 - **Accept** sets the contribution to `verified`. It is part of the live corpus from that moment.
+- **Correct** sets it to `verified` with the reviewer's `corrected_text`. The translator's text stays on `contributions.text` and the correction goes on `reviews.corrected_text`, so both versions and both authors are kept; a row's verified text is `COALESCE(reviews.corrected_text, contributions.text)`. A correction must change the text (otherwise it's an Accept) and needs no further review: reviewers are chosen by the team (see below).
 - **Reject** needs a reason from `domain.RejectReasons` (`inaccurate`, `incomplete`, `machine_translated`, `off_topic`, `other`) and sets it to `rejected`, which reopens the item for other volunteers.
 - Nobody reviews their own work (`ErrOwnContribution`).
 - `SaveReview` changes status only `WHERE status = 'pending'`, inside the same transaction as the review insert, so two reviewers racing on one contribution get one review and one `ErrAlreadyReviewed`.

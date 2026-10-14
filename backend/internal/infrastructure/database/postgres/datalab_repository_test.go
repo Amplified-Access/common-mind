@@ -325,3 +325,30 @@ func TestDataLab_SetMemberLevel_NeedsMembership(t *testing.T) {
 		t.Errorf("non-member error = %v, want ErrNotFound", err)
 	}
 }
+
+func TestDataLab_SaveReview_StoresCorrectionBesideTheOriginal(t *testing.T) {
+	truncate(t, "users", "sources")
+	ctx := context.Background()
+	repo := NewDataLabRepository(testDB)
+	reviewer := seedVolunteer(t, "uid-reviewer", "sw")
+	other := seedVolunteer(t, "uid-other", "sw")
+	ids := seedItems(t, "The clinic opens at eight.")
+	contribute(t, ids[0], other, domain.StatusPending)
+	ref, err := repo.GetContributionRef(ctx, 1)
+	if err != nil || ref.Text != "x" {
+		t.Fatalf("GetContributionRef = %+v, %v, want the contribution's text", ref, err)
+	}
+
+	rec := usecase.ReviewRecord{ContributionID: ref.ID, ReviewerID: reviewer, Decision: domain.DecisionCorrect, CorrectedText: "Kliniki hufunguliwa saa mbili.", Status: domain.StatusVerified}
+	if err := repo.SaveReview(ctx, rec); err != nil {
+		t.Fatalf("SaveReview: %v", err)
+	}
+
+	var original, corrected, status string
+	if err := testDB.QueryRow(`SELECT c.text, r.corrected_text, c.status FROM contributions c JOIN reviews r ON r.contribution_id = c.id WHERE c.id = $1`, ref.ID).Scan(&original, &corrected, &status); err != nil {
+		t.Fatal(err)
+	}
+	if original != "x" || corrected != rec.CorrectedText || status != domain.StatusVerified {
+		t.Errorf("got original %q, corrected %q, status %q; want the original kept, the correction stored, verified", original, corrected, status)
+	}
+}

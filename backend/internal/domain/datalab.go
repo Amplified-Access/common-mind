@@ -117,10 +117,13 @@ type Contribution struct {
 	CreatedAt    time.Time `json:"created_at"`
 }
 
-// Review decisions.
+// Review decisions. A correction verifies the contribution with the
+// reviewer's corrected text; reviewers are chosen by the team, so their
+// correction needs no further check.
 const (
-	DecisionAccept = "accept"
-	DecisionReject = "reject"
+	DecisionAccept  = "accept"
+	DecisionCorrect = "correct"
+	DecisionReject  = "reject"
 )
 
 // RejectReasons are the reasons a reviewer can give; a rejection needs one.
@@ -146,6 +149,7 @@ type ContributionRef struct {
 	LanguageCode  string
 	ContributorID int64
 	Status        string
+	Text          string
 }
 
 // ProgressEvent is the WebSocket message type carrying a LanguageProgress.
