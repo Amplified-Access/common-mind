@@ -65,7 +65,7 @@ const CivicCorpusPage = () => {
         tags={["CIVIC DISCOURSE", "TERMINOLOGY", "RESPONSIBLE DATA"]}
       >
         <div>
-          <LinkButton href="/data-lab">Join the Data Lab</LinkButton>
+          <LinkButton href="/data-lab">Data Lab</LinkButton>
         </div>
       </PageHero>
 
