@@ -7,6 +7,7 @@ import { AnnouncementBanner } from "@/components/layout/announcement-banner";
 import { SmoothScroll } from "@/components/common/smooth-scroll";
 import Footer from "@/components/layout/footer";
 import Header from "@/components/layout/header";
+import { HideOnStandalone } from "@/components/layout/hide-on-standalone";
 
 const sora = Sora({
   variable: "--font-sora",
@@ -46,7 +47,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <AnnouncementBanner {...announcement} />
           <Header />
           <main className="flex-1">{children}</main>
-          <Footer />
+          <HideOnStandalone>
+            <Footer />
+          </HideOnStandalone>
         </SmoothScroll>
       </body>
     </html>

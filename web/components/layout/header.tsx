@@ -9,7 +9,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 import { buttonClasses } from "@/components/system/primitives";
-import { isActive, navItems } from "@/lib/site";
+import { isActive, isStandalone, navItems } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 import {
@@ -39,6 +39,8 @@ const Header = () => {
   });
   const home = pathname === "/";
   const floating = !home || pinned;
+
+  if (isStandalone(pathname)) return null;
 
   // Docked: a full-width bar, 56px tall. Pinned: an 8px drop plus a 48px
   // pill, still 56px, so the page below never shifts during the morph.

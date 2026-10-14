@@ -1,5 +1,10 @@
 // Single source of truth for navigation and external destinations.
 
+// Pages that stand on their own, without the site header and footer.
+export const standalonePaths = ["/data-lab/sign-in"];
+
+export const isStandalone = (pathname: string) => standalonePaths.includes(pathname);
+
 export const navItems = [
   { label: "Models", href: "/models" },
   { label: "Languages", href: "/languages" },
