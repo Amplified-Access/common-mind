@@ -13,15 +13,19 @@ type PageHeroProps = {
   tags?: string[];
   /** The yellow CommonMind tile on a grid of nodes, above the eyebrow. */
   tile?: boolean;
-  /** Centered (default) or left-aligned with the lede beside the title. */
-  align?: "center" | "split";
+  /**
+   * Centered (default); split, left-aligned with the lede beside the title;
+   * or columns, two groups centered against each other: eyebrow, title and
+   * beneathTitle on the left, lede and beneathLede on the right.
+   */
+  align?: "center" | "split" | "columns";
   /** Controls under the heading: search, filters. */
   children?: React.ReactNode;
   /** Full-width content after the heading block, still on the hero's wash. */
   after?: React.ReactNode;
-  /** Split layout only: content under the title, in the left column. */
+  /** Columns layout only: content under the title, in the left group. */
   beneathTitle?: React.ReactNode;
-  /** Split layout only: content under the lede, in the right column. */
+  /** Columns layout only: content under the lede, in the right group. */
   beneathLede?: React.ReactNode;
   /** A hairline closes the hero, for pages with tabs or a side rail below. */
   ruled?: boolean;
@@ -57,7 +61,8 @@ function PageHero({
       <Backdrop wash grain stars shade sideGrids={sideGrids} />
       <Container
         className={cn(
-          "flex flex-col gap-6 pt-16 pb-14 sm:pt-20 sm:pb-16",
+          "flex flex-col gap-6",
+          align === "columns" ? "py-20 sm:py-28" : "pt-16 pb-14 sm:pt-20 sm:pb-16",
           centered ? "items-center text-center" : "items-start",
           tile && "pt-10 sm:pt-12",
         )}
@@ -69,20 +74,26 @@ function PageHero({
             <h1 className="text-h2 text-balance">{title}</h1>
             {lede && <p className="max-w-lg text-[13px] leading-[1.2] text-pretty text-faint">{lede}</p>}
           </div>
+        ) : align === "columns" ? (
+          <div className="flex w-full flex-col gap-10 md:flex-row md:items-center md:gap-6">
+            <div className="flex flex-col items-start gap-5 md:w-[26rem] md:shrink-0">
+              {eyebrow && <Eyebrow className="text-base">{eyebrow}</Eyebrow>}
+              <h1 className="text-h2 text-balance">{title}</h1>
+              {beneathTitle && <div className="pt-1">{beneathTitle}</div>}
+            </div>
+            {(lede || beneathLede) && (
+              <div className="flex min-w-0 flex-col items-start gap-5 md:max-w-[26rem]">
+                {lede && <p className="text-sm text-pretty text-subtle">{lede}</p>}
+                {beneathLede}
+              </div>
+            )}
+          </div>
         ) : (
           <div className="flex w-full flex-col gap-5">
             {eyebrow && <Eyebrow className="text-base">{eyebrow}</Eyebrow>}
             <div className="grid w-full gap-5 md:grid-cols-[minmax(0,26rem)_minmax(0,22rem)] md:gap-6">
-              <div className="flex flex-col items-start gap-6">
-                <h1 className="text-h2 text-balance">{title}</h1>
-                {beneathTitle}
-              </div>
-              {(lede || beneathLede) && (
-                <div className="flex flex-col items-start gap-5 md:pt-2">
-                  {lede && <p className="text-sm text-pretty text-subtle">{lede}</p>}
-                  {beneathLede}
-                </div>
-              )}
+              <h1 className="text-h2 text-balance">{title}</h1>
+              {lede && <p className="text-sm text-pretty text-subtle md:pt-2">{lede}</p>}
             </div>
           </div>
         )}

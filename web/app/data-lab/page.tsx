@@ -17,13 +17,13 @@ const DataLabPage = () => {
   return (
     <>
       <PageHero
-        align="split"
+        align="columns"
         sideGrids
         eyebrow="Data Lab"
         title="Build civic language data together."
         lede="Translate, write, and review civic text in your language. Every contribution joins CommonMind's open datasets once a second speaker approves it, starting with the Civic Corpus."
         beneathTitle={<SignInLink />}
-        beneathLede={<TagChain tags={["VOLUNTEER", "HUMAN-WRITTEN", "OPEN DATA"]} className="lg:w-max lg:flex-nowrap" />}
+        beneathLede={<TagChain tags={["VOLUNTEER", "HUMAN-WRITTEN", "OPEN DATA"]} className="lg:flex-nowrap" />}
       />
       <Section className="pt-0">
         <Container>
