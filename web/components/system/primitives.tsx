@@ -187,13 +187,12 @@ type ButtonVariant = "signal" | "outline" | "ink" | "bright" | "cream";
 
 const buttonVariants: Record<ButtonVariant, string> = {
   // Pills: header and toolbars.
-  signal: "h-8 rounded-full bg-signal px-5 text-background hover:bg-signal/85",
-  outline:
-    "h-8 rounded-full border border-signal px-5 text-signal hover:bg-signal hover:text-background",
-  cream: "h-10 rounded-full bg-foreground px-5 text-background hover:bg-foreground/85",
+  signal: "h-8 chamfer bg-signal px-5 text-background hover:bg-signal/85",
+  outline: "h-8 chamfer border border-signal px-5 text-signal hover:bg-signal hover:text-background",
+  cream: "h-10 chamfer bg-foreground px-5 text-background hover:bg-foreground/85",
   // Blocks: for use on the yellow call to action.
-  ink: "h-10 bg-background px-6 text-signal hover:bg-background/85",
-  bright: "h-10 bg-signal px-6 text-background shadow-sm hover:bg-signal/85",
+  ink: "h-10 chamfer bg-background px-6 text-signal hover:bg-background/85",
+  bright: "h-10 chamfer bg-signal px-6 text-background shadow-sm hover:bg-signal/85",
 };
 
 function buttonClasses(variant: ButtonVariant = "signal", className?: string) {

@@ -233,7 +233,7 @@ function Translator({ initialModel, locked = false, onModelChange }: TranslatorP
           type="button"
           onClick={handleTranslate}
           disabled={!input.trim() || status === "loading"}
-          className="inline-flex h-11 cursor-pointer items-center justify-center gap-3 rounded-full bg-foreground px-5 text-lg text-background transition-colors hover:bg-signal disabled:cursor-not-allowed disabled:opacity-80 disabled:hover:bg-foreground"
+          className="chamfer inline-flex h-11 cursor-pointer items-center justify-center gap-3 bg-foreground px-5 text-lg text-background transition-colors hover:bg-signal disabled:cursor-not-allowed disabled:opacity-80 disabled:hover:bg-foreground"
         >
           {status === "loading" ? "Translating…" : "Translate"}
           <HugeiconsIcon icon={TranslateIcon} className="size-5" />

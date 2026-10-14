@@ -245,6 +245,27 @@
   zoom: var(--viewport-scale);
 }
 
+/* The brand's cut corners, from the CommonMind mark: the top-left and
+   bottom-right corners cut at 45°. Size with --chamfer (default 8px).
+   Where corner-shape is supported the border follows the cut, so outlined
+   buttons keep their edge on the diagonals; elsewhere the corners are
+   clipped, which keeps the shape and drops the line along the two cuts. */
+@utility chamfer {
+  clip-path: polygon(
+    var(--chamfer, 8px) 0,
+    100% 0,
+    100% calc(100% - var(--chamfer, 8px)),
+    calc(100% - var(--chamfer, 8px)) 100%,
+    0 100%,
+    0 var(--chamfer, 8px)
+  );
+  @supports (corner-shape: bevel) {
+    clip-path: none;
+    corner-shape: bevel;
+    border-radius: var(--chamfer, 8px) 0;
+  }
+}
+
 /* Film grain in pure CSS: an SVG turbulence tile of white specks whose
    alpha follows the noise. Layer it over a surface and set its opacity. The
    tile is sized in screen pixels, so the specks stay as fine on a zoomed
