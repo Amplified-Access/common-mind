@@ -198,6 +198,8 @@ Allowed methods: GET, POST, PUT, DELETE, OPTIONS, PATCH.
 | GET | `/api/v1/data-lab/languages` | none | `ListLanguagesHandler` — see [data-lab.md](data-lab.md) | `datalab_handler.go` |
 | GET | `/api/v1/data-lab/me` | FirebaseAuth header | `DataLabMeHandler` — see [data-lab.md](data-lab.md) | `datalab_handler.go` |
 | POST | `/api/v1/data-lab/onboarding` | FirebaseAuth header | `OnboardHandler` — see [data-lab.md](data-lab.md) | `datalab_handler.go` |
+| GET | `/api/v1/data-lab/tasks/next` | FirebaseAuth header | `NextTaskHandler` — see [data-lab.md](data-lab.md) | `datalab_handler.go` |
+| POST | `/api/v1/data-lab/contributions` | FirebaseAuth header | `ContributeHandler` — see [data-lab.md](data-lab.md) | `datalab_handler.go` |
 | GET | `/api/v1/me` | FirebaseAuth header | `MeHandler` — returns verified `FirebaseToken` claims | `auth_handler.go` |
 | PATCH | `/api/v1/me` | FirebaseAuth header | `UpdateMeHandler` — upserts user profile; returns `domain.User` | `me_handler.go` |
 | DELETE | `/api/v1/me` | FirebaseAuth header | `DeleteMeHandler` — deletes user profile record; 204 on success | `me_handler.go` |

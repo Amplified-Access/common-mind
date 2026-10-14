@@ -7,6 +7,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/jackc/pgx/v5/pgconn"
+
 	"backend/internal/domain"
 	"backend/internal/usecase"
 )
@@ -117,4 +119,67 @@ func (r *dataLabRepository) SaveOnboarding(ctx context.Context, rec usecase.Onbo
 		return nil, fmt.Errorf("datalab repository: commit onboarding: %w", err)
 	}
 	return r.GetVolunteer(ctx, rec.FirebaseUID)
+}
+
+func (r *dataLabRepository) CountReviewers(ctx context.Context, language string) (int, error) {
+	var n int
+	err := r.db.QueryRowContext(ctx, `
+        SELECT count(*) FROM language_members
+        WHERE language_code = $1 AND level IN ('reviewer', 'lead')`, language).Scan(&n)
+	if err != nil {
+		return 0, fmt.Errorf("datalab repository: count reviewers: %w", err)
+	}
+	return n, nil
+}
+
+// NextItem picks at random among open items so volunteers working the same
+// language at once rarely get the same one. An item is open in a language
+// until it has a pending or verified contribution there; a rejected one
+// reopens it for everyone except the volunteer who was rejected.
+func (r *dataLabRepository) NextItem(ctx context.Context, userID int64, language string) (*domain.Task, error) {
+	const q = `
+        SELECT i.id, i.kind, i.category, i.text, i.language_code
+        FROM items i
+        WHERE i.language_code <> $2
+          AND NOT EXISTS (
+              SELECT 1 FROM contributions c
+              WHERE c.item_id = i.id AND c.language_code = $2
+                AND (c.status IN ('pending', 'verified') OR c.contributor_id = $1))
+        ORDER BY random()
+        LIMIT 1`
+
+	t := &domain.Task{TargetLanguage: language}
+	err := r.db.QueryRowContext(ctx, q, userID, language).
+		Scan(&t.ItemID, &t.Kind, &t.Category, &t.Text, &t.TextLanguage)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("datalab repository: next item: %w", err)
+	}
+	return t, nil
+}
+
+func (r *dataLabRepository) CreateContribution(ctx context.Context, rec usecase.ContributionRecord) (*domain.Contribution, error) {
+	const q = `
+        INSERT INTO contributions (item_id, language_code, contributor_id, text, pasted, consent_version)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING id, item_id, language_code, text, pasted, status, created_at`
+
+	c := &domain.Contribution{}
+	err := r.db.QueryRowContext(ctx, q, rec.ItemID, rec.Language, rec.ContributorID, rec.Text, rec.Pasted, rec.ConsentVersion).
+		Scan(&c.ID, &c.ItemID, &c.LanguageCode, &c.Text, &c.Pasted, &c.Status, &c.CreatedAt)
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		switch pgErr.Code {
+		case "23505": // unique_violation: same volunteer, item, and language
+			return nil, usecase.ErrAlreadyContributed
+		case "23503": // foreign_key_violation: unknown item
+			return nil, usecase.ErrNotFound
+		}
+	}
+	if err != nil {
+		return nil, fmt.Errorf("datalab repository: create contribution: %w", err)
+	}
+	return c, nil
 }

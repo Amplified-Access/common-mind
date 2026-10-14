@@ -1,5 +1,7 @@
 package domain
 
+import "time"
+
 // Language is a language the Data Lab works with. Target languages are the
 // ones volunteers contribute in; source languages are what they translate from.
 type Language struct {
@@ -61,4 +63,53 @@ func (v Volunteer) Membership(code string) (Membership, bool) {
 		}
 	}
 	return Membership{}, false
+}
+
+// Item kinds.
+const (
+	KindTranslate = "translate" // render a source-language segment
+	KindWrite     = "write"     // answer a civic prompt in your own language
+)
+
+// Contribution statuses.
+const (
+	StatusPending  = "pending"
+	StatusVerified = "verified"
+	StatusRejected = "rejected"
+)
+
+// MaxContributionLength bounds a single contribution, in characters.
+const MaxContributionLength = 2000
+
+// MinReviewersToOpen is how many reviewers a language needs before it accepts
+// contributions, so every row can get a second speaker (ADR 0010).
+const MinReviewersToOpen = 2
+
+// CivicCategories are the civic topics items are tagged with. They match the
+// ids in web/components/civic/data.ts.
+var CivicCategories = []string{
+	"community-problems", "public-services", "local-government", "elections",
+	"accountability", "priorities", "rights", "public-meetings", "promises",
+	"development", "feedback",
+}
+
+// Task is an item offered to a volunteer in one target language.
+type Task struct {
+	ItemID         int64  `json:"item_id"`
+	Kind           string `json:"kind"`
+	Category       string `json:"category"`
+	Text           string `json:"text"`            // the segment to translate, or the prompt to answer
+	TextLanguage   string `json:"text_language"`   // language Text is written in
+	TargetLanguage string `json:"target_language"` // language the volunteer writes in
+}
+
+// Contribution is a volunteer's translation or answer for one item.
+type Contribution struct {
+	ID           int64     `json:"id"`
+	ItemID       int64     `json:"item_id"`
+	LanguageCode string    `json:"language_code"`
+	Text         string    `json:"text"`
+	Pasted       bool      `json:"pasted"`
+	Status       string    `json:"status"`
+	CreatedAt    time.Time `json:"created_at"`
 }

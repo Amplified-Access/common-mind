@@ -56,6 +56,72 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/data-lab/contributions": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Saves a translation or answer as pending review. ` + "`" + `pasted` + "`" + ` is set by the editor when text was pasted in.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "data-lab"
+                ],
+                "summary": "Submit a contribution",
+                "parameters": [
+                    {
+                        "description": "Contribution",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.contributionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ContributionAlias"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "already_contributed or language_closed",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/data-lab/languages": {
             "get": {
                 "description": "Returns the enabled languages: the target languages volunteers contribute in, then the source languages.",
@@ -187,6 +253,67 @@ const docTemplate = `{
                     },
                     "403": {
                         "description": "consent_required",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/data-lab/tasks/next": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns an item to translate or a prompt to answer. 404 no_tasks when the language has nothing left for this volunteer; 409 language_closed until it has two reviewers.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "data-lab"
+                ],
+                "summary": "Get the next task in a language",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Target language code, e.g. sw",
+                        "name": "language",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.TaskAlias"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "no_tasks",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "language_closed",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -523,6 +650,32 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.ContributionAlias": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "item_id": {
+                    "type": "integer"
+                },
+                "language_code": {
+                    "type": "string"
+                },
+                "pasted": {
+                    "type": "boolean"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "text": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.FirebaseToken": {
             "type": "object",
             "properties": {
@@ -605,6 +758,32 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.TaskAlias": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "item_id": {
+                    "type": "integer"
+                },
+                "kind": {
+                    "type": "string"
+                },
+                "target_language": {
+                    "description": "language the volunteer writes in",
+                    "type": "string"
+                },
+                "text": {
+                    "description": "the segment to translate, or the prompt to answer",
+                    "type": "string"
+                },
+                "text_language": {
+                    "description": "language Text is written in",
+                    "type": "string"
+                }
+            }
+        },
         "handlers.UserAlias": {
             "type": "object",
             "properties": {
@@ -651,6 +830,27 @@ const docTemplate = `{
                     }
                 },
                 "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.contributionRequest": {
+            "type": "object",
+            "required": [
+                "item_id",
+                "language"
+            ],
+            "properties": {
+                "item_id": {
+                    "type": "integer"
+                },
+                "language": {
+                    "type": "string"
+                },
+                "pasted": {
+                    "type": "boolean"
+                },
+                "text": {
                     "type": "string"
                 }
             }

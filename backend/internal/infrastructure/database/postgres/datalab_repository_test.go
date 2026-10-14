@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"backend/internal/domain"
@@ -69,5 +70,111 @@ func TestDataLab_SaveOnboarding_AddsLanguagesWithoutLoweringLevel(t *testing.T) 
 
 	if missing, err := repo.GetVolunteer(ctx, "uid-nobody"); err != nil || missing != nil {
 		t.Errorf("GetVolunteer(unknown) = %v, %v, want nil, nil", missing, err)
+	}
+}
+
+// seedVolunteer onboards a volunteer in the given languages and returns their ID.
+func seedVolunteer(t *testing.T, uid string, langs ...string) int64 {
+	t.Helper()
+	v, err := NewDataLabRepository(testDB).SaveOnboarding(context.Background(), usecase.OnboardingRecord{
+		FirebaseUID: uid, Name: uid, Languages: langs, ConsentVersion: domain.CurrentConsentVersion,
+	})
+	if err != nil {
+		t.Fatalf("seed volunteer %s: %v", uid, err)
+	}
+	return v.ID
+}
+
+// seedItems adds one source with the given English segments and returns their IDs.
+func seedItems(t *testing.T, texts ...string) []int64 {
+	t.Helper()
+	var sourceID int64
+	if err := testDB.QueryRow(`INSERT INTO sources (key, title, licence, split) VALUES ('src-1', 'Test', 'CC-BY-4.0', 'train') RETURNING id`).Scan(&sourceID); err != nil {
+		t.Fatal(err)
+	}
+	var ids []int64
+	for _, text := range texts {
+		var id int64
+		if err := testDB.QueryRow(`INSERT INTO items (source_id, kind, language_code, category, text) VALUES ($1, 'translate', 'en', 'public-services', $2) RETURNING id`, sourceID, text).Scan(&id); err != nil {
+			t.Fatal(err)
+		}
+		ids = append(ids, id)
+	}
+	return ids
+}
+
+func contribute(t *testing.T, item, contributor int64, status string) {
+	t.Helper()
+	if _, err := testDB.Exec(`INSERT INTO contributions (item_id, language_code, contributor_id, text, consent_version, status) VALUES ($1, 'sw', $2, 'x', $3, $4)`, item, contributor, domain.CurrentConsentVersion, status); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestDataLab_NextItem_SkipsTakenAndOwnItems(t *testing.T) {
+	truncate(t, "users", "sources")
+	ctx := context.Background()
+	repo := NewDataLabRepository(testDB)
+	me := seedVolunteer(t, "uid-me", "sw")
+	other := seedVolunteer(t, "uid-other", "sw")
+	ids := seedItems(t, "pending elsewhere", "verified elsewhere", "rejected for someone else", "rejected for me")
+	contribute(t, ids[0], other, domain.StatusPending)
+	contribute(t, ids[1], other, domain.StatusVerified)
+	contribute(t, ids[2], other, domain.StatusRejected)
+	contribute(t, ids[3], me, domain.StatusRejected)
+
+	task, err := repo.NextItem(ctx, me, "sw")
+	if err != nil {
+		t.Fatalf("NextItem: %v", err)
+	}
+	if task == nil || task.ItemID != ids[2] {
+		t.Fatalf("NextItem = %+v, want item %d (rejected for someone else, reopened)", task, ids[2])
+	}
+	if task.TargetLanguage != "sw" || task.TextLanguage != "en" {
+		t.Errorf("languages = %s → %s, want en → sw", task.TextLanguage, task.TargetLanguage)
+	}
+
+	contribute(t, ids[2], me, domain.StatusPending)
+	if task, err := repo.NextItem(ctx, me, "sw"); err != nil || task != nil {
+		t.Errorf("NextItem after everything is taken = %+v, %v, want nil, nil", task, err)
+	}
+}
+
+func TestDataLab_CreateContribution_RejectsRepeatsAndUnknownItems(t *testing.T) {
+	truncate(t, "users", "sources")
+	ctx := context.Background()
+	repo := NewDataLabRepository(testDB)
+	me := seedVolunteer(t, "uid-me", "sw")
+	ids := seedItems(t, "The borehole is broken.")
+	rec := usecase.ContributionRecord{ItemID: ids[0], Language: "sw", ContributorID: me, Text: "Kisima kimeharibika.", Pasted: true, ConsentVersion: domain.CurrentConsentVersion}
+
+	got, err := repo.CreateContribution(ctx, rec)
+	if err != nil {
+		t.Fatalf("CreateContribution: %v", err)
+	}
+	if got.Status != domain.StatusPending || !got.Pasted {
+		t.Errorf("created = %+v, want pending and pasted", got)
+	}
+
+	if _, err := repo.CreateContribution(ctx, rec); !errors.Is(err, usecase.ErrAlreadyContributed) {
+		t.Errorf("repeat error = %v, want ErrAlreadyContributed", err)
+	}
+	rec.ItemID = 999999
+	if _, err := repo.CreateContribution(ctx, rec); !errors.Is(err, usecase.ErrNotFound) {
+		t.Errorf("unknown item error = %v, want ErrNotFound", err)
+	}
+}
+
+func TestDataLab_CountReviewers_CountsReviewersAndLeads(t *testing.T) {
+	truncate(t, "users")
+	a := seedVolunteer(t, "uid-a", "sw")
+	b := seedVolunteer(t, "uid-b", "sw")
+	seedVolunteer(t, "uid-c", "sw")
+	if _, err := testDB.Exec(`UPDATE language_members SET level = CASE user_id WHEN $1 THEN 'reviewer' ELSE 'lead' END WHERE user_id IN ($1, $2)`, a, b); err != nil {
+		t.Fatal(err)
+	}
+
+	n, err := NewDataLabRepository(testDB).CountReviewers(context.Background(), "sw")
+	if err != nil || n != 2 {
+		t.Errorf("CountReviewers = %d, %v, want 2", n, err)
 	}
 }

@@ -92,3 +92,80 @@ func (h *Handler) OnboardHandler(c *gin.Context) {
 	}
 	JSON(c, v)
 }
+
+type languageQuery struct {
+	Language string `form:"language" binding:"required"`
+}
+
+// NextTaskHandler godoc
+//
+//	@Summary		Get the next task in a language
+//	@Description	Returns an item to translate or a prompt to answer. 404 no_tasks when the language has nothing left for this volunteer; 409 language_closed until it has two reviewers.
+//	@Tags			data-lab
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			language	query		string	true	"Target language code, e.g. sw"
+//	@Success		200			{object}	TaskAlias
+//	@Failure		403			{object}	map[string]string
+//	@Failure		404			{object}	map[string]string	"no_tasks"
+//	@Failure		409			{object}	map[string]string	"language_closed"
+//	@Router			/api/v1/data-lab/tasks/next [get]
+func (h *Handler) NextTaskHandler(c *gin.Context) {
+	tok, ok := currentToken(c)
+	if !ok {
+		return
+	}
+	var q languageQuery
+	if !bindQuery(c, &q) {
+		return
+	}
+	task, err := h.dataLab.NextTask(c.Request.Context(), tok, q.Language)
+	if err != nil {
+		dataLabError(c, err)
+		return
+	}
+	JSON(c, task)
+}
+
+type contributionRequest struct {
+	ItemID   int64  `json:"item_id" binding:"required"`
+	Language string `json:"language" binding:"required"`
+	Text     string `json:"text"`
+	Pasted   bool   `json:"pasted"`
+}
+
+// ContributeHandler godoc
+//
+//	@Summary		Submit a contribution
+//	@Description	Saves a translation or answer as pending review. `pasted` is set by the editor when text was pasted in.
+//	@Tags			data-lab
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			body	body		contributionRequest	true	"Contribution"
+//	@Success		201		{object}	ContributionAlias
+//	@Failure		400		{object}	map[string]string
+//	@Failure		403		{object}	map[string]string
+//	@Failure		409		{object}	map[string]string	"already_contributed or language_closed"
+//	@Router			/api/v1/data-lab/contributions [post]
+func (h *Handler) ContributeHandler(c *gin.Context) {
+	tok, ok := currentToken(c)
+	if !ok {
+		return
+	}
+	var req contributionRequest
+	if !bindJSON(c, &req) {
+		return
+	}
+	contribution, err := h.dataLab.Contribute(c.Request.Context(), tok, usecase.ContributionInput{
+		ItemID:   req.ItemID,
+		Language: req.Language,
+		Text:     req.Text,
+		Pasted:   req.Pasted,
+	})
+	if err != nil {
+		dataLabError(c, err)
+		return
+	}
+	JSONStatus(c, http.StatusCreated, contribution)
+}

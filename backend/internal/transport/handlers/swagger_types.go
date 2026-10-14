@@ -22,3 +22,9 @@ type LanguageAlias = domain.Language
 
 // VolunteerAlias is a type alias so swaggo can resolve domain.Volunteer.
 type VolunteerAlias = domain.Volunteer
+
+// TaskAlias is a type alias so swaggo can resolve domain.Task.
+type TaskAlias = domain.Task
+
+// ContributionAlias is a type alias so swaggo can resolve domain.Contribution.
+type ContributionAlias = domain.Contribution

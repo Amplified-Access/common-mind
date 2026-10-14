@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"strings"
+	"unicode/utf8"
 
 	"backend/internal/domain"
 )
@@ -15,6 +16,14 @@ type DataLabStore interface {
 	// SaveOnboarding upserts the user, adds memberships without lowering an
 	// existing level, and records consent, in one transaction.
 	SaveOnboarding(ctx context.Context, rec OnboardingRecord) (*domain.Volunteer, error)
+	// CountReviewers counts reviewers and leads in a language.
+	CountReviewers(ctx context.Context, language string) (int, error)
+	// NextItem returns an item the volunteer hasn't done that has no pending or
+	// verified contribution in the language, or nil, nil when none is left.
+	NextItem(ctx context.Context, userID int64, language string) (*domain.Task, error)
+	// CreateContribution returns ErrNotFound for an unknown item and
+	// ErrAlreadyContributed for a repeat by the same volunteer.
+	CreateContribution(ctx context.Context, rec ContributionRecord) (*domain.Contribution, error)
 }
 
 // DataLab is the application-layer interface for the volunteer platform.
@@ -23,6 +32,27 @@ type DataLab interface {
 	// Me returns ErrNotOnboarded when the user has no Data Lab profile yet.
 	Me(ctx context.Context, tok *FirebaseToken) (*domain.Volunteer, error)
 	Onboard(ctx context.Context, tok *FirebaseToken, in OnboardingInput) (*domain.Volunteer, error)
+	// NextTask returns ErrNoTasks when the language has nothing left for the volunteer.
+	NextTask(ctx context.Context, tok *FirebaseToken, language string) (*domain.Task, error)
+	Contribute(ctx context.Context, tok *FirebaseToken, in ContributionInput) (*domain.Contribution, error)
+}
+
+// ContributionInput is a volunteer's submission for one item.
+type ContributionInput struct {
+	ItemID   int64
+	Language string
+	Text     string
+	Pasted   bool
+}
+
+// ContributionRecord is a validated contribution, ready to persist.
+type ContributionRecord struct {
+	ItemID         int64
+	Language       string
+	ContributorID  int64
+	Text           string
+	Pasted         bool
+	ConsentVersion string
 }
 
 // OnboardingInput is what a volunteer submits when joining or adding languages.
@@ -107,5 +137,65 @@ func (d *dataLab) Onboard(ctx context.Context, tok *FirebaseToken, in Onboarding
 		PhotoURL:       tok.PhotoURL,
 		Languages:      codes,
 		ConsentVersion: in.ConsentVersion,
+	})
+}
+
+// contributorIn loads the volunteer and checks they may contribute in the
+// language: onboarded, current consent, a member, and the language open.
+func (d *dataLab) contributorIn(ctx context.Context, tok *FirebaseToken, language string) (*domain.Volunteer, error) {
+	v, err := d.Me(ctx, tok)
+	if err != nil {
+		return nil, err
+	}
+	if !v.ConsentCurrent() {
+		return nil, ErrConsentOutdated
+	}
+	if _, ok := v.Membership(language); !ok {
+		return nil, ErrNotMember
+	}
+	reviewers, err := d.store.CountReviewers(ctx, language)
+	if err != nil {
+		return nil, err
+	}
+	if reviewers < domain.MinReviewersToOpen {
+		return nil, ErrLanguageClosed
+	}
+	return v, nil
+}
+
+func (d *dataLab) NextTask(ctx context.Context, tok *FirebaseToken, language string) (*domain.Task, error) {
+	v, err := d.contributorIn(ctx, tok, language)
+	if err != nil {
+		return nil, err
+	}
+	task, err := d.store.NextItem(ctx, v.ID, language)
+	if err != nil {
+		return nil, err
+	}
+	if task == nil {
+		return nil, ErrNoTasks
+	}
+	return task, nil
+}
+
+func (d *dataLab) Contribute(ctx context.Context, tok *FirebaseToken, in ContributionInput) (*domain.Contribution, error) {
+	v, err := d.contributorIn(ctx, tok, in.Language)
+	if err != nil {
+		return nil, err
+	}
+	text := strings.TrimSpace(in.Text)
+	if text == "" {
+		return nil, invalid("write something before submitting")
+	}
+	if utf8.RuneCountInString(text) > domain.MaxContributionLength {
+		return nil, invalid("keep it under 2,000 characters")
+	}
+	return d.store.CreateContribution(ctx, ContributionRecord{
+		ItemID:         in.ItemID,
+		Language:       in.Language,
+		ContributorID:  v.ID,
+		Text:           text,
+		Pasted:         in.Pasted,
+		ConsentVersion: v.ConsentVersion,
 	})
 }

@@ -20,6 +20,16 @@ func dataLabError(c *gin.Context, err error) {
 		JSONError(c, http.StatusForbidden, "onboarding_required", "complete onboarding first")
 	case errors.Is(err, usecase.ErrConsentOutdated):
 		JSONError(c, http.StatusForbidden, "consent_required", "accept the current consent first")
+	case errors.Is(err, usecase.ErrNotMember):
+		JSONError(c, http.StatusForbidden, "not_member", "add this language to your profile first")
+	case errors.Is(err, usecase.ErrLanguageClosed):
+		JSONError(c, http.StatusConflict, "language_closed", "this language opens once it has reviewers")
+	case errors.Is(err, usecase.ErrNoTasks):
+		JSONError(c, http.StatusNotFound, "no_tasks", "nothing left to do in this language right now")
+	case errors.Is(err, usecase.ErrNotFound):
+		JSONError(c, http.StatusNotFound, "not_found", "not found")
+	case errors.Is(err, usecase.ErrAlreadyContributed):
+		JSONError(c, http.StatusConflict, "already_contributed", "you already submitted this one")
 	case errors.Is(err, usecase.ErrInvalidInput):
 		JSONError(c, http.StatusBadRequest, "invalid_input", err.Error())
 	default:

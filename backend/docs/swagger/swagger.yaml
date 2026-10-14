@@ -7,6 +7,23 @@ definitions:
       level:
         type: string
     type: object
+  handlers.ContributionAlias:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      item_id:
+        type: integer
+      language_code:
+        type: string
+      pasted:
+        type: boolean
+      status:
+        type: string
+      text:
+        type: string
+    type: object
   handlers.FirebaseToken:
     properties:
       claims:
@@ -61,6 +78,24 @@ definitions:
       script:
         type: string
     type: object
+  handlers.TaskAlias:
+    properties:
+      category:
+        type: string
+      item_id:
+        type: integer
+      kind:
+        type: string
+      target_language:
+        description: language the volunteer writes in
+        type: string
+      text:
+        description: the segment to translate, or the prompt to answer
+        type: string
+      text_language:
+        description: language Text is written in
+        type: string
+    type: object
   handlers.UserAlias:
     properties:
       created_at:
@@ -93,6 +128,20 @@ definitions:
         type: array
       name:
         type: string
+    type: object
+  handlers.contributionRequest:
+    properties:
+      item_id:
+        type: integer
+      language:
+        type: string
+      pasted:
+        type: boolean
+      text:
+        type: string
+    required:
+    - item_id
+    - language
     type: object
   handlers.onboardingRequest:
     properties:
@@ -162,6 +211,49 @@ paths:
       summary: Asynq job monitoring UI
       tags:
       - observability
+  /api/v1/data-lab/contributions:
+    post:
+      consumes:
+      - application/json
+      description: Saves a translation or answer as pending review. `pasted` is set
+        by the editor when text was pasted in.
+      parameters:
+      - description: Contribution
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.contributionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.ContributionAlias'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: already_contributed or language_closed
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Submit a contribution
+      tags:
+      - data-lab
   /api/v1/data-lab/languages:
     get:
       description: 'Returns the enabled languages: the target languages volunteers
@@ -253,6 +345,47 @@ paths:
       security:
       - BearerAuth: []
       summary: Join the Data Lab or add languages
+      tags:
+      - data-lab
+  /api/v1/data-lab/tasks/next:
+    get:
+      description: Returns an item to translate or a prompt to answer. 404 no_tasks
+        when the language has nothing left for this volunteer; 409 language_closed
+        until it has two reviewers.
+      parameters:
+      - description: Target language code, e.g. sw
+        in: query
+        name: language
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.TaskAlias'
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: no_tasks
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: language_closed
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get the next task in a language
       tags:
       - data-lab
   /api/v1/me:

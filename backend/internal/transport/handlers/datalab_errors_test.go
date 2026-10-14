@@ -24,6 +24,11 @@ func TestDataLabError_MapsUseCaseErrors(t *testing.T) {
 		{err: usecase.ErrNotOnboarded, status: http.StatusForbidden, code: "onboarding_required"},
 		{err: usecase.ErrConsentOutdated, status: http.StatusForbidden, code: "consent_required"},
 		{err: fmt.Errorf("wrapped: %w", usecase.ErrInvalidInput), status: http.StatusBadRequest, code: "invalid_input", passMsg: true},
+		{err: usecase.ErrNotMember, status: http.StatusForbidden, code: "not_member"},
+		{err: usecase.ErrLanguageClosed, status: http.StatusConflict, code: "language_closed"},
+		{err: usecase.ErrNoTasks, status: http.StatusNotFound, code: "no_tasks"},
+		{err: usecase.ErrNotFound, status: http.StatusNotFound, code: "not_found"},
+		{err: usecase.ErrAlreadyContributed, status: http.StatusConflict, code: "already_contributed"},
 		{err: errors.New("db down"), status: http.StatusInternalServerError, code: "internal_error"},
 	}
 	for _, tt := range tests {

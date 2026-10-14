@@ -10,6 +10,7 @@ sources:
   - internal/transport/handlers/datalab_errors.go
   - internal/infrastructure/database/migrations/20261014060632_add_languages.sql
   - internal/infrastructure/database/migrations/20261014060907_add_language_members_and_consents.sql
+  - internal/infrastructure/database/migrations/20261014061144_add_items_and_contributions.sql
 ---
 
 # Data Lab
@@ -37,6 +38,15 @@ A volunteer is a `users` row plus `language_members` (one row per language, with
 - **Levels** are per language: `contributor` → `reviewer` → `lead`. New memberships start at `contributor`; promotion is manual for now.
 - **Consent**: bump `CurrentConsentVersion` when the consent text changes. Volunteers then accept again (by onboarding) before contributing.
 
+## Items, tasks, and contributions
+
+- **Sources** (`sources`) record where items come from: a stable `key` from the import file, licence, and the `train`/`test` split, fixed at ingestion (ADR 0011).
+- **Items** (`items`) are what volunteers work on. `translate` items are segments in a source language; `write` items are civic prompts to answer. One item serves every target language. `category` is one of `domain.CivicCategories`, which match the site's civic categories.
+- **A task** is an item offered in one target language. `NextItem` picks at random among items that have no pending or verified contribution in that language and that the volunteer hasn't done. A rejected contribution reopens the item for everyone except its author.
+- **Contributions** start `pending`. `(item_id, language_code, contributor_id)` is unique, so a volunteer submits an item once per language. Each row records the consent version in force and whether the text was pasted.
+
+Contributing (`NextTask`, `Contribute`) requires, in order: onboarded, current consent, membership in the language, and the language **open**, meaning at least `domain.MinReviewersToOpen` (2) reviewers or leads. Text is trimmed and capped at `domain.MaxContributionLength` characters.
+
 ## Errors
 
 Use cases return the sentinel errors in `usecase/datalab_errors.go`. `handlers.dataLabError` is the one place they become HTTP responses, with stable `code` values the web app branches on:
@@ -45,6 +55,11 @@ Use cases return the sentinel errors in `usecase/datalab_errors.go`. `handlers.d
 |---|---|---|
 | `ErrNotOnboarded` | 403 | `onboarding_required` |
 | `ErrConsentOutdated` | 403 | `consent_required` |
+| `ErrNotMember` | 403 | `not_member` |
+| `ErrLanguageClosed` | 409 | `language_closed` |
+| `ErrNoTasks` | 404 | `no_tasks` |
+| `ErrNotFound` | 404 | `not_found` |
+| `ErrAlreadyContributed` | 409 | `already_contributed` |
 | `ErrInvalidInput` (via `invalid(msg)`) | 400 | `invalid_input` — message shown to the volunteer |
 | anything else | 500 | `internal_error` — logged, detail hidden |
 
@@ -55,3 +70,5 @@ Use cases return the sentinel errors in `usecase/datalab_errors.go`. `handlers.d
 | GET | `/api/v1/data-lab/languages` | none | `ListLanguagesHandler` — enabled languages, targets first |
 | GET | `/api/v1/data-lab/me` | Firebase | `DataLabMeHandler` — profile, or 403 `onboarding_required` |
 | POST | `/api/v1/data-lab/onboarding` | Firebase | `OnboardHandler` — join or add languages |
+| GET | `/api/v1/data-lab/tasks/next?language=` | Firebase | `NextTaskHandler` — next item, or 404 `no_tasks` |
+| POST | `/api/v1/data-lab/contributions` | Firebase | `ContributeHandler` — 201 with the pending contribution |
