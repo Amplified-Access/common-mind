@@ -19,8 +19,6 @@ type PageHeroProps = {
   children?: React.ReactNode;
   /** Full-width content after the heading block, still on the hero's wash. */
   after?: React.ReactNode;
-  /** Content beside the heading block, centered in the space it leaves (from md up). */
-  aside?: React.ReactNode;
   /** A hairline closes the hero, for pages with tabs or a side rail below. */
   ruled?: boolean;
   /** Faint grids at either edge of the hero. */
@@ -37,46 +35,11 @@ function PageHero({
   align = "center",
   children,
   after,
-  aside,
   ruled,
   sideGrids,
   className,
 }: PageHeroProps) {
   const centered = align === "center";
-  const heading = (
-    <>
-      {tile && <NodeTile />}
-      {centered ? (
-        <div className="flex max-w-2xl flex-col items-center gap-5">
-          {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
-          <h1 className="text-h2 text-balance">{title}</h1>
-          {lede && <p className="max-w-lg text-[13px] leading-[1.2] text-pretty text-faint">{lede}</p>}
-        </div>
-      ) : (
-        <div className="flex w-full flex-col gap-5">
-          {eyebrow && <Eyebrow className="text-base">{eyebrow}</Eyebrow>}
-          <div
-            className={cn(
-              "grid w-full gap-5",
-              // The second column holds the lede; without one the title keeps the full width.
-              lede && "md:grid-cols-[minmax(0,26rem)_minmax(0,22rem)] md:gap-6",
-            )}
-          >
-            <h1 className="text-h2 text-balance">{title}</h1>
-            {lede && <p className="text-sm text-pretty text-subtle md:pt-2">{lede}</p>}
-          </div>
-        </div>
-      )}
-      {tags && tags.length > 0 && (
-        <TagChain tags={tags} className={cn(centered && "justify-center")} />
-      )}
-      {children && (
-        <div className={cn("flex w-full flex-col gap-6 pt-4", centered && "items-center")}>
-          {children}
-        </div>
-      )}
-    </>
-  );
   return (
     <section
       className={cn(
@@ -93,16 +56,29 @@ function PageHero({
           tile && "pt-10 sm:pt-12",
         )}
       >
-        {aside ? (
-          <div className="flex w-full flex-col gap-10 md:flex-row md:items-start md:gap-0">
-            <div className="flex flex-col items-start gap-6 md:w-[26rem] md:shrink-0">{heading}</div>
-            {/* Centered in whatever width the heading leaves. */}
-            <div className="flex w-full md:flex-1 md:justify-center">
-              <div className="w-full md:max-w-md">{aside}</div>
-            </div>
+        {tile && <NodeTile />}
+        {centered ? (
+          <div className="flex max-w-2xl flex-col items-center gap-5">
+            {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
+            <h1 className="text-h2 text-balance">{title}</h1>
+            {lede && <p className="max-w-lg text-[13px] leading-[1.2] text-pretty text-faint">{lede}</p>}
           </div>
         ) : (
-          heading
+          <div className="flex w-full flex-col gap-5">
+            {eyebrow && <Eyebrow className="text-base">{eyebrow}</Eyebrow>}
+            <div className="grid w-full gap-5 md:grid-cols-[minmax(0,26rem)_minmax(0,22rem)] md:gap-6">
+              <h1 className="text-h2 text-balance">{title}</h1>
+              {lede && <p className="text-sm text-pretty text-subtle md:pt-2">{lede}</p>}
+            </div>
+          </div>
+        )}
+        {tags && tags.length > 0 && (
+          <TagChain tags={tags} className={cn(centered && "justify-center")} />
+        )}
+        {children && (
+          <div className={cn("flex w-full flex-col gap-6 pt-4", centered && "items-center")}>
+            {children}
+          </div>
         )}
       </Container>
       {after}

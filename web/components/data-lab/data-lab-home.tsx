@@ -9,6 +9,7 @@ import { Eyebrow, SectionHeader } from "@/components/system/primitives";
 import { useAuth } from "./auth-provider";
 import { LanguageBoard, LanguageStatus } from "./language-board";
 import { Onboarding } from "./onboarding";
+import { SignIn } from "./sign-in";
 import { primaryButton, quietButton, secondaryButton } from "./styles";
 import { canReview, type Language, type LanguageProgress, type Volunteer } from "./types";
 import { useProgress } from "./use-progress";
@@ -32,6 +33,7 @@ function DataLabHome() {
           {state.message}
         </p>
       )}
+      {state.status === "signed-out" && <SignIn />}
       {state.status === "onboarding" && board && <Onboarding languages={languages} onDone={refresh} />}
       {state.status === "ready" &&
         (editing || !state.consentCurrent ? (
