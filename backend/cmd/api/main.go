@@ -37,7 +37,7 @@ func gracefulShutdown(apiServer *http.Server, done chan bool) {
 
 // @title			CommonMind API
 // @version		1.0
-// @description	CommonMind data studio REST API.
+// @description	CommonMind Data Lab REST API.
 //
 // @host		localhost:8080
 // @BasePath	/

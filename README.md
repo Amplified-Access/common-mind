@@ -1,13 +1,13 @@
 # CommonMind
 
-Open language models, datasets, and benchmarks for African languages, and the data studio where volunteers build the Civic Corpus.
+Open language models, datasets, and benchmarks for African languages, and the Data Lab, where volunteers create civic language datasets, starting with the Civic Corpus.
 
 ## Project structure
 
 ```
 common-mind/
-├── web/          # Next.js 16 site — models, datasets, research, Playground; later the studio UI
-├── backend/      # Go + Gin API — data studio, release engine (Postgres, Redis/Asynq, R2)
+├── web/          # Next.js 16 site — models, datasets, research, Playground; later the Data Lab at /data-lab
+├── backend/      # Go + Gin API — Data Lab, release engine (Postgres, Redis/Asynq, R2)
 ├── inference/    # Python model server on a Runpod GPU pod, behind the Playground
 ├── docs/adr/     # Architectural decision records
 ├── scripts/      # setup, dev, staging sync, production deploy

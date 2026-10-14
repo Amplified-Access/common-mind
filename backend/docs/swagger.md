@@ -42,7 +42,7 @@ Place the block immediately above `func main()`:
 ```go
 //	@title		CommonMind API
 //	@version	1.0
-//	@description	CommonMind data studio REST API.
+//	@description	CommonMind Data Lab REST API.
 //
 //	@host		localhost:8080
 //	@BasePath	/

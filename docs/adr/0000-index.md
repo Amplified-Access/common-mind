@@ -27,7 +27,7 @@ Each ADR follows this structure:
 | [0007](0007-testcontainers.md) | Testcontainers for backend integration tests | Accepted |
 | [0008](0008-cloudflare-r2.md) | Cloudflare R2 for object storage | Accepted |
 | [0009](0009-monorepo-layout.md) | Monorepo layout: web, backend, inference | Accepted |
-| [0010](0010-human-only-civic-corpus.md) | A human-only data studio for the Civic Corpus | Accepted |
+| [0010](0010-human-only-civic-corpus.md) | The Data Lab: a human-only platform for civic language data | Accepted |
 | [0011](0011-triggered-corpus-releases.md) | Live corpus with metric-triggered snapshot releases | Accepted |
 
 ## Adding a new ADR

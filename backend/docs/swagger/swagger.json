@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "CommonMind data studio REST API.",
+        "description": "CommonMind Data Lab REST API.",
         "title": "CommonMind API",
         "contact": {},
         "version": "1.0"

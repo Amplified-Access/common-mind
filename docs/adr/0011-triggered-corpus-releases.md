@@ -5,7 +5,7 @@
 
 ## Context
 
-The data studio (ADR 0010) adds each row to the corpus the moment it passes verification. Contributors and dashboards work against that live corpus. Training runs and CivicBench need fixed, citable versions that never change underneath them. Releasing on a calendar would cut versions with too little new data in some languages and too late in others.
+The Data Lab (ADR 0010) adds each row to the corpus the moment it passes verification. Contributors and dashboards work against that live corpus. Training runs and CivicBench need fixed, citable versions that never change underneath them. Releasing on a calendar would cut versions with too little new data in some languages and too late in others.
 
 ## Decision
 

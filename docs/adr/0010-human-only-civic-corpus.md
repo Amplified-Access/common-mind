@@ -1,4 +1,4 @@
-# ADR 0010 — A human-only data studio for the Civic Corpus
+# ADR 0010 — The Data Lab: a human-only platform for civic language data
 
 **Status:** Accepted  
 **Date:** 2026-10-14
@@ -11,9 +11,9 @@ Drafting translations with the existing models would be faster, but it would fee
 
 ## Decision
 
-Build a CommonMind data studio, backed by `backend/`, in which every row is produced by a person.
+Build the **Data Lab**, CommonMind's volunteer platform at `/data-lab`, backed by `backend/`, in which every row is produced by a person. The Civic Corpus is its first dataset; the name leaves room for the others built there later. `/research/civic-corpus` explains the corpus and links to the Data Lab.
 
-- **No model in the loop.** The studio does not call the inference server. Model assistance may be revisited if collection hits a ceiling, through a new ADR.
+- **No model in the loop.** The Data Lab does not call the inference server. Model assistance may be revisited if collection hits a ceiling, through a new ADR.
 - **Contributors are volunteers.** There is no payment tracking. Trust grows through levels: new contributor → contributor → reviewer → language lead.
 - **Launch languages** are the African locales shared with Watchtower: Kiswahili (`sw`), Luganda (`lg`), Kinyarwanda (`rw`), Amharic (`am`), Kikuyu (`ki`), Sukuma (`suk`), Dholuo (`luo`), Afaan Oromoo (`om`), and Dinka / Thuɔŋjäŋ (`din`). Languages are rows in the database. English, and French where it helps, serve as source languages.
 - **Task types:** *translate*, which turns a civic source segment into parallel data, and *write*, an original response to a civic prompt in the speaker's own language.

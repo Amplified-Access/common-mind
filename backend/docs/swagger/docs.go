@@ -508,7 +508,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "CommonMind API",
-	Description:      "CommonMind data studio REST API.",
+	Description:      "CommonMind Data Lab REST API.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

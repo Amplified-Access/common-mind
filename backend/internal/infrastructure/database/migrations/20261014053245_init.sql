@@ -1,5 +1,5 @@
 -- +goose Up
--- Volunteer accounts, keyed by their Firebase UID. Studio tables (languages,
+-- Volunteer accounts, keyed by their Firebase UID. Data Lab tables (languages,
 -- consent, tasks, contributions, reviews, snapshots) come in later migrations.
 CREATE TABLE IF NOT EXISTS users (
     id           BIGSERIAL    PRIMARY KEY,

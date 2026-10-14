@@ -81,7 +81,7 @@ definitions:
 host: localhost:8080
 info:
   contact: {}
-  description: CommonMind data studio REST API.
+  description: CommonMind Data Lab REST API.
   title: CommonMind API
   version: "1.0"
 paths:

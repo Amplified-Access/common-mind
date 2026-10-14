@@ -78,7 +78,7 @@ Production accounts required:
 | `TRANSLATE_API_URL` | No | Inference pod URL for the Playground — omit and `/api/translate` returns 503 |
 | `TRANSLATE_API_KEY` | No | Shared secret the inference server checks in `X-API-Key` |
 
-Firebase client config and the backend URL are added here when the studio UI is built.
+Firebase client config and the backend URL are added here when the Data Lab UI is built.
 
 ---|---|---|
 | `AUTH_SECRET` | Yes | `openssl rand -base64 32` |

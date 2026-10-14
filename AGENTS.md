@@ -3,11 +3,13 @@
 CommonMind — Go + Gin backend, Next.js 16 + React 19 web app, PostgreSQL + Redis, and a Python inference server on Runpod.
 
 Each layer has its own `AGENTS.md`. Read the file closest to what you are editing:
-- `backend/AGENTS.md` + `backend/docs/` — Go API (data studio, release engine)
-- `web/AGENTS.md` — Next.js site, and later the studio UI
+- `backend/AGENTS.md` + `backend/docs/` — Go API (Data Lab, release engine)
+- `web/AGENTS.md` — Next.js site, and later the Data Lab UI at `/data-lab`
 - `inference/AGENTS.md` + `inference/README.md` — model server behind the Playground
 
-Architectural decisions live in `docs/adr/`. Read 0009–0011 before working on the data studio.
+Architectural decisions live in `docs/adr/`. Read 0009–0011 before working on the Data Lab.
+
+**Naming:** the Data Lab (`/data-lab`) is the volunteer platform for creating, annotating, and verifying civic language datasets, starting with the Civic Corpus. `/studio` is reserved for the embedded Sanity CMS. `/research/civic-corpus` is the informational page about the corpus and links to the Data Lab.
 
 Claude Code users: see `CLAUDE.md` for the feature development workflow and subagent definitions.
 
@@ -95,9 +97,9 @@ The web app has no test suite yet. When adding one, use Vitest + `@testing-libra
 
 ---
 
-## Data studio rules
+## Data Lab rules
 
-- Every corpus row is written by a person. The studio never calls the inference server (ADR 0010).
+- Every corpus row is written by a person. The Data Lab never calls the inference server (ADR 0010).
 - Every row keeps its provenance: contributor, consent version, source and licence, reviewer, timestamps.
 - Languages are database rows, keyed by the BCP-47 codes Watchtower uses (`sw`, `lg`, `rw`, `am`, `ki`, `suk`, `luo`, `om`, `din`).
 - Release thresholds are configuration, never constants in code (ADR 0011).

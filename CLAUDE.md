@@ -1,6 +1,6 @@
 # Project Guide
 
-See `AGENTS.md` for setup, data studio rules, and security rules; `docs/adr/` for architectural decisions.
+See `AGENTS.md` for setup, Data Lab rules, and security rules; `docs/adr/` for architectural decisions.
 
 ## Stack
 | Layer | Tech |
@@ -109,7 +109,7 @@ web/
 inference/
   server.py                     # FastAPI model server that runs on the Runpod pod
   translator.py                 # Flash worker with the same logic, for local iteration
-docs/adr/                       # architectural decisions (0009–0011 cover the data studio)
+docs/adr/                       # architectural decisions (0009–0011 cover the Data Lab)
 ```
 
 ## Swagger / OpenAPI
