@@ -22,12 +22,20 @@ make itest         # integration tests only (requires Docker)
 
 ```
 cmd/api/main.go                 # entry point — wiring and graceful shutdown only
+cmd/migrate/main.go             # goose migration CLI
 internal/
-  server/server.go              # Server struct, NewServer(), http.Server timeouts
-  server/routes.go              # RegisterRoutes(), CORS, all handlers as *Server methods
-  database/database.go          # Service interface, New() singleton, all query methods
-  database/database_test.go     # Testcontainers integration tests
-docker-compose.yml              # Postgres service (reads .env)
+  bootstrap/bootstrap.go        # Run(): config, DB, service probes → *App
+  domain/                       # entities, no external deps
+  usecase/                      # application logic + the repository interfaces it needs
+  infrastructure/
+    database/postgres/          # repositories + Testcontainers tests
+    database/migrations/        # goose SQL files
+    cache/redis/  queue/  storage/r2/  email/  streams/  ws/
+  transport/
+    handlers/                   # Handler struct, handlers, RegisterRoutes() in routes.go
+    middleware/                 # auth, logger, rate limit, metrics, Sentry
+  server/server.go              # wires repositories → use cases → handlers → *http.Server
+docker-compose.yml              # Postgres, Redis, Prometheus, Grafana (reads .env)
 .env                            # env vars — never commit secrets
 Makefile                        # all dev commands
 ```
@@ -77,8 +85,8 @@ See `backend/docs/testing.md` for full patterns including `TestMain`, table-driv
 
 ## Key conventions (short version — see docs for full detail)
 
-- New route → register in `RegisterRoutes()`, handler as method on `*Server`
-- New DB query → add to `Service` interface, implement on `*service`, add integration test
+- New route → follow `/project:new-route`: domain → use case → repository → handler method on `*Handler` → `RegisterRoutes()` → wire in `server.go`
+- New DB query → method on the repository interface in `usecase/`, implemented in `infrastructure/database/postgres/`, with one integration test
 - Return errors up the stack — no `log.Fatal`/`os.Exit` inside `internal/` (see `docs/error-handling.md` for the two documented exceptions)
 - Parameterized queries only — never `fmt.Sprintf` SQL
 - Env vars loaded automatically via `godotenv/autoload` blank imports — no explicit call needed
