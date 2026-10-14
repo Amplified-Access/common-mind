@@ -23,7 +23,7 @@ const DataLabPage = () => {
         title="Build civic language data together."
         lede="The Data Lab works with the communities who speak each language to build high-quality civic datasets, written and verified by native speakers, for training AI that understands civic discourse in their own languages."
         beneathTitle={<SignInLink />}
-        beneathLede={<TagChain tags={["SPEAKER-VERIFIED", "TRAINING-READY", "OPEN DATA"]} className="lg:flex-nowrap" />}
+        beneathLede={<TagChain tags={["NATIVELY VERIFIED", "TRAINING-READY", "OPEN DATA"]} className="lg:flex-nowrap" />}
       />
       <Section className="pt-0">
         <Container>
