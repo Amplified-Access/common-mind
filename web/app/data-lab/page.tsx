@@ -1,0 +1,34 @@
+import type { Metadata } from "next";
+
+import { Container } from "@/components/common/container";
+import { DataLabHome } from "@/components/data-lab/data-lab-home";
+import { PageHero } from "@/components/system/page-hero";
+import { Section } from "@/components/system/primitives";
+
+export const metadata: Metadata = {
+  title: "Data Lab",
+  description:
+    "Translate, write, and review civic text in your language. Verified contributions build CommonMind's open datasets, starting with the Civic Corpus.",
+};
+
+const DataLabPage = () => {
+  return (
+    <>
+      <PageHero
+        align="split"
+        sideGrids
+        eyebrow="Data Lab"
+        title="Build civic language data together."
+        lede="Translate, write, and review civic text in your language. Every contribution joins CommonMind's open datasets once a second speaker approves it, starting with the Civic Corpus."
+        tags={["VOLUNTEER", "HUMAN-WRITTEN", "OPEN DATA"]}
+      />
+      <Section className="pt-0">
+        <Container>
+          <DataLabHome />
+        </Container>
+      </Section>
+    </>
+  );
+};
+
+export default DataLabPage;
