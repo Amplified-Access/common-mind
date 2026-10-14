@@ -82,6 +82,21 @@ migrate-version:
 migrate-create:
 	@go run ./cmd/migrate create $(name)
 
+# ---- Data Lab admin ----
+
+# Import sources and items from a JSONL file: make datalab-import file=items.jsonl
+datalab-import:
+	@go run ./cmd/datalab import $(file)
+
+# Import the development sample (dev/data-lab/sample-items.jsonl)
+datalab-sample:
+	@go run ./cmd/datalab import dev/data-lab/sample-items.jsonl
+
+# Set a volunteer's level: make datalab-promote email=a@b.c language=sw level=reviewer
+datalab-promote:
+	@go run ./cmd/datalab promote $(email) $(language) $(level)
+
 .PHONY: all build run test clean watch lint docker-run docker-down itest swagger \
         migrate-up migrate-up-one migrate-down migrate-down-to migrate-reset \
-        migrate-status migrate-version migrate-create
+        migrate-status migrate-version migrate-create \
+        datalab-import datalab-sample datalab-promote

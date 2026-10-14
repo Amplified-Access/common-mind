@@ -262,3 +262,60 @@ func TestDataLab_Progress_CountsPerLanguage(t *testing.T) {
 		t.Errorf("sw progress = %+v, want %+v", sw[0], want)
 	}
 }
+
+func TestDataLab_ImportItems_IsIdempotentAndKeepsSplit(t *testing.T) {
+	truncate(t, "sources")
+	ctx := context.Background()
+	repo := NewImportRepository(testDB)
+	src := usecase.ImportSource{Key: "council-notices-2026", Title: "Council notices", Licence: "CC-BY-4.0"}
+	rows := []usecase.ImportRow{
+		{Source: src, Kind: domain.KindTranslate, Language: "en", Category: "public-services", Text: "The clinic opens at eight."},
+		{Source: src, Kind: domain.KindWrite, Language: "en", Category: "elections", Text: "How do you find your polling station?"},
+	}
+
+	first, err := repo.ImportItems(ctx, rows)
+	if err != nil {
+		t.Fatalf("first import: %v", err)
+	}
+	if first != (usecase.ImportResult{Sources: 1, Items: 2}) {
+		t.Errorf("first import = %+v, want 1 source and 2 items", first)
+	}
+
+	again, err := repo.ImportItems(ctx, rows)
+	if err != nil {
+		t.Fatalf("second import: %v", err)
+	}
+	if again != (usecase.ImportResult{Skipped: 2}) {
+		t.Errorf("second import = %+v, want everything skipped", again)
+	}
+
+	var split string
+	if err := testDB.QueryRow(`SELECT split FROM sources WHERE key = $1`, src.Key).Scan(&split); err != nil {
+		t.Fatal(err)
+	}
+	if split != domain.SplitFor(src.Key) {
+		t.Errorf("split = %q, want %q", split, domain.SplitFor(src.Key))
+	}
+}
+
+func TestDataLab_SetMemberLevel_NeedsMembership(t *testing.T) {
+	truncate(t, "users")
+	ctx := context.Background()
+	repo := NewImportRepository(testDB)
+	if _, err := NewDataLabRepository(testDB).SaveOnboarding(ctx, usecase.OnboardingRecord{
+		FirebaseUID: "uid-baraka", Name: "Baraka", Email: "baraka@example.com", Languages: []string{"sw"}, ConsentVersion: domain.CurrentConsentVersion,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := repo.SetMemberLevel(ctx, "baraka@example.com", "sw", domain.LevelReviewer); err != nil {
+		t.Fatalf("SetMemberLevel: %v", err)
+	}
+	v, _ := NewDataLabRepository(testDB).GetVolunteer(ctx, "uid-baraka")
+	if m, _ := v.Membership("sw"); m.Level != domain.LevelReviewer {
+		t.Errorf("sw level = %q, want reviewer", m.Level)
+	}
+	if err := repo.SetMemberLevel(ctx, "baraka@example.com", "luo", domain.LevelReviewer); !errors.Is(err, usecase.ErrNotFound) {
+		t.Errorf("non-member error = %v, want ErrNotFound", err)
+	}
+}

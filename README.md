@@ -56,6 +56,8 @@ The Playground needs a running inference pod; see [inference/README.md](inferenc
 | `make lint` | `go vet` and ESLint |
 | `make build` | Backend binary and production web build |
 | `cd backend && make migrate-create name=<slug>` | New SQL migration |
+| `cd backend && make datalab-sample` | Load sample Data Lab items into the local database |
+| `cd backend && make datalab-promote email=… language=sw level=reviewer` | Promote a volunteer in a language |
 | `cd backend && make swagger` | Regenerate API docs after changing handler annotations |
 | `make deploy-prod` | Advance `production` to `main` (see [RUNBOOK.md](RUNBOOK.md)) |
 

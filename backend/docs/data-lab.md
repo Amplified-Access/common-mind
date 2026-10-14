@@ -12,6 +12,10 @@ sources:
   - internal/infrastructure/database/migrations/20261014060907_add_language_members_and_consents.sql
   - internal/infrastructure/database/migrations/20261014061144_add_items_and_contributions.sql
   - internal/infrastructure/database/migrations/20261014061424_add_reviews.sql
+  - internal/infrastructure/database/migrations/20261014061844_add_items_unique_text.sql
+  - internal/usecase/datalab_import.go
+  - internal/infrastructure/database/postgres/datalab_import_repository.go
+  - cmd/datalab/main.go
 ---
 
 # Data Lab
@@ -70,6 +74,30 @@ After every successful contribution and review, the use case reloads that langua
 ```
 
 `NewDataLab` takes a `Broadcaster` (satisfied by `*ws.Hub`, wired in `server.go`); nil turns broadcasting off. Publishing is best-effort: the write has already succeeded, so a failure is logged and not returned. `/ws` needs a Firebase token, so live updates reach signed-in volunteers; signed-out visitors read the endpoint.
+
+## Admin: importing items and promoting volunteers
+
+`cmd/datalab` runs admin tasks against the database in `.env`:
+
+```bash
+make datalab-sample                                              # import dev/data-lab/sample-items.jsonl
+make datalab-import file=path/to/items.jsonl                     # import a file
+make datalab-promote email=a@example.com language=sw level=reviewer
+```
+
+An import file has one JSON object per line:
+
+```json
+{"source": {"key": "council-notices-2026", "title": "Council notices", "origin": "…", "licence": "CC-BY-4.0"},
+ "kind": "translate", "language": "en", "category": "public-services", "text": "The clinic opens at eight."}
+```
+
+- Every row is checked before anything is written (`Importer.ImportItems`), and all bad lines are reported together: the kind must be `translate` or `write`, the language a source language, the category one of `domain.CivicCategories`, and the source needs a key, title, and licence.
+- Sources upsert by `key`. The split comes from `domain.SplitFor(key)` (about 1 in 10 to `test`) and is set only on first insert.
+- Items are unique per `(source, kind, text)`, so importing the same file again adds nothing.
+- `promote` changes the level of an existing membership. The volunteer must have joined that language first.
+
+`dev/data-lab/sample-items.jsonl` is written for local development (licence CC0) and is not corpus data.
 
 ## Errors
 

@@ -1,6 +1,9 @@
 package domain
 
-import "time"
+import (
+	"hash/fnv"
+	"time"
+)
 
 // Language is a language the Data Lab works with. Target languages are the
 // ones volunteers contribute in; source languages are what they translate from.
@@ -156,4 +159,22 @@ type LanguageProgress struct {
 	Contributors int    `json:"contributors"` // members at any level
 	Reviewers    int    `json:"reviewers"`    // reviewers and leads
 	Open         bool   `json:"open"`         // enough reviewers to accept contributions
+}
+
+// Dataset splits. A source's split is fixed when it is first imported.
+const (
+	SplitTrain = "train"
+	SplitTest  = "test"
+)
+
+// SplitFor assigns a source to a split from its stable key: about one source
+// in ten goes to test. Hashing the key keeps the assignment the same on every
+// import and in every release (ADR 0011).
+func SplitFor(key string) string {
+	h := fnv.New32a()
+	_, _ = h.Write([]byte(key))
+	if h.Sum32()%10 == 0 {
+		return SplitTest
+	}
+	return SplitTrain
 }
