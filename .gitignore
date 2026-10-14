@@ -1,6 +1,7 @@
 # Each layer (web/, inference/) keeps its own .gitignore; these apply repo-wide.
 .DS_Store
 .env*
+!.env.example
 node_modules/
 
 #Temporary files not for committing
