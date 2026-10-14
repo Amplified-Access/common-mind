@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 
 import { ApiError, dataLabApi } from "./api";
 import { useAuth } from "./auth-provider";
-import { SignIn } from "./sign-in";
+import { RedirectToSignIn } from "./redirect-to-sign-in";
 import { primaryButton, quietButton } from "./styles";
 import type { Language, Task } from "./types";
 
@@ -99,7 +99,8 @@ function Contribute({ language }: { language: string }) {
     });
   };
 
-  if (!loading && !user) return <SignIn />;
+  // Signed-out visitors sign in on their own page and come back here.
+  if (!loading && !user) return <RedirectToSignIn next={`/data-lab/contribute/${language}`} />;
 
   return (
     <div className="flex flex-col gap-8">

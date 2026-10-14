@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { Container } from "@/components/common/container";
 import { DataLabHome } from "@/components/data-lab/data-lab-home";
+import { SignInLink } from "@/components/data-lab/sign-in-link";
 import { PageHero } from "@/components/system/page-hero";
 import { Section } from "@/components/system/primitives";
 
@@ -21,7 +22,9 @@ const DataLabPage = () => {
         title="Build civic language data together."
         lede="Translate, write, and review civic text in your language. Every contribution joins CommonMind's open datasets once a second speaker approves it, starting with the Civic Corpus."
         tags={["VOLUNTEER", "HUMAN-WRITTEN", "OPEN DATA"]}
-      />
+      >
+        <SignInLink />
+      </PageHero>
       <Section className="pt-0">
         <Container>
           <DataLabHome />

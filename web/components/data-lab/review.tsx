@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 
 import { ApiError, dataLabApi } from "./api";
 import { useAuth } from "./auth-provider";
-import { SignIn } from "./sign-in";
+import { RedirectToSignIn } from "./redirect-to-sign-in";
 import { fieldClasses, primaryButton, quietButton, secondaryButton } from "./styles";
 import type { Language, RejectReason, ReviewItem } from "./types";
 
@@ -92,7 +92,8 @@ function Review({ language }: { language: string }) {
     setView(await fetchItem());
   };
 
-  if (!loading && !user) return <SignIn />;
+  // Signed-out visitors sign in on their own page and come back here.
+  if (!loading && !user) return <RedirectToSignIn next={`/data-lab/review/${language}`} />;
 
   return (
     <div className="flex flex-col gap-8">
