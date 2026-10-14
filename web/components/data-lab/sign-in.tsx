@@ -26,6 +26,7 @@ function SignIn() {
   const [mode, setMode] = useState<"sign-in" | "create">("sign-in");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [repeat, setRepeat] = useState("");
   const [busy, setBusy] = useState(false);
 
   const run = async (action: () => Promise<void>) => {
@@ -71,6 +72,10 @@ function SignIn() {
           className="flex flex-col gap-3"
           onSubmit={(e) => {
             e.preventDefault();
+            if (mode === "create" && password !== repeat) {
+              toast.error("The passwords don't match. Type the same password in both fields.");
+              return;
+            }
             run(() => signInWithEmail(email, password, mode === "create"));
           }}
         >
@@ -97,15 +102,31 @@ function SignIn() {
               className={fieldClasses}
             />
           </label>
+          {mode === "create" && (
+            <label className="flex flex-col gap-1.5">
+              <span className="font-mono text-xs text-faint">Repeat password</span>
+              <input
+                type="password"
+                required
+                minLength={6}
+                autoComplete="new-password"
+                value={repeat}
+                onChange={(e) => setRepeat(e.target.value)}
+                className={fieldClasses}
+              />
+            </label>
+          )}
           <button type="submit" disabled={busy} className={primaryButton}>
             {mode === "create" ? "Create account" : "Sign in"}
           </button>
         </form>
 
-
         <button
           type="button"
-          onClick={() => setMode(mode === "create" ? "sign-in" : "create")}
+          onClick={() => {
+            setMode(mode === "create" ? "sign-in" : "create");
+            setRepeat("");
+          }}
           className="cursor-pointer self-start font-mono text-xs text-signal hover:text-foreground"
         >
           {mode === "create" ? "I already have an account" : "Create an account with email"}
