@@ -1,0 +1,323 @@
+basePath: /
+definitions:
+  handlers.FirebaseToken:
+    properties:
+      claims:
+        additionalProperties: {}
+        type: object
+      email:
+        type: string
+      name:
+        type: string
+      photoUrl:
+        type: string
+      uid:
+        type: string
+    type: object
+  handlers.HealthStats:
+    properties:
+      error:
+        type: string
+      idle:
+        type: integer
+      in_use:
+        type: integer
+      max_idle_closed:
+        type: integer
+      max_lifetime_closed:
+        type: integer
+      message:
+        type: string
+      open_connections:
+        type: integer
+      status:
+        type: string
+      wait_count:
+        type: integer
+      wait_duration:
+        type: string
+    type: object
+  handlers.UserAlias:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      firebase_uid:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      photo_url:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  handlers.presignRequest:
+    properties:
+      content_type:
+        type: string
+      filename:
+        type: string
+    required:
+    - content_type
+    - filename
+    type: object
+  handlers.presignResponse:
+    properties:
+      public_url:
+        type: string
+      upload_url:
+        type: string
+    type: object
+  handlers.updateMeRequest:
+    properties:
+      name:
+        type: string
+    required:
+    - name
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: CommonMind data studio REST API.
+  title: CommonMind API
+  version: "1.0"
+paths:
+  /:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Hello World
+      tags:
+      - general
+  /admin/queues:
+    get:
+      produces:
+      - text/html
+      responses:
+        "200":
+          description: Asynqmon UI
+          schema:
+            type: string
+      summary: Asynq job monitoring UI
+      tags:
+      - observability
+  /api/v1/me:
+    delete:
+      description: Removes the authenticated user's profile record from the database.
+        The Firebase account is not deleted.
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete current user account
+      tags:
+      - users
+    get:
+      description: 'Returns the authenticated Firebase user''s decoded claims. Requires
+        Authorization: Bearer <firebase-id-token>.'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.FirebaseToken'
+        "401":
+          description: Missing or invalid token
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get current user
+      tags:
+      - auth
+    patch:
+      consumes:
+      - application/json
+      description: Upserts the authenticated user's profile record. Requires a valid
+        Firebase ID token.
+      parameters:
+      - description: Profile update
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.updateMeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.UserAlias'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update current user profile
+      tags:
+      - users
+  /api/v1/storage/{key}:
+    delete:
+      parameters:
+      - description: Object key
+        in: path
+        name: key
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a stored object
+      tags:
+      - storage
+  /api/v1/storage/presign:
+    post:
+      consumes:
+      - application/json
+      description: Returns a presigned PUT URL and the final public URL. The client
+        uploads directly to R2 using the presigned URL.
+      parameters:
+      - description: Upload request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.presignRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.presignResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Request a presigned upload URL
+      tags:
+      - storage
+  /health:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.HealthStats'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/handlers.HealthStats'
+      summary: Health check
+      tags:
+      - ops
+  /metrics:
+    get:
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: Prometheus exposition format
+          schema:
+            type: string
+      summary: Prometheus metrics
+      tags:
+      - observability
+  /ws:
+    get:
+      description: Upgrades HTTP to WebSocket. Pass a Firebase ID token as `?token=<token>`.
+        Returns 401 when the token is missing or invalid.
+      parameters:
+      - description: Firebase ID token
+        in: query
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "101":
+          description: Switching Protocols
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Open a WebSocket connection
+      tags:
+      - websocket
+securityDefinitions:
+  BearerAuth:
+    description: Firebase ID token — prefix with "Bearer "
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
