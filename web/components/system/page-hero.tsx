@@ -15,8 +15,9 @@ type PageHeroProps = {
   tile?: boolean;
   /**
    * Centered (default); split, left-aligned with the lede beside the title;
-   * or columns, two groups centered against each other: eyebrow, title and
-   * beneathTitle on the left, lede and beneathLede on the right.
+   * or columns, two groups centered against each other and, as a pair, in the
+   * container: eyebrow, title and beneathTitle on the left, lede and
+   * beneathLede on the right.
    */
   align?: "center" | "split" | "columns";
   /** Controls under the heading: search, filters. */
@@ -75,7 +76,7 @@ function PageHero({
             {lede && <p className="max-w-lg text-[13px] leading-[1.2] text-pretty text-faint">{lede}</p>}
           </div>
         ) : align === "columns" ? (
-          <div className="flex w-full flex-col gap-10 md:flex-row md:items-center md:gap-6">
+          <div className="flex w-full flex-col gap-10 md:flex-row md:items-center md:justify-center md:gap-6">
             <div className="flex flex-col items-start gap-5 md:w-[26rem] md:shrink-0">
               {eyebrow && <Eyebrow className="text-base">{eyebrow}</Eyebrow>}
               <h1 className="text-h2 text-balance">{title}</h1>
