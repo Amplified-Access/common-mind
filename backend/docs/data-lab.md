@@ -59,6 +59,18 @@ A reviewer (level `reviewer` or `lead` in the language) takes the oldest pending
 
 One review per contribution for now (`reviews.contribution_id` is unique). Disputes and third reviewers (ADR 0010) come later.
 
+## Live progress
+
+`Progress` returns, per enabled target language: verified and pending counts, members, reviewers, and `open` (reviewers ≥ `MinReviewersToOpen`). It's public at `GET /api/v1/data-lab/progress`.
+
+After every successful contribution and review, the use case reloads that language's counts and publishes them on the WebSocket hub as a `data-lab.progress` message:
+
+```json
+{"type": "data-lab.progress", "payload": {"code": "sw", "verified": 12, "pending": 3, "contributors": 8, "reviewers": 2, "open": true}}
+```
+
+`NewDataLab` takes a `Broadcaster` (satisfied by `*ws.Hub`, wired in `server.go`); nil turns broadcasting off. Publishing is best-effort: the write has already succeeded, so a failure is logged and not returned. `/ws` needs a Firebase token, so live updates reach signed-in volunteers; signed-out visitors read the endpoint.
+
 ## Errors
 
 Use cases return the sentinel errors in `usecase/datalab_errors.go`. `handlers.dataLabError` is the one place they become HTTP responses, with stable `code` values the web app branches on:
@@ -84,6 +96,7 @@ Use cases return the sentinel errors in `usecase/datalab_errors.go`. `handlers.d
 | Method | Path | Auth | Handler |
 |---|---|---|---|
 | GET | `/api/v1/data-lab/languages` | none | `ListLanguagesHandler` — enabled languages, targets first |
+| GET | `/api/v1/data-lab/progress` | none | `ProgressHandler` — live counts per target language |
 | GET | `/api/v1/data-lab/me` | Firebase | `DataLabMeHandler` — profile, or 403 `onboarding_required` |
 | POST | `/api/v1/data-lab/onboarding` | Firebase | `OnboardHandler` — join or add languages |
 | GET | `/api/v1/data-lab/tasks/next?language=` | Firebase | `NextTaskHandler` — next item, or 404 `no_tasks` |

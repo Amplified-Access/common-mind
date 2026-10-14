@@ -202,6 +202,7 @@ Allowed methods: GET, POST, PUT, DELETE, OPTIONS, PATCH.
 | POST | `/api/v1/data-lab/contributions` | FirebaseAuth header | `ContributeHandler` — see [data-lab.md](data-lab.md) | `datalab_handler.go` |
 | GET | `/api/v1/data-lab/reviews/next` | FirebaseAuth header | `NextReviewHandler` — see [data-lab.md](data-lab.md) | `datalab_handler.go` |
 | POST | `/api/v1/data-lab/reviews` | FirebaseAuth header | `ReviewHandler` — see [data-lab.md](data-lab.md) | `datalab_handler.go` |
+| GET | `/api/v1/data-lab/progress` | none | `ProgressHandler` — see [data-lab.md](data-lab.md) | `datalab_handler.go` |
 | GET | `/api/v1/me` | FirebaseAuth header | `MeHandler` — returns verified `FirebaseToken` claims | `auth_handler.go` |
 | PATCH | `/api/v1/me` | FirebaseAuth header | `UpdateMeHandler` — upserts user profile; returns `domain.User` | `me_handler.go` |
 | DELETE | `/api/v1/me` | FirebaseAuth header | `DeleteMeHandler` — deletes user profile record; 204 on success | `me_handler.go` |

@@ -232,3 +232,33 @@ func TestDataLab_SaveReview_SetsStatusOnce(t *testing.T) {
 		t.Errorf("unknown contribution error = %v, want ErrNotFound", err)
 	}
 }
+
+func TestDataLab_Progress_CountsPerLanguage(t *testing.T) {
+	truncate(t, "users", "sources")
+	ctx := context.Background()
+	a := seedVolunteer(t, "uid-a", "sw")
+	b := seedVolunteer(t, "uid-b", "sw", "luo")
+	if _, err := testDB.Exec(`UPDATE language_members SET level = 'lead' WHERE user_id = $1 AND language_code = 'sw'`, b); err != nil {
+		t.Fatal(err)
+	}
+	ids := seedItems(t, "one", "two", "three")
+	contribute(t, ids[0], a, domain.StatusVerified)
+	contribute(t, ids[1], a, domain.StatusPending)
+	contribute(t, ids[2], a, domain.StatusRejected)
+
+	all, err := NewDataLabRepository(testDB).Progress(ctx, "")
+	if err != nil {
+		t.Fatalf("Progress: %v", err)
+	}
+	if len(all) != 9 {
+		t.Fatalf("got %d languages, want the 9 targets", len(all))
+	}
+	sw, err := NewDataLabRepository(testDB).Progress(ctx, "sw")
+	if err != nil || len(sw) != 1 {
+		t.Fatalf("Progress(sw) = %v, %v", sw, err)
+	}
+	want := domain.LanguageProgress{Code: "sw", Verified: 1, Pending: 1, Contributors: 2, Reviewers: 1, Open: false}
+	if sw[0] != want {
+		t.Errorf("sw progress = %+v, want %+v", sw[0], want)
+	}
+}

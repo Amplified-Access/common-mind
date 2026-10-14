@@ -263,6 +263,38 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/data-lab/progress": {
+            "get": {
+                "description": "Verified and pending counts, members, reviewers, and whether each target language is open. Signed-in clients also receive data-lab.progress messages on /ws as counts change.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "data-lab"
+                ],
+                "summary": "Live progress per language",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/handlers.LanguageProgressAlias"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/data-lab/reviews": {
             "post": {
                 "security": [
@@ -867,6 +899,32 @@ const docTemplate = `{
                 },
                 "script": {
                     "type": "string"
+                }
+            }
+        },
+        "handlers.LanguageProgressAlias": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "contributors": {
+                    "description": "members at any level",
+                    "type": "integer"
+                },
+                "open": {
+                    "description": "enough reviewers to accept contributions",
+                    "type": "boolean"
+                },
+                "pending": {
+                    "type": "integer"
+                },
+                "reviewers": {
+                    "description": "reviewers and leads",
+                    "type": "integer"
+                },
+                "verified": {
+                    "type": "integer"
                 }
             }
         },

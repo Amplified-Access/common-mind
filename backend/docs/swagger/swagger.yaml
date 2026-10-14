@@ -78,6 +78,24 @@ definitions:
       script:
         type: string
     type: object
+  handlers.LanguageProgressAlias:
+    properties:
+      code:
+        type: string
+      contributors:
+        description: members at any level
+        type: integer
+      open:
+        description: enough reviewers to accept contributions
+        type: boolean
+      pending:
+        type: integer
+      reviewers:
+        description: reviewers and leads
+        type: integer
+      verified:
+        type: integer
+    type: object
   handlers.ReviewItemAlias:
     properties:
       category:
@@ -380,6 +398,29 @@ paths:
       security:
       - BearerAuth: []
       summary: Join the Data Lab or add languages
+      tags:
+      - data-lab
+  /api/v1/data-lab/progress:
+    get:
+      description: Verified and pending counts, members, reviewers, and whether each
+        target language is open. Signed-in clients also receive data-lab.progress
+        messages on /ws as counts change.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.LanguageProgressAlias'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Live progress per language
       tags:
       - data-lab
   /api/v1/data-lab/reviews:

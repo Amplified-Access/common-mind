@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"log/slog"
 	"slices"
 	"strings"
 	"unicode/utf8"
@@ -33,6 +34,14 @@ type DataLabStore interface {
 	// SaveReview records the review and sets the contribution's status in one
 	// transaction. Returns ErrAlreadyReviewed if another review won the race.
 	SaveReview(ctx context.Context, rec ReviewRecord) error
+	// Progress returns live counts for every enabled target language, or for
+	// one when language is non-empty.
+	Progress(ctx context.Context, language string) ([]domain.LanguageProgress, error)
+}
+
+// Broadcaster pushes a message to connected clients. *ws.Hub satisfies it.
+type Broadcaster interface {
+	Publish(msgType string, payload any) error
 }
 
 // DataLab is the application-layer interface for the volunteer platform.
@@ -47,6 +56,7 @@ type DataLab interface {
 	// NextReview returns ErrNoReviews when nothing is waiting in the language.
 	NextReview(ctx context.Context, tok *FirebaseToken, language string) (*domain.ReviewItem, error)
 	Review(ctx context.Context, tok *FirebaseToken, in ReviewInput) error
+	Progress(ctx context.Context) ([]domain.LanguageProgress, error)
 }
 
 // ReviewInput is a reviewer's decision on one contribution.
@@ -103,12 +113,13 @@ type OnboardingRecord struct {
 }
 
 type dataLab struct {
-	store DataLabStore
+	store       DataLabStore
+	broadcaster Broadcaster // nil disables live progress
 }
 
-// NewDataLab constructs the Data Lab use case.
-func NewDataLab(store DataLabStore) DataLab {
-	return &dataLab{store: store}
+// NewDataLab constructs the Data Lab use case. broadcaster may be nil.
+func NewDataLab(store DataLabStore, broadcaster Broadcaster) DataLab {
+	return &dataLab{store: store, broadcaster: broadcaster}
 }
 
 func (d *dataLab) ListLanguages(ctx context.Context) ([]domain.Language, error) {
@@ -220,7 +231,7 @@ func (d *dataLab) Contribute(ctx context.Context, tok *FirebaseToken, in Contrib
 	if utf8.RuneCountInString(text) > domain.MaxContributionLength {
 		return nil, invalid("keep it under 2,000 characters")
 	}
-	return d.store.CreateContribution(ctx, ContributionRecord{
+	c, err := d.store.CreateContribution(ctx, ContributionRecord{
 		ItemID:         in.ItemID,
 		Language:       in.Language,
 		ContributorID:  v.ID,
@@ -228,6 +239,11 @@ func (d *dataLab) Contribute(ctx context.Context, tok *FirebaseToken, in Contrib
 		Pasted:         in.Pasted,
 		ConsentVersion: v.ConsentVersion,
 	})
+	if err != nil {
+		return nil, err
+	}
+	d.publishProgress(ctx, in.Language)
+	return c, nil
 }
 
 // reviewerIn loads the volunteer and checks they may review in the language.
@@ -290,5 +306,29 @@ func (d *dataLab) Review(ctx context.Context, tok *FirebaseToken, in ReviewInput
 		return ErrAlreadyReviewed
 	}
 	rec.ReviewerID = v.ID
-	return d.store.SaveReview(ctx, rec)
+	if err := d.store.SaveReview(ctx, rec); err != nil {
+		return err
+	}
+	d.publishProgress(ctx, ref.LanguageCode)
+	return nil
+}
+
+func (d *dataLab) Progress(ctx context.Context) ([]domain.LanguageProgress, error) {
+	return d.store.Progress(ctx, "")
+}
+
+// publishProgress pushes a language's new counts to connected clients. It is
+// best-effort: the write already succeeded, so failures are only logged.
+func (d *dataLab) publishProgress(ctx context.Context, language string) {
+	if d.broadcaster == nil {
+		return
+	}
+	p, err := d.store.Progress(ctx, language)
+	if err != nil || len(p) == 0 {
+		slog.Warn("data lab: load progress for broadcast", "language", language, "error", err)
+		return
+	}
+	if err := d.broadcaster.Publish(domain.ProgressEvent, p[0]); err != nil {
+		slog.Warn("data lab: broadcast progress", "language", language, "error", err)
+	}
 }

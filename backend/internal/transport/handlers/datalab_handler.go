@@ -28,6 +28,24 @@ func (h *Handler) ListLanguagesHandler(c *gin.Context) {
 	JSON(c, langs)
 }
 
+// ProgressHandler godoc
+//
+//	@Summary		Live progress per language
+//	@Description	Verified and pending counts, members, reviewers, and whether each target language is open. Signed-in clients also receive data-lab.progress messages on /ws as counts change.
+//	@Tags			data-lab
+//	@Produce		json
+//	@Success		200	{array}		LanguageProgressAlias
+//	@Failure		500	{object}	map[string]string
+//	@Router			/api/v1/data-lab/progress [get]
+func (h *Handler) ProgressHandler(c *gin.Context) {
+	progress, err := h.dataLab.Progress(c.Request.Context())
+	if err != nil {
+		dataLabError(c, err)
+		return
+	}
+	JSON(c, progress)
+}
+
 // DataLabMeHandler godoc
 //
 //	@Summary		Get my Data Lab profile

@@ -36,7 +36,7 @@ func NewServer(app *bootstrap.App, hub *ws.Hub) (*http.Server, error) {
 	healthUC := usecase.NewHealthUseCase(healthRepo)
 
 	userRepo := postgres.NewUserRepository(app.DB)
-	dataLab := usecase.NewDataLab(postgres.NewDataLabRepository(app.DB))
+	dataLab := usecase.NewDataLab(postgres.NewDataLabRepository(app.DB), hub)
 
 	// Build Asynqmon UI handler when Redis is available.
 	var queueUI http.Handler

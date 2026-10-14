@@ -20,6 +20,14 @@ type fakeStore struct {
 	reviewed    *ReviewRecord
 }
 
+// fakeBroadcaster records published messages.
+type fakeBroadcaster struct{ published []any }
+
+func (b *fakeBroadcaster) Publish(_ string, payload any) error {
+	b.published = append(b.published, payload)
+	return nil
+}
+
 func (f *fakeStore) ListLanguages(context.Context) ([]domain.Language, error) {
 	return f.languages, nil
 }
@@ -77,7 +85,7 @@ func TestOnboard_ValidatesLanguagesNameAndConsent(t *testing.T) {
 			in.Languages = append([]string(nil), valid.Languages...)
 			tt.mutate(&in)
 
-			_, err := NewDataLab(store).Onboard(context.Background(), tok, in)
+			_, err := NewDataLab(store, nil).Onboard(context.Background(), tok, in)
 
 			if !errors.Is(err, tt.wantErr) {
 				t.Fatalf("Onboard() error = %v, want %v", err, tt.wantErr)
@@ -104,6 +112,10 @@ func (f *fakeStore) GetContributionRef(context.Context, int64) (*domain.Contribu
 		return nil, ErrNotFound
 	}
 	return f.ref, nil
+}
+
+func (f *fakeStore) Progress(_ context.Context, language string) ([]domain.LanguageProgress, error) {
+	return []domain.LanguageProgress{{Code: language, Pending: 1, Reviewers: f.reviewers}}, nil
 }
 
 func (f *fakeStore) SaveReview(_ context.Context, rec ReviewRecord) error {
@@ -146,7 +158,7 @@ func TestContribute_RequiresOpenLanguageMembershipAndText(t *testing.T) {
 				tt.mutate(&in)
 			}
 
-			_, err := NewDataLab(store).Contribute(context.Background(), tok, in)
+			_, err := NewDataLab(store, nil).Contribute(context.Background(), tok, in)
 
 			if !errors.Is(err, tt.wantErr) {
 				t.Fatalf("Contribute() error = %v, want %v", err, tt.wantErr)
@@ -199,7 +211,7 @@ func TestReview_EnforcesReviewerRulesAndReasons(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			store := &fakeStore{volunteer: tt.volunteer, ref: tt.ref}
 
-			err := NewDataLab(store).Review(context.Background(), tok, tt.in)
+			err := NewDataLab(store, nil).Review(context.Background(), tok, tt.in)
 
 			if !errors.Is(err, tt.wantErr) {
 				t.Fatalf("Review() error = %v, want %v", err, tt.wantErr)
@@ -214,5 +226,24 @@ func TestReview_EnforcesReviewerRulesAndReasons(t *testing.T) {
 				t.Errorf("saved review = %+v, want status %s by reviewer 7", store.reviewed, tt.wantStatus)
 			}
 		})
+	}
+}
+
+func TestContribute_PublishesLanguageProgress(t *testing.T) {
+	store := &fakeStore{volunteer: swahiliContributor(), reviewers: 2}
+	bc := &fakeBroadcaster{}
+
+	_, err := NewDataLab(store, bc).Contribute(context.Background(), &FirebaseToken{UID: "uid-7"},
+		ContributionInput{ItemID: 1, Language: "sw", Text: "Kisima kimeharibika."})
+	if err != nil {
+		t.Fatalf("Contribute: %v", err)
+	}
+
+	if len(bc.published) != 1 {
+		t.Fatalf("published %d messages, want 1", len(bc.published))
+	}
+	p, ok := bc.published[0].(domain.LanguageProgress)
+	if !ok || p.Code != "sw" {
+		t.Errorf("published %+v, want progress for sw", bc.published[0])
 	}
 }

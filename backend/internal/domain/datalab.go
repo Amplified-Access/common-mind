@@ -144,3 +144,16 @@ type ContributionRef struct {
 	ContributorID int64
 	Status        string
 }
+
+// ProgressEvent is the WebSocket message type carrying a LanguageProgress.
+const ProgressEvent = "data-lab.progress"
+
+// LanguageProgress is a target language's live counts.
+type LanguageProgress struct {
+	Code         string `json:"code"`
+	Verified     int    `json:"verified"`
+	Pending      int    `json:"pending"`
+	Contributors int    `json:"contributors"` // members at any level
+	Reviewers    int    `json:"reviewers"`    // reviewers and leads
+	Open         bool   `json:"open"`         // enough reviewers to accept contributions
+}

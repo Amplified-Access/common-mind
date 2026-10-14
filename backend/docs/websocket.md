@@ -1,6 +1,6 @@
 ---
 topic: websocket
-last_verified: 2026-06-23
+last_verified: 2026-10-14
 sources:
   - internal/infrastructure/ws/message.go
   - internal/infrastructure/ws/hub.go
@@ -194,3 +194,9 @@ Unit tests in `internal/infrastructure/ws/hub_test.go` cover:
 
 Tests inject `*Client` with a nil `conn` and a buffered `Send` channel; the Hub only
 touches `client.Send`, not the connection, so real WebSocket connections are not needed.
+
+## Messages the backend publishes
+
+| Type | Payload | Published by |
+|---|---|---|
+| `data-lab.progress` | `domain.LanguageProgress` | `usecase.DataLab` after each contribution and review — see [data-lab.md](data-lab.md) |

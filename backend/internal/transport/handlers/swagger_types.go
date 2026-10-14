@@ -31,3 +31,6 @@ type ContributionAlias = domain.Contribution
 
 // ReviewItemAlias is a type alias so swaggo can resolve domain.ReviewItem.
 type ReviewItemAlias = domain.ReviewItem
+
+// LanguageProgressAlias is a type alias so swaggo can resolve domain.LanguageProgress.
+type LanguageProgressAlias = domain.LanguageProgress
