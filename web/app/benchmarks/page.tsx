@@ -1,3 +1,4 @@
+import { ChartHistogramIcon } from "@hugeicons/core-free-icons";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -36,7 +37,7 @@ const BenchmarksPage = () => {
   return (
     <>
       <PageHero
-        tile
+        tile={ChartHistogramIcon}
         eyebrow="Benchmarks"
         title="Measure what improves."
         lede="Open reproducible benchmarks for evaluating multilingual AI performance across languages, civic discourse tasks, and community contexts."

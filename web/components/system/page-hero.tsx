@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 
 import { Container } from "@/components/common/container";
 import { Backdrop } from "@/components/system/backdrop";
@@ -11,8 +11,9 @@ type PageHeroProps = {
   title: React.ReactNode;
   lede?: React.ReactNode;
   tags?: string[];
-  /** The yellow CommonMind tile on a grid of nodes, above the eyebrow. */
-  tile?: boolean;
+  /** A yellow tile on a grid of nodes, above the eyebrow, holding this
+   *  page's icon (from @hugeicons/core-free-icons). */
+  tile?: IconSvgElement;
   /**
    * Centered (default); split, left-aligned with the lede beside the title;
    * or columns, two groups centered against each other and, as a pair, in the
@@ -68,7 +69,7 @@ function PageHero({
           tile && "pt-10 sm:pt-12",
         )}
       >
-        {tile && <NodeTile />}
+        {tile && <NodeTile icon={tile} />}
         {centered ? (
           <div className="flex max-w-2xl flex-col items-center gap-5">
             {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
@@ -129,7 +130,7 @@ const NODES: [number, number][] = [
   [4, 3],
 ];
 
-function NodeTile() {
+function NodeTile({ icon }: { icon: IconSvgElement }) {
   const viewBox = `${-GRID_W / 2} ${-GRID_H / 2} ${GRID_W} ${GRID_H}`;
   const svgClass = "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 overflow-visible";
   return (
@@ -158,7 +159,7 @@ function NodeTile() {
         ))}
       </svg>
       <div className="absolute top-1/2 left-1/2 flex size-15 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-xl bg-signal">
-        <Image src="/icon-black.svg" alt="" width={52} height={44} className="h-8 w-auto" />
+        <HugeiconsIcon icon={icon} strokeWidth={1.75} className="size-8 text-background" />
       </div>
     </div>
   );

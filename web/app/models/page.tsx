@@ -1,3 +1,4 @@
+import { NeuralNetworkIcon } from "@hugeicons/core-free-icons";
 import type { Metadata } from "next";
 
 import { Container } from "@/components/common/container";
@@ -23,7 +24,7 @@ const ModelsPage = () => {
   return (
     <>
       <PageHero
-        tile
+        tile={NeuralNetworkIcon}
         eyebrow="Model registry"
         title={
           <>

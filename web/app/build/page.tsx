@@ -1,3 +1,4 @@
+import { SourceCodeIcon } from "@hugeicons/core-free-icons";
 import type { Metadata } from "next";
 
 import { apiResponse, journey, paths, quickstart } from "@/components/build/snippets";
@@ -24,7 +25,7 @@ const BuildPage = () => {
   return (
     <>
       <PageHero
-        tile
+        tile={SourceCodeIcon}
         eyebrow="Build"
         title="Build with CommonMind."
         lede="From experimentation to production. Open models, APIs, and deployment tools for building multilingual AI applications grounded in civic discourse."
