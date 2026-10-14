@@ -7,7 +7,7 @@ import { FramedCard } from "@/components/system/framed-card";
 import { Eyebrow, SectionHeader } from "@/components/system/primitives";
 
 import { useAuth } from "./auth-provider";
-import { LanguageBoard, LanguageStatus } from "./language-board";
+import { LanguageBoard } from "./language-board";
 import { Onboarding } from "./onboarding";
 import { primaryButton, quietButton, secondaryButton } from "./styles";
 import { canReview, type Language, type LanguageProgress, type Volunteer } from "./types";
@@ -57,7 +57,7 @@ function DataLabHome() {
         <SectionHeader
           eyebrow="Languages"
           title="Progress in every language"
-          lede="Counts update live as volunteers contribute and review. A language opens for contributions once it has two reviewers."
+          lede="Sentence pairs between English and each language. A pair counts as translated once a volunteer submits it, and as verified once a second speaker approves it. Counts update live."
           layout="split"
         />
         {boardError && <p className="text-sm text-destructive">{boardError}</p>}
@@ -112,7 +112,6 @@ function YourLanguages({
                       {lang?.name} · {levelLabel[m.level]}
                     </span>
                   </div>
-                  <LanguageStatus progress={p} />
                 </div>
                 <div className="mt-auto flex flex-wrap gap-2">
                   {p?.open ? (

@@ -23,10 +23,13 @@ export type Volunteer = {
 
 export type LanguageProgress = {
   code: string;
+  /** Sentence pairs with English, pending review or verified. */
+  translated: number;
+  /** Sentence pairs a second speaker approved. */
   verified: number;
+  /** Contributions of any kind waiting for review. */
   pending: number;
-  contributors: number;
-  reviewers: number;
+  /** Whether the language accepts contributions yet. */
   open: boolean;
 };
 
