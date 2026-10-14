@@ -4,7 +4,7 @@ import { CivicExplorer } from "@/components/civic/civic-explorer";
 import { TerminologyViewer } from "@/components/civic/terminology-viewer";
 import { Container } from "@/components/common/container";
 import { PageHero } from "@/components/system/page-hero";
-import { Panel, Section, SectionHeader } from "@/components/system/primitives";
+import { LinkButton, Panel, Section, SectionHeader } from "@/components/system/primitives";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -63,7 +63,11 @@ const CivicCorpusPage = () => {
         title="Understanding civic language in context."
         lede="Civic discourse is shaped by language, place, and lived experience. The Civic Corpus brings together language data, local terminology, and contextual knowledge to help AI systems interpret community expression beyond literal translation."
         tags={["CIVIC DISCOURSE", "TERMINOLOGY", "RESPONSIBLE DATA"]}
-      />
+      >
+        <div>
+          <LinkButton href="/data-lab">Join the Data Lab</LinkButton>
+        </div>
+      </PageHero>
 
       <Section id="scope">
         <Container className="flex flex-col gap-14">
