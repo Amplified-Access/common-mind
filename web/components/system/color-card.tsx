@@ -38,8 +38,8 @@ function ColorCard({ href, title, kind, description, tags, cta, color, className
       <Image
         src="/icon-black.svg"
         alt=""
-        width={458}
-        height={480}
+        width={52}
+        height={44}
         aria-hidden
         className="pointer-events-none absolute top-1/2 right-0 h-52 w-auto translate-x-1/2 -translate-y-1/2 opacity-[0.07] transition-transform duration-500 group-hover:-rotate-12"
       />

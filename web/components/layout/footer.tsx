@@ -80,9 +80,9 @@ const Footer = () => {
             <Image
               src="/logo-white.svg"
               alt="CommonMind"
-              width={1039}
-              height={184}
-              className="h-7 w-auto self-start"
+              width={138}
+              height={49}
+              className="h-10 w-auto self-start"
             />
             <p className="max-w-xs text-sm text-pretty text-subtle">
               An open civic AI infrastructure initiative by{" "}

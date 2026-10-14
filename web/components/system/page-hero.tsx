@@ -158,7 +158,7 @@ function NodeTile() {
         ))}
       </svg>
       <div className="absolute top-1/2 left-1/2 flex size-15 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-xl bg-signal">
-        <Image src="/icon-black.svg" alt="" width={458} height={480} className="h-8 w-auto" />
+        <Image src="/icon-black.svg" alt="" width={52} height={44} className="h-8 w-auto" />
       </div>
     </div>
   );
