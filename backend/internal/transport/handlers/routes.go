@@ -74,6 +74,10 @@ func (h *Handler) RegisterRoutes(rps float64, burst int, sentryDSN string, allow
 		r.Any("/admin/queues/*path", gin.WrapH(h.queueUI))
 	}
 
+	// Public Data Lab reads: the landing page shows them before sign-in.
+	publicLab := r.Group("/api/v1/data-lab")
+	publicLab.GET("/languages", h.ListLanguagesHandler)
+
 	api := r.Group("/api/v1")
 	if h.verifier != nil {
 		api.Use(middleware.FirebaseAuth(h.verifier))

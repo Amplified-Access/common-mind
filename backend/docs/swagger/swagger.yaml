@@ -37,6 +37,23 @@ definitions:
       wait_duration:
         type: string
     type: object
+  handlers.LanguageAlias:
+    properties:
+      code:
+        type: string
+      extra_characters:
+        items:
+          type: string
+        type: array
+      name:
+        type: string
+      native_name:
+        type: string
+      role:
+        type: string
+      script:
+        type: string
+    type: object
   handlers.UserAlias:
     properties:
       created_at:
@@ -111,6 +128,28 @@ paths:
       summary: Asynq job monitoring UI
       tags:
       - observability
+  /api/v1/data-lab/languages:
+    get:
+      description: 'Returns the enabled languages: the target languages volunteers
+        contribute in, then the source languages.'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.LanguageAlias'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List Data Lab languages
+      tags:
+      - data-lab
   /api/v1/me:
     delete:
       description: Removes the authenticated user's profile record from the database.

@@ -50,6 +50,38 @@
                 }
             }
         },
+        "/api/v1/data-lab/languages": {
+            "get": {
+                "description": "Returns the enabled languages: the target languages volunteers contribute in, then the source languages.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "data-lab"
+                ],
+                "summary": "List Data Lab languages",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/handlers.LanguageAlias"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/me": {
             "get": {
                 "security": [
@@ -417,6 +449,32 @@
                     "type": "integer"
                 },
                 "wait_duration": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.LanguageAlias": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "extra_characters": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "native_name": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "script": {
                     "type": "string"
                 }
             }

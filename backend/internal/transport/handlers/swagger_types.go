@@ -16,3 +16,6 @@ type FirebaseToken = usecase.FirebaseToken
 // UserAlias is a type alias so swaggo can resolve domain.User
 // from within this package for annotation purposes.
 type UserAlias = domain.User
+
+// LanguageAlias is a type alias so swaggo can resolve domain.Language.
+type LanguageAlias = domain.Language

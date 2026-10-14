@@ -195,6 +195,7 @@ Allowed methods: GET, POST, PUT, DELETE, OPTIONS, PATCH.
 | GET | `/debug/pprof/trace` | `LocalNetworkOnly()` (always) | execution trace | `routes.go` |
 | GET | `/debug/pprof/:profile` | `LocalNetworkOnly()` (always) | named profile (heap, goroutine, etc.) | `routes.go` |
 | GET | `/admin/queues` | none (debug mode only) | Asynqmon job-monitoring UI | `routes.go` |
+| GET | `/api/v1/data-lab/languages` | none | `ListLanguagesHandler` — see [data-lab.md](data-lab.md) | `datalab_handler.go` |
 | GET | `/api/v1/me` | FirebaseAuth header | `MeHandler` — returns verified `FirebaseToken` claims | `auth_handler.go` |
 | PATCH | `/api/v1/me` | FirebaseAuth header | `UpdateMeHandler` — upserts user profile; returns `domain.User` | `me_handler.go` |
 | DELETE | `/api/v1/me` | FirebaseAuth header | `DeleteMeHandler` — deletes user profile record; 204 on success | `me_handler.go` |
