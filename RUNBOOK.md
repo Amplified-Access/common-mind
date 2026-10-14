@@ -78,7 +78,13 @@ Production accounts required:
 | `TRANSLATE_API_URL` | No | Inference pod URL for the Playground — omit and `/api/translate` returns 503 |
 | `TRANSLATE_API_KEY` | No | Shared secret the inference server checks in `X-API-Key` |
 
-Firebase client config and the backend URL are added here when the Data Lab UI is built.
+| `NEXT_PUBLIC_BACKEND_URL` | Yes | Go backend URL — the Data Lab API and `/ws` |
+| `NEXT_PUBLIC_FIREBASE_API_KEY` | Yes | Firebase web app config |
+| `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | Yes | Firebase web app config |
+| `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | Yes | Same project as the backend's `FIREBASE_PROJECT_ID` |
+| `NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_HOST` | No | Local only (`localhost:9099`). Leave unset in staging and production. |
+
+`NEXT_PUBLIC_` values are inlined at build time, so set them before `next build`.
 
 ---|---|---|
 | `AUTH_SECRET` | Yes | `openssl rand -base64 32` |
