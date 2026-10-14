@@ -23,6 +23,8 @@ export type Volunteer = {
 
 export type LanguageProgress = {
   code: string;
+  /** Sentences available to translate: the whole every language works from. */
+  available: number;
   /** Sentence pairs with English, pending review or verified. */
   translated: number;
   /** Sentence pairs a second speaker approved. */
