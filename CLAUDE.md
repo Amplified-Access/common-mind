@@ -37,11 +37,12 @@ make migrate-version              # print current schema version
 1. **Check docs first** — delegate to `docs` agent: find relevant topic docs, verify they match the current code
 2. **Fix stale docs** — if docs diverge from code, update docs before implementing
 3. **Migrate** — if the feature needs new or changed tables: `make migrate-create name=<slug>`, write the SQL, `make migrate-up`
-4. **Write tests first (TDD)** — write failing tests that describe the intended behaviour before writing any implementation code
-5. **Implement** — delegate to `backend` or `web` agent, passing the relevant doc content as context; implementation is complete when all tests pass
+4. **Write the failing test first** — only for behaviour the [testing policy](AGENTS.md#testing) says is worth a test; skip tests for wiring, pass-throughs, and framework behaviour
+5. **Implement** — delegate to `backend` or `web` agent, passing the relevant doc content as context; implementation is complete when the new tests pass
 6. **Env vars** — if any new env vars were added to `loadConfig()`, add them to `backend/.env.example` with a safe placeholder value and a comment explaining the format
 7. **Update docs** — delegate to `docs` agent: update `last_verified`, add new topics if introduced
-8. **Quality gate** — run `/project:check` before declaring done
+8. **Quality gate** — run `/project:check`
+9. **Commit** — one atomic commit per logical change, made as each change is finished (see [Commits](AGENTS.md#commits)). A feature that needs a migration, a repository, and a route is usually several commits.
 
 Use `/project:implement` to run this workflow end-to-end.
 
@@ -150,9 +151,9 @@ cd backend && make swagger   # regenerate docs/swagger/ after annotation changes
 - No `any`. Use proper interfaces or `unknown`.
 - Shared components → `components/`, utilities → `lib/`, types → `types/`.
 
-## Testing — non-negotiable
+## Testing
 
-**Test-Driven Development is the required approach.** Write failing tests first; make them pass; then refactor.
+Test-first, scoped to behaviour: what to test and what to skip is in [AGENTS.md → Testing](AGENTS.md#testing). This section covers where tests live.
 
 ### Backend (Go)
 - **Never mock the database.** Always use Testcontainers (real PostgreSQL, real Redis).
@@ -173,5 +174,6 @@ cd backend && make swagger   # regenerate docs/swagger/ after annotation changes
 - No `"use client"` without a concrete browser requirement.
 - No database mocks in tests.
 - No `any` in TypeScript.
-- **No new backend feature without tests.** Every new route, use case, and repository must ship with tests.
+- **Behaviour changes ship with a test; wiring and pass-throughs don't need one.** See [AGENTS.md → Testing](AGENTS.md#testing).
+- **Atomic commits.** One logical change per commit, committed as it is finished. No batching a session's work into one commit.
 - **Every new env var must appear in `backend/.env.example`** with a safe placeholder value and a comment. Never leave a new `loadConfig()` variable undocumented in the example file.

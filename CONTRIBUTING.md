@@ -56,9 +56,9 @@ Feature suggestions are welcome. Open an issue with:
 
 2. **Set up** the development environment following the [README](README.md#getting-started).
 
-3. **Make your changes.** Keep them focused — one logical change per PR.
+3. **Make your changes.** Keep the PR to one feature or fix, built from atomic commits: one logical change per commit, each one building and passing tests on its own. See [AGENTS.md → Commits](AGENTS.md#commits).
 
-4. **Add or update tests** when changing behaviour. Integration tests should use Testcontainers, not mocks.
+4. **Add tests for the behaviour you changed**, written before the code. Test rules, queries, and handler logic; skip wiring, pass-throughs, and framework behaviour. Integration tests use Testcontainers, not mocks. See [AGENTS.md → Testing](AGENTS.md#testing).
 
 5. **Verify** everything passes before opening the PR:
 
@@ -168,6 +168,8 @@ The `AGENTS.md` files at the root, `backend/`, `web/`, and `inference/` are entr
 - Do not commit `.env` files or secrets.
 
 ## Commit Messages
+
+Commit each logical change on its own as soon as it is done, and keep refactors, formatting, and dependency bumps out of behaviour commits. Tests go in the same commit as the code they cover.
 
 Use the [Conventional Commits](https://www.conventionalcommits.org/) format:
 

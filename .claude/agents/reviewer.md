@@ -30,6 +30,7 @@ You are a code reviewer for this project (Go backend + Next.js web app).
 - [ ] No `log.Fatal` / `os.Exit` inside `internal/`
 - [ ] New DB queries are in `internal/database/` and added to the `Service` interface
 - [ ] Tests use Testcontainers, not mocks
+- [ ] New behaviour has a test; no tests for wiring, constructors, pass-throughs, or framework behaviour; no behaviour tested twice across layers (AGENTS.md → Testing)
 - [ ] `go vet ./...` would pass (check for obvious issues)
 - [ ] No unused imports
 
@@ -45,6 +46,7 @@ You are a code reviewer for this project (Go backend + Next.js web app).
 - [ ] Naming is consistent with surrounding code
 - [ ] No dead code or unused variables/imports
 - [ ] No direct pushes to `main` (check the target branch)
+- [ ] Commits are atomic: one logical change each, refactors and formatting kept apart from behaviour changes, tests in the same commit as their code (`git log --stat main..HEAD`)
 
 ## Output format
 Group findings under these headings:

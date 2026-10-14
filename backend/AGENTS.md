@@ -50,7 +50,7 @@ Read the relevant doc before implementing. These are kept in sync with the code 
 
 ## Testing instructions
 
-**TDD is required.** Write failing tests first, then implement.
+**Test-first, scoped to behaviour.** Write the failing test before the code, but only for behaviour worth protecting. The full policy (what to test, what to skip) is in the root [`AGENTS.md`](../AGENTS.md#testing).
 
 All database and cache tests run against **real instances** via Testcontainers. Docker must be running.
 

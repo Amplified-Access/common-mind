@@ -31,9 +31,13 @@
 - [ ] `go vet ./...` passes (backend)
 - [ ] `pnpm lint && pnpm build` passes (web)
 
+### Commits
+
+- [ ] Each commit is one logical change that builds and passes tests on its own
+
 ### Tests
 
-- [ ] New behaviour is covered by tests
+- [ ] New or changed behaviour is covered by a test; no tests added for wiring, pass-throughs, or framework behaviour
 - [ ] Integration tests use Testcontainers — no database mocks
 - [ ] `make test` (backend) passes locally
 

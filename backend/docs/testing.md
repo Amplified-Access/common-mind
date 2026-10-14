@@ -1,6 +1,6 @@
 ---
 topic: testing
-last_verified: 2026-06-15
+last_verified: 2026-10-14
 sources:
   - internal/infrastructure/database/postgres/health_repository_test.go
   - internal/transport/handlers/hello_handler_test.go
@@ -14,6 +14,8 @@ sources:
 # Testing
 
 ## Philosophy
+
+What to test, and what not to, is set by the testing policy in the root `AGENTS.md`. This doc covers how: placement, fixtures, and patterns.
 
 No mocks for the database or cache. All infrastructure tests run against real services spun up by Testcontainers. This catches schema mismatches, query errors, and type coercion issues that mocks hide.
 

@@ -35,6 +35,10 @@ Delegate to the appropriate agent (`backend`, `web`, or both).
 
 Pass the relevant doc content as context so the agent implements to the correct patterns — not from training data.
 
+Write the failing test first for each behaviour worth testing (see `AGENTS.md` → Testing). Don't add tests for wiring or pass-through code.
+
+Commit each logical change as soon as it passes: for example, the migration and its repository in one commit, then the route in the next. Stage by path and review `git diff --staged` first (see `AGENTS.md` → Commits).
+
 Run `/project:check` at the end of this step. Do not proceed if it fails.
 
 ---
@@ -53,3 +57,4 @@ Report:
 - What was implemented
 - Which docs were updated or created
 - Output of `/project:check`
+- The commits made (`git log --oneline main..HEAD`)
