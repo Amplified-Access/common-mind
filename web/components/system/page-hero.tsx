@@ -19,7 +19,7 @@ type PageHeroProps = {
   children?: React.ReactNode;
   /** Full-width content after the heading block, still on the hero's wash. */
   after?: React.ReactNode;
-  /** Content held at the right edge, beside the heading block (from md up). */
+  /** Content beside the heading block, centered in the space it leaves (from md up). */
   aside?: React.ReactNode;
   /** A hairline closes the hero, for pages with tabs or a side rail below. */
   ruled?: boolean;
@@ -55,7 +55,13 @@ function PageHero({
       ) : (
         <div className="flex w-full flex-col gap-5">
           {eyebrow && <Eyebrow className="text-base">{eyebrow}</Eyebrow>}
-          <div className="grid w-full gap-5 md:grid-cols-[minmax(0,26rem)_minmax(0,22rem)] md:gap-6">
+          <div
+            className={cn(
+              "grid w-full gap-5",
+              // The second column holds the lede; without one the title keeps the full width.
+              lede && "md:grid-cols-[minmax(0,26rem)_minmax(0,22rem)] md:gap-6",
+            )}
+          >
             <h1 className="text-h2 text-balance">{title}</h1>
             {lede && <p className="text-sm text-pretty text-subtle md:pt-2">{lede}</p>}
           </div>
@@ -88,9 +94,12 @@ function PageHero({
         )}
       >
         {aside ? (
-          <div className="flex w-full flex-col gap-10 md:flex-row md:items-start md:justify-between">
-            <div className="flex flex-col items-start gap-6">{heading}</div>
-            <div className="w-full md:max-w-md">{aside}</div>
+          <div className="flex w-full flex-col gap-10 md:flex-row md:items-start md:gap-0">
+            <div className="flex flex-col items-start gap-6 md:w-[26rem] md:shrink-0">{heading}</div>
+            {/* Centered in whatever width the heading leaves. */}
+            <div className="flex w-full md:flex-1 md:justify-center">
+              <div className="w-full md:max-w-md">{aside}</div>
+            </div>
           </div>
         ) : (
           heading
