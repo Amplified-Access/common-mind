@@ -48,6 +48,22 @@ cd web && pnpm dev              # site → http://localhost:3000
 
 The Playground needs a running inference pod; see [inference/README.md](inference/README.md). Without one, the rest of the site works and `/api/translate` returns 503.
 
+## Try the Data Lab locally
+
+Sign-in runs against the Firebase Auth Emulator that `make docker-run` starts, so no Firebase project is needed.
+
+```bash
+cd backend && make docker-run          # Postgres, Redis, Auth Emulator (UI at http://localhost:4000)
+cd backend && make migrate-up && make datalab-sample   # schema + sample civic items
+cd backend && make watch               # API on :8080
+cd web && pnpm dev                     # site on :3000
+```
+
+1. Open http://localhost:3000/data-lab, create an account with any email, and join one or more languages.
+2. A language accepts contributions once it has two reviewers. Create a second account, join the same language, then promote both:
+   `cd backend && make datalab-promote email=you@example.com language=sw level=reviewer`
+3. Contribute with one account and review with the other. Counts on `/data-lab` update live.
+
 ## Common commands
 
 | Command | What it does |
