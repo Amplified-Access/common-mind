@@ -23,7 +23,7 @@ Prerequisites: Go 1.25+, Node.js 22+, pnpm, Docker + Docker Compose.
 make setup                      # first run: checks tools, installs deps, copies .env files, migrates
 
 # Or by hand:
-cd backend && make docker-run   # Postgres (:5434) + Redis (:6380) + Prometheus + Grafana
+cd backend && make docker-run   # Postgres (:5434), Redis (:6380), Firebase Auth Emulator (:9099, UI :4000), Prometheus, Grafana
 cd backend && make migrate-up
 cd backend && make watch        # → http://localhost:8080 (Swagger at /swagger/index.html)
 cd web && pnpm install && pnpm dev   # → http://localhost:3000

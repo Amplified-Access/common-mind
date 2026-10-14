@@ -19,6 +19,17 @@ services:
     ports:
       - "6380:6379"
 
+  firebase-auth:
+    build: ./dev/firebase-emulator
+    restart: unless-stopped
+    environment:
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID:-demo-commonmind}
+    ports:
+      - "9099:9099"   # Auth Emulator API
+      - "4000:4000"   # Emulator UI — browse and create test users
+    volumes:
+      - firebase_auth_data:/firebase/data
+
   prometheus:
     image: prom/prometheus:v3.4.0
     restart: unless-stopped
@@ -44,5 +55,6 @@ services:
       - prometheus
 
 volumes:
+  firebase_auth_data:
   psql_volume_bp:
   grafana_data:

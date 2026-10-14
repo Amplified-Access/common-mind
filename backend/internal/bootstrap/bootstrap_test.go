@@ -304,3 +304,26 @@ func dbConfigFull() postgres.DBConfig {
 func contains(s, substr string) bool {
 	return strings.Contains(s, substr)
 }
+
+// The Auth Emulator accepts unsigned tokens, so pointing a deployed backend at
+// it would let anyone sign in as anyone.
+func TestValidateConfig_AuthEmulatorOnlyInLocal(t *testing.T) {
+	tests := []struct {
+		env     string
+		wantErr bool
+	}{
+		{env: "local", wantErr: false},
+		{env: "", wantErr: false},
+		{env: "staging", wantErr: true},
+		{env: "production", wantErr: true},
+	}
+	for _, tt := range tests {
+		t.Run("env="+tt.env, func(t *testing.T) {
+			cfg := Config{Env: tt.env, DB: dbConfigFull(), FirebaseAuthEmulatorHost: "localhost:9099"}
+			err := validateConfig(cfg, discardLogger())
+			if (err != nil) != tt.wantErr {
+				t.Errorf("validateConfig() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}

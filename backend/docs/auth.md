@@ -1,6 +1,6 @@
 ---
 topic: auth
-last_verified: 2026-06-15
+last_verified: 2026-10-14
 sources:
   - internal/usecase/auth_usecase.go
   - internal/transport/middleware/auth.go
@@ -10,6 +10,8 @@ sources:
   - internal/server/server.go
   - pkg/firebase/admin.go
   - internal/bootstrap/bootstrap.go
+  - docker-compose.yml
+  - dev/firebase-emulator/
 ---
 
 # Firebase Auth
@@ -111,3 +113,24 @@ api.GET("/me", h.MeHandler)
 When `FIREBASE_PROJECT_ID` is not set `bootstrap.Run` skips Firebase initialisation and `app.Firebase` is `nil`. `server.NewServer` passes `app.Firebase` to `NewHandler` where it is stored as `h.verifier`. When `h.verifier` is `nil` the guard in `RegisterRoutes` skips `api.Use(middleware.FirebaseAuth(...))`, so `/api/v1/me` is reachable without a token.
 
 To enable auth locally set both `FIREBASE_PROJECT_ID` and `FIREBASE_SERVICE_ACCOUNT_JSON` in `backend/.env`.
+
+## Local development: Firebase Auth Emulator
+
+`docker-compose` runs the Firebase Auth Emulator (`dev/firebase-emulator/`) on `:9099`, with its UI on `http://localhost:4000` for creating and inspecting test users. Users persist in the `firebase_auth_data` volume across restarts.
+
+`.env.example` points the backend at it:
+
+```bash
+FIREBASE_PROJECT_ID=demo-commonmind        # "demo-" projects need no real Firebase project
+FIREBASE_AUTH_EMULATOR_HOST=localhost:9099 # the Admin SDK reads this and verifies emulator tokens
+```
+
+No service account is needed. The emulator's tokens are unsigned, so `validateConfig` refuses to start when `FIREBASE_AUTH_EMULATOR_HOST` is set with `ENV=staging` or `ENV=production`.
+
+Get a token from the command line:
+
+```bash
+curl -s -X POST "http://localhost:9099/identitytoolkit.googleapis.com/v1/accounts:signUp?key=any" \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"test@example.com","password":"secret123","returnSecureToken":true}'
+```

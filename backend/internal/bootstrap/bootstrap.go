@@ -58,6 +58,7 @@ type Config struct {
 	RateLimitBurst             int
 	FirebaseProjectID          string
 	FirebaseServiceAccountJSON string
+	FirebaseAuthEmulatorHost   string
 	SentryDSN                  string
 	MailjetAPIKey              string
 	MailjetSecretKey           string
@@ -154,6 +155,9 @@ func Run(ctx context.Context) (*App, error) {
 		}
 		firebaseClient = authClient
 		log.Info("bootstrap: firebase auth client initialised", "project_id", cfg.FirebaseProjectID)
+		if cfg.FirebaseAuthEmulatorHost != "" {
+			log.Warn("bootstrap: verifying tokens against the Firebase Auth Emulator", "host", cfg.FirebaseAuthEmulatorHost)
+		}
 	}
 
 	var emailSender usecase.EmailSender
@@ -230,6 +234,7 @@ func loadConfig() Config {
 		RateLimitBurst:             burst,
 		FirebaseProjectID:          os.Getenv("FIREBASE_PROJECT_ID"),
 		FirebaseServiceAccountJSON: os.Getenv("FIREBASE_SERVICE_ACCOUNT_JSON"),
+		FirebaseAuthEmulatorHost:   os.Getenv("FIREBASE_AUTH_EMULATOR_HOST"),
 		SentryDSN:                  os.Getenv("SENTRY_DSN"),
 		MailjetAPIKey:              os.Getenv("MAILJET_API_KEY"),
 		MailjetSecretKey:           os.Getenv("MAILJET_SECRET_KEY"),
@@ -275,6 +280,12 @@ func validateConfig(cfg Config, log *slog.Logger) error {
 		requireNonEmpty("MAILJET_API_KEY", cfg.MailjetAPIKey)
 		requireNonEmpty("MAILJET_SECRET_KEY", cfg.MailjetSecretKey)
 		requireNonEmpty("FROM_EMAIL", cfg.FromEmail)
+	}
+
+	// The Firebase SDK reads FIREBASE_AUTH_EMULATOR_HOST itself and then accepts
+	// unsigned tokens, so it must never reach a deployed environment.
+	if cfg.FirebaseAuthEmulatorHost != "" && (cfg.Env == "staging" || cfg.Env == "production") {
+		issues = append(issues, "FIREBASE_AUTH_EMULATOR_HOST must not be set when ENV is "+cfg.Env)
 	}
 
 	if len(issues) > 0 {
