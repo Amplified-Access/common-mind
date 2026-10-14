@@ -1,7 +1,7 @@
 # CommonMind inference
 
 Serves all four published translation models behind one HTTP API, used by the
-Playground (`/playground` → `app/api/translate/route.ts`).
+Playground (`/playground` → `web/app/api/translate/route.ts`).
 
 - `server.py` — the service that actually runs in production (FastAPI, all
   four models warm in one process, on a Runpod GPU pod).
@@ -93,7 +93,7 @@ Banned"). If the env churn becomes annoying, the two ways out are:
   that domain is already on Cloudflare. Recreating the pod and restarting the
   tunnel reuses the same hostname, so the frontend URL never changes again,
   and it stops tying the frontend to Runpod at all.
-- **Runtime lookup** — have `app/api/translate/route.ts` find the pod by name
+- **Runtime lookup** — have `web/app/api/translate/route.ts` find the pod by name
   through Runpod's API and build the URL itself. No domain needed, but it
   puts a pod-creating Runpod key in the frontend's environment.
 
