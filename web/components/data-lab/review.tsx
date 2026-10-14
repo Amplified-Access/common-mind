@@ -12,7 +12,6 @@ import { cn } from "@/lib/utils";
 import { ApiError, dataLabApi } from "./api";
 import { useAuth } from "./auth-provider";
 import { BackLink } from "./back-link";
-import { RedirectToSignIn } from "./redirect-to-sign-in";
 import { fieldClasses, primaryButton, quietButton, secondaryButton } from "./styles";
 import type { Language, RejectReason, ReviewItem } from "./types";
 
@@ -33,7 +32,7 @@ type View =
   | { status: "blocked"; message: string };
 
 function Review({ language }: { language: string }) {
-  const { user, loading, getToken } = useAuth();
+  const { user, getToken } = useAuth();
   const [languages, setLanguages] = useState<Language[]>([]);
   const [view, setView] = useState<View>({ status: "loading" });
   const [rejecting, setRejecting] = useState(false);
@@ -92,14 +91,12 @@ function Review({ language }: { language: string }) {
     setView(await fetchItem());
   };
 
-  // Signed-out visitors sign in on their own page and come back here.
-  if (!loading && !user) return <RedirectToSignIn next={`/data-lab/review/${language}`} />;
 
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-col gap-3">
-          <BackLink className="self-start" />
+          <BackLink href="/data-lab/workspace" label="Workspace" className="self-start" />
           <h1 className="text-h2">Review · {target?.native_name ?? language}</h1>
         </div>
         {reviewed > 0 && <span className="font-mono text-xs text-subtle">{reviewed} reviewed this session</span>}

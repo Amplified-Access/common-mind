@@ -4,11 +4,19 @@ import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 
-/** "‹ Data Lab": the way back to the Data Lab home from its inner pages. */
-function BackLink({ className }: { className?: string }) {
+/** "‹ Data Lab": a way back, by default to the Data Lab's public page. */
+function BackLink({
+  href = "/data-lab",
+  label = "Data Lab",
+  className,
+}: {
+  href?: string;
+  label?: string;
+  className?: string;
+}) {
   return (
     <Link
-      href="/data-lab"
+      href={href}
       className={cn(
         "group inline-flex items-center gap-1 font-mono text-xs leading-none text-signal transition-colors hover:text-foreground",
         className,
@@ -19,7 +27,7 @@ function BackLink({ className }: { className?: string }) {
         strokeWidth={2}
         className="size-4 transition-transform group-hover:-translate-x-0.5"
       />
-      Data Lab
+      {label}
     </Link>
   );
 }

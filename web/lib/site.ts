@@ -1,9 +1,18 @@
 // Single source of truth for navigation and external destinations.
 
-// Pages that stand on their own, without the site header and footer.
-export const standalonePaths = ["/data-lab/sign-in"];
+// Pages that stand on their own, without the site header and footer: the
+// Data Lab sign-in and the signed-in Data Lab app. Each entry covers its
+// subpaths too.
+export const standalonePaths = [
+  "/data-lab/sign-in",
+  "/data-lab/workspace",
+  "/data-lab/welcome",
+  "/data-lab/contribute",
+  "/data-lab/review",
+];
 
-export const isStandalone = (pathname: string) => standalonePaths.includes(pathname);
+export const isStandalone = (pathname: string) =>
+  standalonePaths.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
 export const navItems = [
   { label: "Models", href: "/models" },
