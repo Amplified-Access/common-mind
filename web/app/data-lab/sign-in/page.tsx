@@ -12,15 +12,16 @@ export default async function DataLabSignInPage({ searchParams }: PageProps<"/da
   const { next } = await searchParams;
   return (
     // A standalone page (see standalonePaths): no header or footer, the form
-    // centered on the screen, and a way back in the top-left corner.
-    <div className="zoom-viewport relative flex min-h-svh items-center justify-center px-4 py-20 md:px-8">
-      <Link
-        href="/data-lab"
-        className="absolute top-6 left-4 font-mono text-xs text-signal hover:text-foreground md:left-8 xl:left-12"
-      >
-        ← Data Lab
-      </Link>
-      <div className="w-full">
+    // centered on the screen, and a way back in the top-left corner. The
+    // full-screen box stays unzoomed so it matches the real viewport; only
+    // its contents take the site's zoom-viewport scaling.
+    <div className="relative flex min-h-svh items-center justify-center">
+      <div className="zoom-viewport absolute top-0 left-0 px-4 pt-6 md:px-8 xl:px-12">
+        <Link href="/data-lab" className="font-mono text-xs text-signal hover:text-foreground">
+          ← Data Lab
+        </Link>
+      </div>
+      <div className="zoom-viewport w-full px-4 py-20 md:px-8">
         <SignInPage next={safeNext(next)} />
       </div>
     </div>
