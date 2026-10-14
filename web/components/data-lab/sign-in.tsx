@@ -15,6 +15,9 @@ const messages: Record<string, string> = {
   "auth/weak-password": "Use at least 6 characters for your password.",
   "auth/invalid-email": "Enter a valid email address.",
   "auth/popup-closed-by-user": "The sign-in window was closed before finishing.",
+  // The Firebase project hasn't enabled Authentication, or this sign-in method.
+  "auth/configuration-not-found": "Sign-in isn't available yet. Please try again later.",
+  "auth/operation-not-allowed": "This sign-in method isn't available yet. Try another one.",
 };
 
 function SignIn() {
