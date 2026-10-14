@@ -905,6 +905,10 @@ const docTemplate = `{
         "handlers.LanguageProgressAlias": {
             "type": "object",
             "properties": {
+                "available": {
+                    "description": "translate items, the whole every language works from",
+                    "type": "integer"
+                },
                 "code": {
                     "type": "string"
                 },

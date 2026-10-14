@@ -80,6 +80,9 @@ definitions:
     type: object
   handlers.LanguageProgressAlias:
     properties:
+      available:
+        description: translate items, the whole every language works from
+        type: integer
       code:
         type: string
       open:

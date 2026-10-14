@@ -263,7 +263,7 @@ func TestDataLab_Progress_CountsSentencePairsPerLanguage(t *testing.T) {
 	if err != nil || len(sw) != 1 {
 		t.Fatalf("Progress(sw) = %v, %v", sw, err)
 	}
-	want := domain.LanguageProgress{Code: "sw", Translated: 2, Verified: 1, Pending: 1, Reviewers: 1, Open: false}
+	want := domain.LanguageProgress{Code: "sw", Available: 3, Translated: 2, Verified: 1, Pending: 1, Reviewers: 1, Open: false}
 	if sw[0] != want {
 		t.Errorf("sw progress = %+v, want %+v", sw[0], want)
 	}

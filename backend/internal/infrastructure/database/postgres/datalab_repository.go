@@ -260,6 +260,7 @@ func (r *dataLabRepository) SaveReview(ctx context.Context, rec usecase.ReviewRe
 func (r *dataLabRepository) Progress(ctx context.Context, language string) ([]domain.LanguageProgress, error) {
 	const q = `
         SELECT l.code,
+               (SELECT count(*) FROM items i WHERE i.kind = 'translate' AND i.language_code <> l.code),
                (SELECT count(*) FROM contributions c JOIN items i ON i.id = c.item_id
                 WHERE c.language_code = l.code AND i.kind = 'translate' AND c.status IN ('pending', 'verified')),
                (SELECT count(*) FROM contributions c JOIN items i ON i.id = c.item_id
@@ -279,7 +280,7 @@ func (r *dataLabRepository) Progress(ctx context.Context, language string) ([]do
 	var out []domain.LanguageProgress
 	for rows.Next() {
 		var p domain.LanguageProgress
-		if err := rows.Scan(&p.Code, &p.Translated, &p.Verified, &p.Pending, &p.Reviewers); err != nil {
+		if err := rows.Scan(&p.Code, &p.Available, &p.Translated, &p.Verified, &p.Pending, &p.Reviewers); err != nil {
 			return nil, fmt.Errorf("datalab repository: scan progress: %w", err)
 		}
 		p.Open = p.Reviewers >= domain.MinReviewersToOpen

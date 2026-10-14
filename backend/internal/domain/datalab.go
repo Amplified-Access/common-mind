@@ -157,6 +157,7 @@ const ProgressEvent = "data-lab.progress"
 // language accepts contributions); Reviewers stays internal.
 type LanguageProgress struct {
 	Code       string `json:"code"`
+	Available  int    `json:"available"`  // translate items, the whole every language works from
 	Translated int    `json:"translated"` // pairs pending review or verified
 	Verified   int    `json:"verified"`   // pairs a second speaker approved
 	Pending    int    `json:"pending"`    // contributions of any kind awaiting review
