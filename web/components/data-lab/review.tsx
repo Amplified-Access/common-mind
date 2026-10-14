@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 
 import { ApiError, dataLabApi } from "./api";
 import { useAuth } from "./auth-provider";
+import { BackLink } from "./back-link";
 import { RedirectToSignIn } from "./redirect-to-sign-in";
 import { fieldClasses, primaryButton, quietButton, secondaryButton } from "./styles";
 import type { Language, RejectReason, ReviewItem } from "./types";
@@ -99,9 +100,7 @@ function Review({ language }: { language: string }) {
     <div className="flex flex-col gap-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-col gap-3">
-          <Link href="/data-lab" className="font-mono text-xs text-signal hover:text-foreground">
-            ← Data Lab
-          </Link>
+          <BackLink className="self-start" />
           <h1 className="text-h2">Review · {target?.native_name ?? language}</h1>
         </div>
         {reviewed > 0 && <span className="font-mono text-xs text-subtle">{reviewed} reviewed this session</span>}

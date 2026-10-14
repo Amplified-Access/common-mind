@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 
 import { ApiError, dataLabApi } from "./api";
 import { useAuth } from "./auth-provider";
+import { BackLink } from "./back-link";
 import { RedirectToSignIn } from "./redirect-to-sign-in";
 import { primaryButton, quietButton } from "./styles";
 import type { Language, Task } from "./types";
@@ -106,9 +107,7 @@ function Contribute({ language }: { language: string }) {
     <div className="flex flex-col gap-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-col gap-3">
-          <Link href="/data-lab" className="font-mono text-xs text-signal hover:text-foreground">
-            ← Data Lab
-          </Link>
+          <BackLink className="self-start" />
           <h1 className="text-h2">{target?.native_name ?? language}</h1>
         </div>
         {submitted > 0 && (

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 
+import { BackLink } from "@/components/data-lab/back-link";
 import { SignInPage } from "@/components/data-lab/sign-in-page";
 import { safeNext } from "@/components/data-lab/sign-in-route";
 
@@ -16,12 +16,14 @@ export default async function DataLabSignInPage({ searchParams }: PageProps<"/da
     // full-screen box stays unzoomed so it matches the real viewport; only
     // its contents take the site's zoom-viewport scaling.
     <div className="relative flex min-h-svh items-center justify-center">
+      {/* Out of the flow, so it never shifts the form's centering. */}
       <div className="zoom-viewport absolute top-0 left-0 px-4 pt-6 md:px-8 xl:px-12">
-        <Link href="/data-lab" className="font-mono text-xs text-signal hover:text-foreground">
-          ← Data Lab
-        </Link>
+        <BackLink />
       </div>
-      <div className="zoom-viewport w-full px-4 py-20 md:px-8">
+      {/* Padding only clears the back link: on phones the card sits under it;
+          from md up they never overlap. More would make the zoomed card
+          outgrow short windows and scroll. */}
+      <div className="zoom-viewport w-full px-4 py-16 md:px-8 md:py-6">
         <SignInPage next={safeNext(next)} />
       </div>
     </div>
