@@ -65,7 +65,13 @@ const dataLabApi = {
     request<ReviewItem>(`/reviews/next?language=${encodeURIComponent(language)}`, { token }),
   review: (
     token: string,
-    body: { contribution_id: number; decision: "accept" | "reject"; reason?: RejectReason; note?: string },
+    body: {
+      contribution_id: number;
+      decision: "accept" | "correct" | "reject";
+      reason?: RejectReason;
+      note?: string;
+      corrected_text?: string;
+    },
   ) => request<void>("/reviews", { token, method: "POST", body }),
 };
 

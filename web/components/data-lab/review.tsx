@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { civicCategories } from "@/components/civic/data";
@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { ApiError, dataLabApi } from "./api";
 import { useAuth } from "./auth-provider";
 import { BackLink } from "./back-link";
+import { CharacterPalette } from "./character-palette";
 import { fieldClasses, primaryButton, quietButton, secondaryButton } from "./styles";
 import type { Language, RejectReason, ReviewItem } from "./types";
 
@@ -35,7 +36,10 @@ function Review({ language }: { language: string }) {
   const { user, getToken } = useAuth();
   const [languages, setLanguages] = useState<Language[]>([]);
   const [view, setView] = useState<View>({ status: "loading" });
-  const [rejecting, setRejecting] = useState(false);
+  // Reviewing: accept, or open one of the two other decisions.
+  const [mode, setMode] = useState<"review" | "reject" | "correct">("review");
+  const [corrected, setCorrected] = useState("");
+  const editor = useRef<HTMLTextAreaElement>(null);
   const [reason, setReason] = useState<RejectReason | null>(null);
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
@@ -66,13 +70,14 @@ function Review({ language }: { language: string }) {
     };
   }, [user, fetchItem]);
 
-  const decide = async (item: ReviewItem, decision: "accept" | "reject") => {
+  const decide = async (item: ReviewItem, decision: "accept" | "correct" | "reject") => {
     setBusy(true);
     try {
       await dataLabApi.review(await getToken(), {
         contribution_id: item.contribution_id,
         decision,
         ...(decision === "reject" && { reason: reason ?? undefined, note }),
+        ...(decision === "correct" && { corrected_text: corrected }),
       });
       setReviewed((n) => n + 1);
     } catch (err) {
@@ -83,14 +88,14 @@ function Review({ language }: { language: string }) {
         return;
       }
     }
-    setRejecting(false);
+    setMode("review");
     setReason(null);
     setNote("");
+    setCorrected("");
     setBusy(false);
     setView({ status: "loading" });
     setView(await fetchItem());
   };
-
 
   return (
     <div className="flex flex-col gap-8">
@@ -147,14 +152,35 @@ function Review({ language }: { language: string }) {
                   </span>
                 )}
               </div>
-              <p lang={language} className="text-xl leading-snug text-pretty whitespace-pre-line">
-                {view.item.text}
-              </p>
+              {mode === "correct" ? (
+                <>
+                  <textarea
+                    ref={editor}
+                    lang={language}
+                    value={corrected}
+                    onChange={(e) => setCorrected(e.target.value.slice(0, 2000))}
+                    rows={5}
+                    autoFocus
+                    aria-label={`Corrected text in ${target?.name ?? language}`}
+                    className="min-h-36 w-full resize-none rounded-inset border border-signal/60 bg-background p-3 text-xl leading-snug text-foreground outline-none focus:border-signal"
+                  />
+                  <CharacterPalette
+                    characters={target?.extra_characters ?? []}
+                    editor={editor}
+                    value={corrected}
+                    onChange={setCorrected}
+                  />
+                </>
+              ) : (
+                <p lang={language} className="text-xl leading-snug text-pretty whitespace-pre-line">
+                  {view.item.text}
+                </p>
+              )}
             </div>
           </div>
 
           <div className="flex flex-col gap-5 border-t border-line p-6 sm:p-8">
-            {rejecting && (
+            {mode === "reject" && (
               <fieldset className="flex flex-col gap-4">
                 <legend className="pb-3 font-mono text-xs text-faint">Why isn&apos;t it ready?</legend>
                 <div className="flex flex-wrap gap-2">
@@ -187,9 +213,9 @@ function Review({ language }: { language: string }) {
               </fieldset>
             )}
             <div className="flex flex-wrap items-center justify-end gap-2">
-              {rejecting ? (
+              {mode === "reject" && (
                 <>
-                  <button type="button" onClick={() => setRejecting(false)} disabled={busy} className={quietButton}>
+                  <button type="button" onClick={() => setMode("review")} disabled={busy} className={quietButton}>
                     Cancel
                   </button>
                   <button
@@ -201,10 +227,37 @@ function Review({ language }: { language: string }) {
                     Reject
                   </button>
                 </>
-              ) : (
+              )}
+              {mode === "correct" && (
                 <>
-                  <button type="button" onClick={() => setRejecting(true)} disabled={busy} className={secondaryButton}>
+                  <button type="button" onClick={() => setMode("review")} disabled={busy} className={quietButton}>
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => decide(view.item, "correct")}
+                    disabled={busy || !corrected.trim() || corrected.trim() === view.item.text.trim()}
+                    className={cn(primaryButton, "min-w-32")}
+                  >
+                    Save correction
+                  </button>
+                </>
+              )}
+              {mode === "review" && (
+                <>
+                  <button type="button" onClick={() => setMode("reject")} disabled={busy} className={secondaryButton}>
                     Needs changes
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCorrected(view.item.text);
+                      setMode("correct");
+                    }}
+                    disabled={busy}
+                    className={secondaryButton}
+                  >
+                    Correct
                   </button>
                   <button
                     type="button"
