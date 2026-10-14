@@ -1,6 +1,6 @@
 ---
 topic: migrations
-last_verified: 2026-06-23
+last_verified: 2026-10-14
 sources:
   - cmd/migrate/main.go
   - internal/infrastructure/database/migrations/
@@ -83,7 +83,7 @@ This avoids the `ERROR: column contains null values` failure that occurs when yo
 Go migrations require the migration functions to be registered and compiled into the binary. `go run ./cmd/migrate` produces a fresh binary on each invocation with no registered functions. Use SQL migrations for all schema changes.
 
 ## Testcontainers and migrations
-Repository integration tests do **not** run goose migrations. Testcontainers starts a blank Postgres instance; tests create their own schema via `testDB.Exec(...)` in `TestMain` or per-test setup. This keeps tests independent of migration history and fast.
+Repository integration tests run against the real schema. `TestMain` in `postgres/health_repository_test.go` starts Postgres with Testcontainers and applies every migration with `goose.Up`, so a broken migration fails the test suite. Tests never create tables themselves; they call `truncate(t, "table", …)` to empty the tables they touch when they finish.
 
 ## Goose tracking table
 Goose creates `goose_db_version` in the schema set by `BLUEPRINT_DB_SCHEMA` (via `search_path` in the connection string). Never modify this table manually.

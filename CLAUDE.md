@@ -141,7 +141,7 @@ cd backend && make swagger   # regenerate docs/swagger/ after annotation changes
 - `make migrate-create name=<slug>` → edit the generated SQL → `make migrate-up`.
 - SQL only — no Go migrations. No DDL inside repository methods.
 - Never edit or delete an applied migration; add a new one to fix it.
-- Integration tests do NOT run migrations — Testcontainers starts blank and tests create their own schema via `testDB.Exec`.
+- Integration tests run the real migrations (`goose.Up` in `TestMain`) and empty their tables with `truncate(t, …)`. Never create tables in a test.
 - See `backend/docs/migrations.md` for the full workflow and format rules.
 
 ## TypeScript/React conventions

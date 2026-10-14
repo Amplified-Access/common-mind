@@ -7,28 +7,8 @@ import (
 	"backend/internal/domain"
 )
 
-func setupUsersTable(t *testing.T) {
-	t.Helper()
-	_, err := testDB.Exec(`
-		CREATE TABLE IF NOT EXISTS users (
-			id           BIGSERIAL    PRIMARY KEY,
-			firebase_uid TEXT         UNIQUE,
-			name         TEXT         NOT NULL DEFAULT '',
-			email        TEXT,
-			photo_url    TEXT,
-			created_at   TIMESTAMPTZ  NOT NULL DEFAULT now(),
-			updated_at   TIMESTAMPTZ  NOT NULL DEFAULT now()
-		)`)
-	if err != nil {
-		t.Fatalf("setupUsersTable: %v", err)
-	}
-	t.Cleanup(func() {
-		_, _ = testDB.Exec(`DROP TABLE IF EXISTS users`)
-	})
-}
-
 func TestUserRepository_Upsert_Create(t *testing.T) {
-	setupUsersTable(t)
+	truncate(t, "users")
 	repo := NewUserRepository(testDB)
 
 	u := &domain.User{
@@ -59,7 +39,7 @@ func TestUserRepository_Upsert_Create(t *testing.T) {
 }
 
 func TestUserRepository_Upsert_Update(t *testing.T) {
-	setupUsersTable(t)
+	truncate(t, "users")
 	repo := NewUserRepository(testDB)
 
 	first := &domain.User{
@@ -95,7 +75,7 @@ func TestUserRepository_Upsert_Update(t *testing.T) {
 }
 
 func TestUserRepository_DeleteByFirebaseUID(t *testing.T) {
-	setupUsersTable(t)
+	truncate(t, "users")
 	repo := NewUserRepository(testDB)
 
 	u := &domain.User{

@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pressly/goose/v3"
 	"github.com/testcontainers/testcontainers-go"
 	tcpostgres "github.com/testcontainers/testcontainers-go/modules/postgres"
 	"github.com/testcontainers/testcontainers-go/wait"
@@ -63,6 +64,15 @@ func mustStartPostgresContainer() (func(context.Context, ...testcontainers.Termi
 	}
 	testDB = db
 
+	// Tests run against the real schema, so the migrations are exercised too.
+	if err := goose.SetDialect("postgres"); err != nil {
+		return container.Terminate, err
+	}
+	goose.SetLogger(goose.NopLogger())
+	if err := goose.Up(db, "../migrations"); err != nil {
+		return container.Terminate, err
+	}
+
 	return container.Terminate, nil
 }
 
@@ -98,4 +108,17 @@ func TestHealth(t *testing.T) {
 	if stats.Error != "" {
 		t.Fatalf("expected no error, got %s", stats.Error)
 	}
+}
+
+// truncate empties the given tables when the test ends, so each test starts
+// from the migrated schema with no rows.
+func truncate(t *testing.T, tables ...string) {
+	t.Helper()
+	t.Cleanup(func() {
+		for _, table := range tables {
+			if _, err := testDB.Exec("TRUNCATE " + table + " RESTART IDENTITY CASCADE"); err != nil {
+				t.Errorf("truncate %s: %v", table, err)
+			}
+		}
+	})
 }

@@ -21,6 +21,8 @@ No mocks for the database or cache. All infrastructure tests run against real se
 
 Tests MUST be independent. No test may rely on execution order or on state left by another test. Each test is responsible for creating its own fixtures.
 
+Repository tests use the real schema: `TestMain` applies all migrations once, and each test calls `truncate(t, "table", …)` so the tables it touches are emptied when it ends. Never `CREATE TABLE` in a test.
+
 ## Test placement
 
 | Layer | Package | Mock strategy |
