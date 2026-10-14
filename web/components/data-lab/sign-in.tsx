@@ -1,11 +1,14 @@
 "use client";
 
+import { ViewIcon, ViewOffSlashIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { FirebaseError } from "firebase/app";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { toast } from "sonner";
 
 import { FramedCard } from "@/components/system/framed-card";
 import { Eyebrow } from "@/components/system/primitives";
+import { cn } from "@/lib/utils";
 
 import { useAuth } from "./auth-provider";
 import { fieldClasses, primaryButton, secondaryButton } from "./styles";
@@ -90,31 +93,14 @@ function SignIn() {
               className={fieldClasses}
             />
           </label>
-          <label className="flex flex-col gap-1.5">
-            <span className="font-mono text-xs text-faint">Password</span>
-            <input
-              type="password"
-              required
-              minLength={6}
-              autoComplete={mode === "create" ? "new-password" : "current-password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className={fieldClasses}
-            />
-          </label>
+          <PasswordField
+            label="Password"
+            value={password}
+            onChange={setPassword}
+            autoComplete={mode === "create" ? "new-password" : "current-password"}
+          />
           {mode === "create" && (
-            <label className="flex flex-col gap-1.5">
-              <span className="font-mono text-xs text-faint">Repeat password</span>
-              <input
-                type="password"
-                required
-                minLength={6}
-                autoComplete="new-password"
-                value={repeat}
-                onChange={(e) => setRepeat(e.target.value)}
-                className={fieldClasses}
-              />
-            </label>
+            <PasswordField label="Repeat password" value={repeat} onChange={setRepeat} autoComplete="new-password" />
           )}
           <button type="submit" disabled={busy} className={primaryButton}>
             {mode === "create" ? "Create account" : "Sign in"}
@@ -133,6 +119,50 @@ function SignIn() {
         </button>
       </div>
     </FramedCard>
+  );
+}
+
+// A password input with a button that shows or hides what's typed.
+function PasswordField({
+  label,
+  value,
+  onChange,
+  autoComplete,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  autoComplete: string;
+}) {
+  const [visible, setVisible] = useState(false);
+  const id = useId();
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={id} className="font-mono text-xs text-faint">
+        {label}
+      </label>
+      <div className="relative">
+        <input
+          id={id}
+          type={visible ? "text" : "password"}
+          required
+          minLength={6}
+          autoComplete={autoComplete}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className={cn(fieldClasses, "pr-11")}
+        />
+        <button
+          type="button"
+          onClick={() => setVisible((v) => !v)}
+          aria-label={visible ? `Hide ${label.toLowerCase()}` : `Show ${label.toLowerCase()}`}
+          aria-pressed={visible}
+          className="absolute inset-y-0 right-0 flex w-11 cursor-pointer items-center justify-center text-faint transition-colors hover:text-foreground"
+        >
+          <HugeiconsIcon icon={visible ? ViewOffSlashIcon : ViewIcon} strokeWidth={1.5} className="size-4.5" />
+        </button>
+      </div>
+    </div>
   );
 }
 
