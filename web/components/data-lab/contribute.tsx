@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { ApiError, dataLabApi } from "./api";
 import { useAuth } from "./auth-provider";
 import { BackLink } from "./back-link";
+import { CharacterPalette } from "./character-palette";
 import { primaryButton, quietButton } from "./styles";
 import type { Language, Task } from "./types";
 
@@ -85,17 +86,6 @@ function Contribute({ language }: { language: string }) {
     }
   };
 
-  // Inserts a palette character at the cursor and keeps focus in the editor.
-  const insert = (ch: string) => {
-    const el = editor.current;
-    const start = el?.selectionStart ?? text.length;
-    const end = el?.selectionEnd ?? text.length;
-    setText(text.slice(0, start) + ch + text.slice(end));
-    requestAnimationFrame(() => {
-      el?.focus();
-      el?.setSelectionRange(start + ch.length, start + ch.length);
-    });
-  };
 
 
   return (
@@ -176,20 +166,12 @@ function Contribute({ language }: { language: string }) {
               placeholder={view.task.kind === "translate" ? "Write the translation" : "Write your answer"}
               className="min-h-48 w-full flex-1 resize-none bg-transparent text-xl leading-snug text-foreground outline-none placeholder:text-foreground/25"
             />
-            {target && target.extra_characters.length > 0 && (
-              <div className="flex flex-wrap gap-1.5" aria-label="Insert a character">
-                {target.extra_characters.map((ch) => (
-                  <button
-                    key={ch}
-                    type="button"
-                    onClick={() => insert(ch)}
-                    className="size-9 cursor-pointer rounded-inset border border-line text-lg transition-colors hover:border-signal hover:text-signal"
-                  >
-                    {ch}
-                  </button>
-                ))}
-              </div>
-            )}
+            <CharacterPalette
+              characters={target?.extra_characters ?? []}
+              editor={editor}
+              value={text}
+              onChange={setText}
+            />
             <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
               <button type="button" onClick={next} disabled={busy} className={quietButton}>
                 Skip
