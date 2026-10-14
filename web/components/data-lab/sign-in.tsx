@@ -40,7 +40,7 @@ function SignIn() {
 
   if (!configured) {
     return (
-      <FramedCard panelsClassName="bg-[#1c1a0e] p-6 sm:p-8">
+      <FramedCard className="mx-auto w-full max-w-md" panelsClassName="bg-[#1c1a0e] p-6 sm:p-8">
         <p className="text-sm text-subtle">
           Sign-in isn&apos;t configured here. Set the <code className="font-mono">NEXT_PUBLIC_FIREBASE_*</code>{" "}
           variables from <code className="font-mono">web/.env.example</code>.
@@ -50,8 +50,8 @@ function SignIn() {
   }
 
   return (
-    <FramedCard panelsClassName="bg-[#1c1a0e] p-6 sm:p-8">
-      <div className="flex max-w-md flex-col gap-6">
+    <FramedCard className="mx-auto w-full max-w-md" panelsClassName="bg-[#1c1a0e] p-6 sm:p-8">
+      <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-3">
           <Eyebrow>{mode === "create" ? "Create an account" : "Sign in"}</Eyebrow>
           <h2 className="text-h3">Join the Data Lab</h2>
