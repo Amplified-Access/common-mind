@@ -29,6 +29,10 @@ func TestDataLabError_MapsUseCaseErrors(t *testing.T) {
 		{err: usecase.ErrNoTasks, status: http.StatusNotFound, code: "no_tasks"},
 		{err: usecase.ErrNotFound, status: http.StatusNotFound, code: "not_found"},
 		{err: usecase.ErrAlreadyContributed, status: http.StatusConflict, code: "already_contributed"},
+		{err: usecase.ErrNotReviewer, status: http.StatusForbidden, code: "not_reviewer"},
+		{err: usecase.ErrOwnContribution, status: http.StatusForbidden, code: "own_contribution"},
+		{err: usecase.ErrAlreadyReviewed, status: http.StatusConflict, code: "already_reviewed"},
+		{err: usecase.ErrNoReviews, status: http.StatusNotFound, code: "no_reviews"},
 		{err: errors.New("db down"), status: http.StatusInternalServerError, code: "internal_error"},
 	}
 	for _, tt := range tests {

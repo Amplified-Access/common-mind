@@ -30,6 +30,14 @@ func dataLabError(c *gin.Context, err error) {
 		JSONError(c, http.StatusNotFound, "not_found", "not found")
 	case errors.Is(err, usecase.ErrAlreadyContributed):
 		JSONError(c, http.StatusConflict, "already_contributed", "you already submitted this one")
+	case errors.Is(err, usecase.ErrNotReviewer):
+		JSONError(c, http.StatusForbidden, "not_reviewer", "reviewing needs reviewer access in this language")
+	case errors.Is(err, usecase.ErrOwnContribution):
+		JSONError(c, http.StatusForbidden, "own_contribution", "someone else has to review your work")
+	case errors.Is(err, usecase.ErrAlreadyReviewed):
+		JSONError(c, http.StatusConflict, "already_reviewed", "this one has already been reviewed")
+	case errors.Is(err, usecase.ErrNoReviews):
+		JSONError(c, http.StatusNotFound, "no_reviews", "nothing waiting for review in this language")
 	case errors.Is(err, usecase.ErrInvalidInput):
 		JSONError(c, http.StatusBadRequest, "invalid_input", err.Error())
 	default:

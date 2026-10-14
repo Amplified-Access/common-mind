@@ -89,6 +89,8 @@ func (h *Handler) RegisterRoutes(rps float64, burst int, sentryDSN string, allow
 	lab.POST("/onboarding", h.OnboardHandler)
 	lab.GET("/tasks/next", h.NextTaskHandler)
 	lab.POST("/contributions", h.ContributeHandler)
+	lab.GET("/reviews/next", h.NextReviewHandler)
+	lab.POST("/reviews", h.ReviewHandler)
 
 	if h.userRepo != nil {
 		api.PATCH("/me", h.UpdateMeHandler)

@@ -16,6 +16,8 @@ type fakeStore struct {
 	volunteer   *domain.Volunteer
 	reviewers   int
 	contributed *ContributionRecord
+	ref         *domain.ContributionRef
+	reviewed    *ReviewRecord
 }
 
 func (f *fakeStore) ListLanguages(context.Context) ([]domain.Language, error) {
@@ -93,6 +95,22 @@ func TestOnboard_ValidatesLanguagesNameAndConsent(t *testing.T) {
 	}
 }
 
+func (f *fakeStore) NextPendingContribution(context.Context, int64, string) (*domain.ReviewItem, error) {
+	return nil, nil
+}
+
+func (f *fakeStore) GetContributionRef(context.Context, int64) (*domain.ContributionRef, error) {
+	if f.ref == nil {
+		return nil, ErrNotFound
+	}
+	return f.ref, nil
+}
+
+func (f *fakeStore) SaveReview(_ context.Context, rec ReviewRecord) error {
+	f.reviewed = &rec
+	return nil
+}
+
 func swahiliContributor() *domain.Volunteer {
 	return &domain.Volunteer{
 		ID:             7,
@@ -142,6 +160,58 @@ func TestContribute_RequiresOpenLanguageMembershipAndText(t *testing.T) {
 			rec := store.contributed
 			if rec.Text != "Barabara imeharibika." || rec.ContributorID != 7 || rec.ConsentVersion != domain.CurrentConsentVersion {
 				t.Errorf("saved record = %+v, want trimmed text, contributor 7, current consent", rec)
+			}
+		})
+	}
+}
+
+func swahiliReviewer() *domain.Volunteer {
+	v := swahiliContributor()
+	v.Languages[0].Level = domain.LevelReviewer
+	return v
+}
+
+func TestReview_EnforcesReviewerRulesAndReasons(t *testing.T) {
+	tok := &FirebaseToken{UID: "uid-7"}
+	pending := func() *domain.ContributionRef {
+		return &domain.ContributionRef{ID: 3, LanguageCode: "sw", ContributorID: 99, Status: domain.StatusPending}
+	}
+
+	tests := []struct {
+		name       string
+		volunteer  *domain.Volunteer
+		ref        *domain.ContributionRef
+		in         ReviewInput
+		wantErr    error
+		wantStatus string
+	}{
+		{name: "accept", volunteer: swahiliReviewer(), ref: pending(), in: ReviewInput{ContributionID: 3, Decision: "accept"}, wantStatus: domain.StatusVerified},
+		{name: "reject with reason", volunteer: swahiliReviewer(), ref: pending(), in: ReviewInput{ContributionID: 3, Decision: "reject", Reason: "machine_translated"}, wantStatus: domain.StatusRejected},
+		{name: "reject without reason", volunteer: swahiliReviewer(), ref: pending(), in: ReviewInput{ContributionID: 3, Decision: "reject"}, wantErr: ErrInvalidInput},
+		{name: "unknown reason", volunteer: swahiliReviewer(), ref: pending(), in: ReviewInput{ContributionID: 3, Decision: "reject", Reason: "bad vibes"}, wantErr: ErrInvalidInput},
+		{name: "unknown decision", volunteer: swahiliReviewer(), ref: pending(), in: ReviewInput{ContributionID: 3, Decision: "maybe"}, wantErr: ErrInvalidInput},
+		{name: "contributor level", volunteer: swahiliContributor(), ref: pending(), in: ReviewInput{ContributionID: 3, Decision: "accept"}, wantErr: ErrNotReviewer},
+		{name: "own contribution", volunteer: swahiliReviewer(), ref: func() *domain.ContributionRef { r := pending(); r.ContributorID = 7; return r }(), in: ReviewInput{ContributionID: 3, Decision: "accept"}, wantErr: ErrOwnContribution},
+		{name: "already reviewed", volunteer: swahiliReviewer(), ref: func() *domain.ContributionRef { r := pending(); r.Status = domain.StatusVerified; return r }(), in: ReviewInput{ContributionID: 3, Decision: "accept"}, wantErr: ErrAlreadyReviewed},
+		{name: "unknown contribution", volunteer: swahiliReviewer(), ref: nil, in: ReviewInput{ContributionID: 3, Decision: "accept"}, wantErr: ErrNotFound},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			store := &fakeStore{volunteer: tt.volunteer, ref: tt.ref}
+
+			err := NewDataLab(store).Review(context.Background(), tok, tt.in)
+
+			if !errors.Is(err, tt.wantErr) {
+				t.Fatalf("Review() error = %v, want %v", err, tt.wantErr)
+			}
+			if tt.wantErr != nil {
+				if store.reviewed != nil {
+					t.Error("review saved despite the error")
+				}
+				return
+			}
+			if store.reviewed.Status != tt.wantStatus || store.reviewed.ReviewerID != 7 {
+				t.Errorf("saved review = %+v, want status %s by reviewer 7", store.reviewed, tt.wantStatus)
 			}
 		})
 	}

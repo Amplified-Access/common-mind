@@ -14,6 +14,10 @@ var (
 	ErrNotFound        = errors.New("not found")
 	// ErrAlreadyContributed: the volunteer already submitted this item in this language.
 	ErrAlreadyContributed = errors.New("already contributed")
+	ErrNotReviewer        = errors.New("volunteer is not a reviewer in this language")
+	ErrOwnContribution    = errors.New("volunteers cannot review their own contributions")
+	ErrAlreadyReviewed    = errors.New("contribution has already been reviewed")
+	ErrNoReviews          = errors.New("nothing to review in this language")
 )
 
 // invalid wraps ErrInvalidInput with a message safe to show the volunteer.

@@ -113,3 +113,34 @@ type Contribution struct {
 	Status       string    `json:"status"`
 	CreatedAt    time.Time `json:"created_at"`
 }
+
+// Review decisions.
+const (
+	DecisionAccept = "accept"
+	DecisionReject = "reject"
+)
+
+// RejectReasons are the reasons a reviewer can give; a rejection needs one.
+// "machine_translated" feeds the MT guard (ADR 0010).
+var RejectReasons = []string{"inaccurate", "incomplete", "machine_translated", "off_topic", "other"}
+
+// ReviewItem is a pending contribution shown to a reviewer with its item.
+type ReviewItem struct {
+	ContributionID int64     `json:"contribution_id"`
+	Kind           string    `json:"kind"`
+	Category       string    `json:"category"`
+	ItemText       string    `json:"item_text"`
+	ItemLanguage   string    `json:"item_language"`
+	LanguageCode   string    `json:"language_code"`
+	Text           string    `json:"text"`
+	Pasted         bool      `json:"pasted"`
+	SubmittedAt    time.Time `json:"submitted_at"`
+}
+
+// ContributionRef is what a review needs to know about the contribution.
+type ContributionRef struct {
+	ID            int64
+	LanguageCode  string
+	ContributorID int64
+	Status        string
+}

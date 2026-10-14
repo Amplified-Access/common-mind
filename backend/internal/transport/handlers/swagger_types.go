@@ -28,3 +28,6 @@ type TaskAlias = domain.Task
 
 // ContributionAlias is a type alias so swaggo can resolve domain.Contribution.
 type ContributionAlias = domain.Contribution
+
+// ReviewItemAlias is a type alias so swaggo can resolve domain.ReviewItem.
+type ReviewItemAlias = domain.ReviewItem

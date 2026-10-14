@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"slices"
 	"strings"
 	"unicode/utf8"
 
@@ -24,6 +25,14 @@ type DataLabStore interface {
 	// CreateContribution returns ErrNotFound for an unknown item and
 	// ErrAlreadyContributed for a repeat by the same volunteer.
 	CreateContribution(ctx context.Context, rec ContributionRecord) (*domain.Contribution, error)
+	// NextPendingContribution returns the oldest pending contribution in the
+	// language not written by the reviewer, or nil, nil when there is none.
+	NextPendingContribution(ctx context.Context, reviewerID int64, language string) (*domain.ReviewItem, error)
+	// GetContributionRef returns ErrNotFound for an unknown contribution.
+	GetContributionRef(ctx context.Context, id int64) (*domain.ContributionRef, error)
+	// SaveReview records the review and sets the contribution's status in one
+	// transaction. Returns ErrAlreadyReviewed if another review won the race.
+	SaveReview(ctx context.Context, rec ReviewRecord) error
 }
 
 // DataLab is the application-layer interface for the volunteer platform.
@@ -35,6 +44,27 @@ type DataLab interface {
 	// NextTask returns ErrNoTasks when the language has nothing left for the volunteer.
 	NextTask(ctx context.Context, tok *FirebaseToken, language string) (*domain.Task, error)
 	Contribute(ctx context.Context, tok *FirebaseToken, in ContributionInput) (*domain.Contribution, error)
+	// NextReview returns ErrNoReviews when nothing is waiting in the language.
+	NextReview(ctx context.Context, tok *FirebaseToken, language string) (*domain.ReviewItem, error)
+	Review(ctx context.Context, tok *FirebaseToken, in ReviewInput) error
+}
+
+// ReviewInput is a reviewer's decision on one contribution.
+type ReviewInput struct {
+	ContributionID int64
+	Decision       string
+	Reason         string
+	Note           string
+}
+
+// ReviewRecord is a validated review, ready to persist.
+type ReviewRecord struct {
+	ContributionID int64
+	ReviewerID     int64
+	Decision       string
+	Reason         string // "" when accepted
+	Note           string
+	Status         string // the contribution's new status
 }
 
 // ContributionInput is a volunteer's submission for one item.
@@ -198,4 +228,67 @@ func (d *dataLab) Contribute(ctx context.Context, tok *FirebaseToken, in Contrib
 		Pasted:         in.Pasted,
 		ConsentVersion: v.ConsentVersion,
 	})
+}
+
+// reviewerIn loads the volunteer and checks they may review in the language.
+func (d *dataLab) reviewerIn(ctx context.Context, tok *FirebaseToken, language string) (*domain.Volunteer, error) {
+	v, err := d.Me(ctx, tok)
+	if err != nil {
+		return nil, err
+	}
+	if !v.ConsentCurrent() {
+		return nil, ErrConsentOutdated
+	}
+	if m, ok := v.Membership(language); !ok || !m.CanReview() {
+		return nil, ErrNotReviewer
+	}
+	return v, nil
+}
+
+func (d *dataLab) NextReview(ctx context.Context, tok *FirebaseToken, language string) (*domain.ReviewItem, error) {
+	v, err := d.reviewerIn(ctx, tok, language)
+	if err != nil {
+		return nil, err
+	}
+	item, err := d.store.NextPendingContribution(ctx, v.ID, language)
+	if err != nil {
+		return nil, err
+	}
+	if item == nil {
+		return nil, ErrNoReviews
+	}
+	return item, nil
+}
+
+func (d *dataLab) Review(ctx context.Context, tok *FirebaseToken, in ReviewInput) error {
+	rec := ReviewRecord{ContributionID: in.ContributionID, Decision: in.Decision, Note: strings.TrimSpace(in.Note)}
+	switch in.Decision {
+	case domain.DecisionAccept:
+		rec.Status = domain.StatusVerified
+	case domain.DecisionReject:
+		if !slices.Contains(domain.RejectReasons, in.Reason) {
+			return invalid("choose a reason for rejecting")
+		}
+		rec.Reason = in.Reason
+		rec.Status = domain.StatusRejected
+	default:
+		return invalid("decision must be accept or reject")
+	}
+
+	ref, err := d.store.GetContributionRef(ctx, in.ContributionID)
+	if err != nil {
+		return err
+	}
+	v, err := d.reviewerIn(ctx, tok, ref.LanguageCode)
+	if err != nil {
+		return err
+	}
+	if ref.ContributorID == v.ID {
+		return ErrOwnContribution
+	}
+	if ref.Status != domain.StatusPending {
+		return ErrAlreadyReviewed
+	}
+	rec.ReviewerID = v.ID
+	return d.store.SaveReview(ctx, rec)
 }

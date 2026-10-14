@@ -257,6 +257,118 @@
                 }
             }
         },
+        "/api/v1/data-lab/reviews": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Accept verifies the contribution; reject needs a reason (inaccurate, incomplete, machine_translated, off_topic, other) and reopens the item for others.",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "data-lab"
+                ],
+                "summary": "Review a contribution",
+                "parameters": [
+                    {
+                        "description": "Review",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.reviewRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "not_reviewer or own_contribution",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "already_reviewed",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/data-lab/reviews/next": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns the oldest pending contribution in the language written by someone else. 404 no_reviews when the queue is empty.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "data-lab"
+                ],
+                "summary": "Get the next contribution to review",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Language code, e.g. sw",
+                        "name": "language",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ReviewItemAlias"
+                        }
+                    },
+                    "403": {
+                        "description": "not_reviewer",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "no_reviews",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/data-lab/tasks/next": {
             "get": {
                 "security": [
@@ -752,6 +864,38 @@
                 }
             }
         },
+        "handlers.ReviewItemAlias": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "contribution_id": {
+                    "type": "integer"
+                },
+                "item_language": {
+                    "type": "string"
+                },
+                "item_text": {
+                    "type": "string"
+                },
+                "kind": {
+                    "type": "string"
+                },
+                "language_code": {
+                    "type": "string"
+                },
+                "pasted": {
+                    "type": "boolean"
+                },
+                "submitted_at": {
+                    "type": "string"
+                },
+                "text": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.TaskAlias": {
             "type": "object",
             "properties": {
@@ -888,6 +1032,27 @@
                     "type": "string"
                 },
                 "upload_url": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.reviewRequest": {
+            "type": "object",
+            "required": [
+                "contribution_id",
+                "decision"
+            ],
+            "properties": {
+                "contribution_id": {
+                    "type": "integer"
+                },
+                "decision": {
+                    "type": "string"
+                },
+                "note": {
+                    "type": "string"
+                },
+                "reason": {
                     "type": "string"
                 }
             }

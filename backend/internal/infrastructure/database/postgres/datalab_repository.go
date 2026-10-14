@@ -183,3 +183,73 @@ func (r *dataLabRepository) CreateContribution(ctx context.Context, rec usecase.
 	}
 	return c, nil
 }
+
+// NextPendingContribution serves the oldest first, so nothing waits forever.
+func (r *dataLabRepository) NextPendingContribution(ctx context.Context, reviewerID int64, language string) (*domain.ReviewItem, error) {
+	const q = `
+        SELECT c.id, i.kind, i.category, i.text, i.language_code,
+               c.language_code, c.text, c.pasted, c.created_at
+        FROM contributions c
+        JOIN items i ON i.id = c.item_id
+        WHERE c.language_code = $2 AND c.status = 'pending' AND c.contributor_id <> $1
+        ORDER BY c.created_at, c.id
+        LIMIT 1`
+
+	it := &domain.ReviewItem{}
+	err := r.db.QueryRowContext(ctx, q, reviewerID, language).Scan(
+		&it.ContributionID, &it.Kind, &it.Category, &it.ItemText, &it.ItemLanguage,
+		&it.LanguageCode, &it.Text, &it.Pasted, &it.SubmittedAt)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("datalab repository: next pending contribution: %w", err)
+	}
+	return it, nil
+}
+
+func (r *dataLabRepository) GetContributionRef(ctx context.Context, id int64) (*domain.ContributionRef, error) {
+	ref := &domain.ContributionRef{}
+	err := r.db.QueryRowContext(ctx, `
+        SELECT id, language_code, contributor_id, status FROM contributions WHERE id = $1`, id).
+		Scan(&ref.ID, &ref.LanguageCode, &ref.ContributorID, &ref.Status)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, usecase.ErrNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("datalab repository: get contribution: %w", err)
+	}
+	return ref, nil
+}
+
+func (r *dataLabRepository) SaveReview(ctx context.Context, rec usecase.ReviewRecord) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("datalab repository: begin review: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	// Only a pending contribution changes status; zero rows means another
+	// reviewer got there first.
+	res, err := tx.ExecContext(ctx, `
+        UPDATE contributions SET status = $2, updated_at = now()
+        WHERE id = $1 AND status = 'pending'`, rec.ContributionID, rec.Status)
+	if err != nil {
+		return fmt.Errorf("datalab repository: update contribution status: %w", err)
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		return usecase.ErrAlreadyReviewed
+	}
+
+	if _, err := tx.ExecContext(ctx, `
+        INSERT INTO reviews (contribution_id, reviewer_id, decision, reason, note)
+        VALUES ($1, $2, $3, NULLIF($4, ''), $5)`,
+		rec.ContributionID, rec.ReviewerID, rec.Decision, rec.Reason, rec.Note); err != nil {
+		return fmt.Errorf("datalab repository: insert review: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("datalab repository: commit review: %w", err)
+	}
+	return nil
+}

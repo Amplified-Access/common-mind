@@ -78,6 +78,27 @@ definitions:
       script:
         type: string
     type: object
+  handlers.ReviewItemAlias:
+    properties:
+      category:
+        type: string
+      contribution_id:
+        type: integer
+      item_language:
+        type: string
+      item_text:
+        type: string
+      kind:
+        type: string
+      language_code:
+        type: string
+      pasted:
+        type: boolean
+      submitted_at:
+        type: string
+      text:
+        type: string
+    type: object
   handlers.TaskAlias:
     properties:
       category:
@@ -170,6 +191,20 @@ definitions:
         type: string
       upload_url:
         type: string
+    type: object
+  handlers.reviewRequest:
+    properties:
+      contribution_id:
+        type: integer
+      decision:
+        type: string
+      note:
+        type: string
+      reason:
+        type: string
+    required:
+    - contribution_id
+    - decision
     type: object
   handlers.updateMeRequest:
     properties:
@@ -345,6 +380,80 @@ paths:
       security:
       - BearerAuth: []
       summary: Join the Data Lab or add languages
+      tags:
+      - data-lab
+  /api/v1/data-lab/reviews:
+    post:
+      consumes:
+      - application/json
+      description: Accept verifies the contribution; reject needs a reason (inaccurate,
+        incomplete, machine_translated, off_topic, other) and reopens the item for
+        others.
+      parameters:
+      - description: Review
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.reviewRequest'
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: not_reviewer or own_contribution
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: already_reviewed
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Review a contribution
+      tags:
+      - data-lab
+  /api/v1/data-lab/reviews/next:
+    get:
+      description: Returns the oldest pending contribution in the language written
+        by someone else. 404 no_reviews when the queue is empty.
+      parameters:
+      - description: Language code, e.g. sw
+        in: query
+        name: language
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.ReviewItemAlias'
+        "403":
+          description: not_reviewer
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: no_reviews
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get the next contribution to review
       tags:
       - data-lab
   /api/v1/data-lab/tasks/next:

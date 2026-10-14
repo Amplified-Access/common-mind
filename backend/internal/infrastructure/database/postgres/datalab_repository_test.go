@@ -178,3 +178,57 @@ func TestDataLab_CountReviewers_CountsReviewersAndLeads(t *testing.T) {
 		t.Errorf("CountReviewers = %d, %v, want 2", n, err)
 	}
 }
+
+func TestDataLab_NextPendingContribution_OldestNotOwn(t *testing.T) {
+	truncate(t, "users", "sources")
+	ctx := context.Background()
+	repo := NewDataLabRepository(testDB)
+	reviewer := seedVolunteer(t, "uid-reviewer", "sw")
+	other := seedVolunteer(t, "uid-other", "sw")
+	ids := seedItems(t, "own", "verified", "oldest pending", "newer pending")
+	contribute(t, ids[0], reviewer, domain.StatusPending)
+	contribute(t, ids[1], other, domain.StatusVerified)
+	contribute(t, ids[2], other, domain.StatusPending)
+	contribute(t, ids[3], other, domain.StatusPending)
+
+	got, err := repo.NextPendingContribution(ctx, reviewer, "sw")
+	if err != nil {
+		t.Fatalf("NextPendingContribution: %v", err)
+	}
+	if got == nil || got.ItemText != "oldest pending" {
+		t.Fatalf("got %+v, want the oldest pending contribution by someone else", got)
+	}
+	if missing, err := repo.NextPendingContribution(ctx, reviewer, "luo"); err != nil || missing != nil {
+		t.Errorf("other language = %+v, %v, want nil, nil", missing, err)
+	}
+}
+
+func TestDataLab_SaveReview_SetsStatusOnce(t *testing.T) {
+	truncate(t, "users", "sources")
+	ctx := context.Background()
+	repo := NewDataLabRepository(testDB)
+	reviewer := seedVolunteer(t, "uid-reviewer", "sw")
+	other := seedVolunteer(t, "uid-other", "sw")
+	ids := seedItems(t, "The clinic opens at eight.")
+	contribute(t, ids[0], other, domain.StatusPending)
+	ref, err := repo.GetContributionRef(ctx, 1)
+	if err != nil {
+		t.Fatalf("GetContributionRef: %v", err)
+	}
+
+	rec := usecase.ReviewRecord{ContributionID: ref.ID, ReviewerID: reviewer, Decision: domain.DecisionReject, Reason: "inaccurate", Status: domain.StatusRejected}
+	if err := repo.SaveReview(ctx, rec); err != nil {
+		t.Fatalf("SaveReview: %v", err)
+	}
+	if after, _ := repo.GetContributionRef(ctx, ref.ID); after.Status != domain.StatusRejected {
+		t.Errorf("status = %q, want rejected", after.Status)
+	}
+
+	rec.Decision, rec.Reason, rec.Status = domain.DecisionAccept, "", domain.StatusVerified
+	if err := repo.SaveReview(ctx, rec); !errors.Is(err, usecase.ErrAlreadyReviewed) {
+		t.Errorf("second review error = %v, want ErrAlreadyReviewed", err)
+	}
+	if _, err := repo.GetContributionRef(ctx, 999999); !errors.Is(err, usecase.ErrNotFound) {
+		t.Errorf("unknown contribution error = %v, want ErrNotFound", err)
+	}
+}

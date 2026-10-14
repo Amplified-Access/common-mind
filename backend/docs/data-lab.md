@@ -11,6 +11,7 @@ sources:
   - internal/infrastructure/database/migrations/20261014060632_add_languages.sql
   - internal/infrastructure/database/migrations/20261014060907_add_language_members_and_consents.sql
   - internal/infrastructure/database/migrations/20261014061144_add_items_and_contributions.sql
+  - internal/infrastructure/database/migrations/20261014061424_add_reviews.sql
 ---
 
 # Data Lab
@@ -47,6 +48,17 @@ A volunteer is a `users` row plus `language_members` (one row per language, with
 
 Contributing (`NextTask`, `Contribute`) requires, in order: onboarded, current consent, membership in the language, and the language **open**, meaning at least `domain.MinReviewersToOpen` (2) reviewers or leads. Text is trimmed and capped at `domain.MaxContributionLength` characters.
 
+## Reviews
+
+A reviewer (level `reviewer` or `lead` in the language) takes the oldest pending contribution written by someone else (`NextPendingContribution`), then accepts or rejects it (`Review`):
+
+- **Accept** sets the contribution to `verified`. It is part of the live corpus from that moment.
+- **Reject** needs a reason from `domain.RejectReasons` (`inaccurate`, `incomplete`, `machine_translated`, `off_topic`, `other`) and sets it to `rejected`, which reopens the item for other volunteers.
+- Nobody reviews their own work (`ErrOwnContribution`).
+- `SaveReview` changes status only `WHERE status = 'pending'`, inside the same transaction as the review insert, so two reviewers racing on one contribution get one review and one `ErrAlreadyReviewed`.
+
+One review per contribution for now (`reviews.contribution_id` is unique). Disputes and third reviewers (ADR 0010) come later.
+
 ## Errors
 
 Use cases return the sentinel errors in `usecase/datalab_errors.go`. `handlers.dataLabError` is the one place they become HTTP responses, with stable `code` values the web app branches on:
@@ -60,6 +72,10 @@ Use cases return the sentinel errors in `usecase/datalab_errors.go`. `handlers.d
 | `ErrNoTasks` | 404 | `no_tasks` |
 | `ErrNotFound` | 404 | `not_found` |
 | `ErrAlreadyContributed` | 409 | `already_contributed` |
+| `ErrNotReviewer` | 403 | `not_reviewer` |
+| `ErrOwnContribution` | 403 | `own_contribution` |
+| `ErrAlreadyReviewed` | 409 | `already_reviewed` |
+| `ErrNoReviews` | 404 | `no_reviews` |
 | `ErrInvalidInput` (via `invalid(msg)`) | 400 | `invalid_input` — message shown to the volunteer |
 | anything else | 500 | `internal_error` — logged, detail hidden |
 
@@ -72,3 +88,5 @@ Use cases return the sentinel errors in `usecase/datalab_errors.go`. `handlers.d
 | POST | `/api/v1/data-lab/onboarding` | Firebase | `OnboardHandler` — join or add languages |
 | GET | `/api/v1/data-lab/tasks/next?language=` | Firebase | `NextTaskHandler` — next item, or 404 `no_tasks` |
 | POST | `/api/v1/data-lab/contributions` | Firebase | `ContributeHandler` — 201 with the pending contribution |
+| GET | `/api/v1/data-lab/reviews/next?language=` | Firebase (reviewer) | `NextReviewHandler` — oldest pending, or 404 `no_reviews` |
+| POST | `/api/v1/data-lab/reviews` | Firebase (reviewer) | `ReviewHandler` — 204 |

@@ -169,3 +169,74 @@ func (h *Handler) ContributeHandler(c *gin.Context) {
 	}
 	JSONStatus(c, http.StatusCreated, contribution)
 }
+
+// NextReviewHandler godoc
+//
+//	@Summary		Get the next contribution to review
+//	@Description	Returns the oldest pending contribution in the language written by someone else. 404 no_reviews when the queue is empty.
+//	@Tags			data-lab
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			language	query		string	true	"Language code, e.g. sw"
+//	@Success		200			{object}	ReviewItemAlias
+//	@Failure		403			{object}	map[string]string	"not_reviewer"
+//	@Failure		404			{object}	map[string]string	"no_reviews"
+//	@Router			/api/v1/data-lab/reviews/next [get]
+func (h *Handler) NextReviewHandler(c *gin.Context) {
+	tok, ok := currentToken(c)
+	if !ok {
+		return
+	}
+	var q languageQuery
+	if !bindQuery(c, &q) {
+		return
+	}
+	item, err := h.dataLab.NextReview(c.Request.Context(), tok, q.Language)
+	if err != nil {
+		dataLabError(c, err)
+		return
+	}
+	JSON(c, item)
+}
+
+type reviewRequest struct {
+	ContributionID int64  `json:"contribution_id" binding:"required"`
+	Decision       string `json:"decision" binding:"required"`
+	Reason         string `json:"reason"`
+	Note           string `json:"note"`
+}
+
+// ReviewHandler godoc
+//
+//	@Summary		Review a contribution
+//	@Description	Accept verifies the contribution; reject needs a reason (inaccurate, incomplete, machine_translated, off_topic, other) and reopens the item for others.
+//	@Tags			data-lab
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Param			body	body	reviewRequest	true	"Review"
+//	@Success		204
+//	@Failure		400	{object}	map[string]string
+//	@Failure		403	{object}	map[string]string	"not_reviewer or own_contribution"
+//	@Failure		409	{object}	map[string]string	"already_reviewed"
+//	@Router			/api/v1/data-lab/reviews [post]
+func (h *Handler) ReviewHandler(c *gin.Context) {
+	tok, ok := currentToken(c)
+	if !ok {
+		return
+	}
+	var req reviewRequest
+	if !bindJSON(c, &req) {
+		return
+	}
+	err := h.dataLab.Review(c.Request.Context(), tok, usecase.ReviewInput{
+		ContributionID: req.ContributionID,
+		Decision:       req.Decision,
+		Reason:         req.Reason,
+		Note:           req.Note,
+	})
+	if err != nil {
+		dataLabError(c, err)
+		return
+	}
+	c.Status(http.StatusNoContent)
+}
