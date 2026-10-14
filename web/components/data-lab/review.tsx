@@ -1,0 +1,236 @@
+"use client";
+
+import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
+
+import { civicCategories } from "@/components/civic/data";
+import { FramedCard } from "@/components/system/framed-card";
+import { Eyebrow } from "@/components/system/primitives";
+import { cn } from "@/lib/utils";
+
+import { ApiError, dataLabApi } from "./api";
+import { useAuth } from "./auth-provider";
+import { SignIn } from "./sign-in";
+import { fieldClasses, primaryButton, quietButton, secondaryButton } from "./styles";
+import type { Language, RejectReason, ReviewItem } from "./types";
+
+const reasons: { value: RejectReason; label: string }[] = [
+  { value: "inaccurate", label: "Meaning is wrong" },
+  { value: "incomplete", label: "Something is missing" },
+  { value: "machine_translated", label: "Reads as machine-translated" },
+  { value: "off_topic", label: "Doesn't answer the prompt" },
+  { value: "other", label: "Other" },
+];
+
+const categoryLabel = (id: string) => civicCategories.find((c) => c.id === id)?.label ?? id;
+
+type View =
+  | { status: "loading" }
+  | { status: "item"; item: ReviewItem }
+  | { status: "empty" }
+  | { status: "blocked"; message: string };
+
+function Review({ language }: { language: string }) {
+  const { user, loading, getToken } = useAuth();
+  const [languages, setLanguages] = useState<Language[]>([]);
+  const [view, setView] = useState<View>({ status: "loading" });
+  const [rejecting, setRejecting] = useState(false);
+  const [reason, setReason] = useState<RejectReason | null>(null);
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [reviewed, setReviewed] = useState(0);
+
+  const target = languages.find((l) => l.code === language);
+  const nameOf = (code: string) => languages.find((l) => l.code === code)?.name ?? code;
+
+  useEffect(() => {
+    dataLabApi.languages().then(setLanguages, () => setLanguages([]));
+  }, []);
+
+  const fetchItem = useCallback(async (): Promise<View> => {
+    try {
+      return { status: "item", item: await dataLabApi.nextReview(await getToken(), language) };
+    } catch (err) {
+      if (err instanceof ApiError && err.code === "no_reviews") return { status: "empty" };
+      return { status: "blocked", message: err instanceof Error ? err.message : "Something went wrong." };
+    }
+  }, [getToken, language]);
+
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    fetchItem().then((next) => !cancelled && setView(next));
+    return () => {
+      cancelled = true;
+    };
+  }, [user, fetchItem]);
+
+  const decide = async (item: ReviewItem, decision: "accept" | "reject") => {
+    setBusy(true);
+    setError(null);
+    try {
+      await dataLabApi.review(await getToken(), {
+        contribution_id: item.contribution_id,
+        decision,
+        ...(decision === "reject" && { reason: reason ?? undefined, note }),
+      });
+      setReviewed((n) => n + 1);
+    } catch (err) {
+      // Someone else reviewed it first: move on rather than stopping the reviewer.
+      if (!(err instanceof ApiError && err.code === "already_reviewed")) {
+        setError(err instanceof Error ? err.message : "Something went wrong.");
+        setBusy(false);
+        return;
+      }
+    }
+    setRejecting(false);
+    setReason(null);
+    setNote("");
+    setBusy(false);
+    setView({ status: "loading" });
+    setView(await fetchItem());
+  };
+
+  if (!loading && !user) return <SignIn />;
+
+  return (
+    <div className="flex flex-col gap-8">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex flex-col gap-3">
+          <Link href="/data-lab" className="font-mono text-xs text-signal hover:text-foreground">
+            ← Data Lab
+          </Link>
+          <h1 className="text-h2">Review · {target?.native_name ?? language}</h1>
+        </div>
+        {reviewed > 0 && <span className="font-mono text-xs text-subtle">{reviewed} reviewed this session</span>}
+      </div>
+
+      {view.status === "loading" && <p className="font-mono text-xs text-faint">Loading the next contribution…</p>}
+
+      {view.status === "empty" && (
+        <FramedCard panelsClassName="bg-[#1c1a0e] p-6 sm:p-8">
+          <p className="text-lg">Nothing is waiting for review in {target?.name ?? language}.</p>
+          <p className="pt-2 text-sm text-subtle">New contributions appear here as volunteers submit them.</p>
+        </FramedCard>
+      )}
+
+      {view.status === "blocked" && (
+        <FramedCard panelsClassName="flex flex-col items-start gap-4 bg-[#1c1a0e] p-6 sm:p-8">
+          <p className="text-lg">{view.message}</p>
+          <Link href="/data-lab" className={primaryButton}>
+            Back to the Data Lab
+          </Link>
+        </FramedCard>
+      )}
+
+      {view.status === "item" && (
+        <FramedCard panelsClassName="flex flex-col bg-[#0b0a07]">
+          <div className="grid md:grid-cols-2">
+            <div className="flex flex-col gap-5 bg-[#1c1a0e] p-6 sm:p-8">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                <Eyebrow>
+                  {view.item.kind === "translate"
+                    ? `Original · ${nameOf(view.item.item_language)}`
+                    : `Prompt · ${nameOf(view.item.item_language)}`}
+                </Eyebrow>
+                <span className="font-mono text-xs text-faint">{categoryLabel(view.item.category)}</span>
+              </div>
+              <p lang={view.item.item_language} className="text-xl leading-snug text-pretty">
+                {view.item.item_text}
+              </p>
+            </div>
+            <div className="flex flex-col gap-5 p-6 sm:p-8">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                <Eyebrow>
+                  {view.item.kind === "translate" ? "Translation" : "Answer"} · {target?.name ?? language}
+                </Eyebrow>
+                {view.item.pasted && (
+                  <span className="inline-flex h-6 items-center rounded-full border border-line-strong px-2.5 font-mono text-[11px] leading-none text-subtle">
+                    Pasted in
+                  </span>
+                )}
+              </div>
+              <p lang={language} className="text-xl leading-snug text-pretty whitespace-pre-line">
+                {view.item.text}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-5 border-t border-line p-6 sm:p-8">
+            {rejecting && (
+              <fieldset className="flex flex-col gap-4">
+                <legend className="pb-3 font-mono text-xs text-faint">Why isn&apos;t it ready?</legend>
+                <div className="flex flex-wrap gap-2">
+                  {reasons.map((r) => (
+                    <button
+                      key={r.value}
+                      type="button"
+                      aria-pressed={reason === r.value}
+                      onClick={() => setReason(r.value)}
+                      className={cn(
+                        "cursor-pointer rounded-full border px-4 py-1.5 font-mono text-xs transition-colors",
+                        reason === r.value
+                          ? "border-signal bg-signal text-background"
+                          : "border-line-strong text-subtle hover:border-signal hover:text-signal",
+                      )}
+                    >
+                      {r.label}
+                    </button>
+                  ))}
+                </div>
+                <label className="flex max-w-xl flex-col gap-1.5">
+                  <span className="font-mono text-xs text-faint">Note for the contributor (optional)</span>
+                  <textarea
+                    rows={2}
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    className={cn(fieldClasses, "resize-none")}
+                  />
+                </label>
+              </fieldset>
+            )}
+            {error && (
+              <p role="alert" className="text-sm text-destructive">
+                {error}
+              </p>
+            )}
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              {rejecting ? (
+                <>
+                  <button type="button" onClick={() => setRejecting(false)} disabled={busy} className={quietButton}>
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => decide(view.item, "reject")}
+                    disabled={busy || !reason}
+                    className={secondaryButton}
+                  >
+                    Reject
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button type="button" onClick={() => setRejecting(true)} disabled={busy} className={secondaryButton}>
+                    Needs changes
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => decide(view.item, "accept")}
+                    disabled={busy}
+                    className={cn(primaryButton, "min-w-32")}
+                  >
+                    Accept
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </FramedCard>
+      )}
+    </div>
+  );
+}
+
+export { Review };
