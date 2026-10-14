@@ -10,7 +10,7 @@ import { TagChain } from "@/components/system/tag-chain";
 export const metadata: Metadata = {
   title: "Data Lab",
   description:
-    "Translate, write, and review civic text in your language. Verified contributions build CommonMind's open datasets, starting with the Civic Corpus.",
+    "The Data Lab works with the communities who speak each language to build high-quality civic datasets, written and verified by native speakers, for training AI that understands civic discourse in their own languages.",
 };
 
 const DataLabPage = () => {
@@ -21,7 +21,7 @@ const DataLabPage = () => {
         sideGrids
         eyebrow="Data Lab"
         title="Build civic language data together."
-        lede="Translate, write, and review civic text in your language. Every contribution joins CommonMind's open datasets once a second speaker approves it, starting with the Civic Corpus."
+        lede="The Data Lab works with the communities who speak each language to build high-quality civic datasets, written and verified by native speakers, for training AI that understands civic discourse in their own languages."
         beneathTitle={<SignInLink />}
         beneathLede={<TagChain tags={["VOLUNTEER", "HUMAN-WRITTEN", "OPEN DATA"]} className="lg:flex-nowrap" />}
       />
