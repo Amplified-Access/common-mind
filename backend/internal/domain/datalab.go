@@ -151,14 +151,17 @@ type ContributionRef struct {
 // ProgressEvent is the WebSocket message type carrying a LanguageProgress.
 const ProgressEvent = "data-lab.progress"
 
-// LanguageProgress is a target language's live counts.
+// LanguageProgress is a target language's live counts. Translated and
+// Verified measure the output: sentence pairs with English, from translate
+// items. Pending and Open serve volunteers (the review queue, whether the
+// language accepts contributions); Reviewers stays internal.
 type LanguageProgress struct {
-	Code         string `json:"code"`
-	Verified     int    `json:"verified"`
-	Pending      int    `json:"pending"`
-	Contributors int    `json:"contributors"` // members at any level
-	Reviewers    int    `json:"reviewers"`    // reviewers and leads
-	Open         bool   `json:"open"`         // enough reviewers to accept contributions
+	Code       string `json:"code"`
+	Translated int    `json:"translated"` // pairs pending review or verified
+	Verified   int    `json:"verified"`   // pairs a second speaker approved
+	Pending    int    `json:"pending"`    // contributions of any kind awaiting review
+	Open       bool   `json:"open"`       // enough reviewers to accept contributions
+	Reviewers  int    `json:"-"`
 }
 
 // Dataset splits. A source's split is fixed when it is first imported.

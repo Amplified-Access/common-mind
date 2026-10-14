@@ -233,7 +233,7 @@ func TestDataLab_SaveReview_SetsStatusOnce(t *testing.T) {
 	}
 }
 
-func TestDataLab_Progress_CountsPerLanguage(t *testing.T) {
+func TestDataLab_Progress_CountsSentencePairsPerLanguage(t *testing.T) {
 	truncate(t, "users", "sources")
 	ctx := context.Background()
 	a := seedVolunteer(t, "uid-a", "sw")
@@ -245,6 +245,12 @@ func TestDataLab_Progress_CountsPerLanguage(t *testing.T) {
 	contribute(t, ids[0], a, domain.StatusVerified)
 	contribute(t, ids[1], a, domain.StatusPending)
 	contribute(t, ids[2], a, domain.StatusRejected)
+	// An answer to a write prompt is original text, not a pair with English.
+	var prompt int64
+	if err := testDB.QueryRow(`INSERT INTO items (source_id, kind, language_code, category, text) SELECT source_id, 'write', 'en', 'elections', 'prompt' FROM items WHERE id = $1 RETURNING id`, ids[0]).Scan(&prompt); err != nil {
+		t.Fatal(err)
+	}
+	contribute(t, prompt, a, domain.StatusVerified)
 
 	all, err := NewDataLabRepository(testDB).Progress(ctx, "")
 	if err != nil {
@@ -257,7 +263,7 @@ func TestDataLab_Progress_CountsPerLanguage(t *testing.T) {
 	if err != nil || len(sw) != 1 {
 		t.Fatalf("Progress(sw) = %v, %v", sw, err)
 	}
-	want := domain.LanguageProgress{Code: "sw", Verified: 1, Pending: 1, Contributors: 2, Reviewers: 1, Open: false}
+	want := domain.LanguageProgress{Code: "sw", Translated: 2, Verified: 1, Pending: 1, Reviewers: 1, Open: false}
 	if sw[0] != want {
 		t.Errorf("sw progress = %+v, want %+v", sw[0], want)
 	}

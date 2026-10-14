@@ -254,14 +254,17 @@ func (r *dataLabRepository) SaveReview(ctx context.Context, rec usecase.ReviewRe
 	return nil
 }
 
-// Progress computes live counts per target language. Open is derived from the
-// reviewer count with the same rule the use case enforces.
+// Progress computes live counts per target language. Sentence pairs are
+// contributions to translate items; Open is derived from the reviewer count
+// with the same rule the use case enforces.
 func (r *dataLabRepository) Progress(ctx context.Context, language string) ([]domain.LanguageProgress, error) {
 	const q = `
         SELECT l.code,
-               (SELECT count(*) FROM contributions c WHERE c.language_code = l.code AND c.status = 'verified'),
+               (SELECT count(*) FROM contributions c JOIN items i ON i.id = c.item_id
+                WHERE c.language_code = l.code AND i.kind = 'translate' AND c.status IN ('pending', 'verified')),
+               (SELECT count(*) FROM contributions c JOIN items i ON i.id = c.item_id
+                WHERE c.language_code = l.code AND i.kind = 'translate' AND c.status = 'verified'),
                (SELECT count(*) FROM contributions c WHERE c.language_code = l.code AND c.status = 'pending'),
-               (SELECT count(*) FROM language_members m WHERE m.language_code = l.code),
                (SELECT count(*) FROM language_members m WHERE m.language_code = l.code AND m.level IN ('reviewer', 'lead'))
         FROM languages l
         WHERE l.role = 'target' AND l.enabled AND ($1 = '' OR l.code = $1)
@@ -276,7 +279,7 @@ func (r *dataLabRepository) Progress(ctx context.Context, language string) ([]do
 	var out []domain.LanguageProgress
 	for rows.Next() {
 		var p domain.LanguageProgress
-		if err := rows.Scan(&p.Code, &p.Verified, &p.Pending, &p.Contributors, &p.Reviewers); err != nil {
+		if err := rows.Scan(&p.Code, &p.Translated, &p.Verified, &p.Pending, &p.Reviewers); err != nil {
 			return nil, fmt.Errorf("datalab repository: scan progress: %w", err)
 		}
 		p.Open = p.Reviewers >= domain.MinReviewersToOpen

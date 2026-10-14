@@ -908,22 +908,20 @@ const docTemplate = `{
                 "code": {
                     "type": "string"
                 },
-                "contributors": {
-                    "description": "members at any level",
-                    "type": "integer"
-                },
                 "open": {
                     "description": "enough reviewers to accept contributions",
                     "type": "boolean"
                 },
                 "pending": {
+                    "description": "contributions of any kind awaiting review",
                     "type": "integer"
                 },
-                "reviewers": {
-                    "description": "reviewers and leads",
+                "translated": {
+                    "description": "pairs pending review or verified",
                     "type": "integer"
                 },
                 "verified": {
+                    "description": "pairs a second speaker approved",
                     "type": "integer"
                 }
             }

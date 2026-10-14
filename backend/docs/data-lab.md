@@ -65,12 +65,14 @@ One review per contribution for now (`reviews.contribution_id` is unique). Dispu
 
 ## Live progress
 
-`Progress` returns, per enabled target language: verified and pending counts, members, reviewers, and `open` (reviewers ≥ `MinReviewersToOpen`). It's public at `GET /api/v1/data-lab/progress`.
+`Progress` returns, per enabled target language, the output in sentence pairs with English (contributions to `translate` items): `translated` (pending review or verified) and `verified`. It also returns `pending`, the review queue across all kinds, and `open` (reviewers ≥ `MinReviewersToOpen`). Reviewer and member counts stay internal: `Reviewers` is `json:"-"`. It's public at `GET /api/v1/data-lab/progress`.
+
+Answers to `write` prompts are original text, not pairs, so they count in `pending` while in review and in neither `translated` nor `verified`.
 
 After every successful contribution and review, the use case reloads that language's counts and publishes them on the WebSocket hub as a `data-lab.progress` message:
 
 ```json
-{"type": "data-lab.progress", "payload": {"code": "sw", "verified": 12, "pending": 3, "contributors": 8, "reviewers": 2, "open": true}}
+{"type": "data-lab.progress", "payload": {"code": "sw", "translated": 15, "verified": 12, "pending": 3, "open": true}}
 ```
 
 `NewDataLab` takes a `Broadcaster` (satisfied by `*ws.Hub`, wired in `server.go`); nil turns broadcasting off. Publishing is best-effort: the write has already succeeded, so a failure is logged and not returned. `/ws` needs a Firebase token, so live updates reach signed-in volunteers; signed-out visitors read the endpoint.
