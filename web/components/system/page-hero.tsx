@@ -19,6 +19,10 @@ type PageHeroProps = {
   children?: React.ReactNode;
   /** Full-width content after the heading block, still on the hero's wash. */
   after?: React.ReactNode;
+  /** Split layout only: content under the title, in the left column. */
+  beneathTitle?: React.ReactNode;
+  /** Split layout only: content under the lede, in the right column. */
+  beneathLede?: React.ReactNode;
   /** A hairline closes the hero, for pages with tabs or a side rail below. */
   ruled?: boolean;
   /** Faint grids at either edge of the hero. */
@@ -35,6 +39,8 @@ function PageHero({
   align = "center",
   children,
   after,
+  beneathTitle,
+  beneathLede,
   ruled,
   sideGrids,
   className,
@@ -67,8 +73,16 @@ function PageHero({
           <div className="flex w-full flex-col gap-5">
             {eyebrow && <Eyebrow className="text-base">{eyebrow}</Eyebrow>}
             <div className="grid w-full gap-5 md:grid-cols-[minmax(0,26rem)_minmax(0,22rem)] md:gap-6">
-              <h1 className="text-h2 text-balance">{title}</h1>
-              {lede && <p className="text-sm text-pretty text-subtle md:pt-2">{lede}</p>}
+              <div className="flex flex-col items-start gap-6">
+                <h1 className="text-h2 text-balance">{title}</h1>
+                {beneathTitle}
+              </div>
+              {(lede || beneathLede) && (
+                <div className="flex flex-col items-start gap-5 md:pt-2">
+                  {lede && <p className="text-sm text-pretty text-subtle">{lede}</p>}
+                  {beneathLede}
+                </div>
+              )}
             </div>
           </div>
         )}
