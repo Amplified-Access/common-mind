@@ -1,5 +1,7 @@
 "use client";
 
+import { Mic01Icon, StopIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -14,6 +16,10 @@ const MAX_SECONDS = 180;
 // What each browser records best, in order of preference: Opus in WebM
 // (Chrome, Edge, Firefox), MP4 (Safari), then Ogg.
 const TYPES = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg;codecs=opus", "audio/ogg"];
+
+// The waveform: one bar per animation frame's loudness, newest on the right.
+const BAR = 3;
+const GAP = 2;
 
 export type Recording = {
   blob: Blob;
@@ -31,8 +37,10 @@ export const canRecordAudio = () =>
   typeof window !== "undefined" && "MediaRecorder" in window && !!navigator.mediaDevices?.getUserMedia;
 
 /**
- * Records one take from the microphone: start, stop (or the time limit),
- * then play it back or record again. The parent holds the take.
+ * Records one take from the microphone: press the microphone to start, press
+ * again (or reach the time limit) to stop, then play it back or record
+ * again. While recording, a live waveform shows the voice is coming through.
+ * The parent holds the take.
  */
 function VoiceRecorder({
   recording,
@@ -47,10 +55,17 @@ function VoiceRecorder({
   const recorder = useRef<MediaRecorder | null>(null);
   const stream = useRef<MediaStream | null>(null);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const audio = useRef<AudioContext | null>(null);
+  const frame = useRef<number | null>(null);
+  const canvas = useRef<HTMLCanvasElement>(null);
 
   const release = () => {
     if (timer.current) clearInterval(timer.current);
     timer.current = null;
+    if (frame.current !== null) cancelAnimationFrame(frame.current);
+    frame.current = null;
+    void audio.current?.close();
+    audio.current = null;
     stream.current?.getTracks().forEach((t) => t.stop());
     stream.current = null;
   };
@@ -59,6 +74,8 @@ function VoiceRecorder({
   useEffect(
     () => () => {
       if (timer.current) clearInterval(timer.current);
+      if (frame.current !== null) cancelAnimationFrame(frame.current);
+      void audio.current?.close();
       stream.current?.getTracks().forEach((t) => t.stop());
     },
     [],
@@ -69,6 +86,48 @@ function VoiceRecorder({
     if (!recording) return;
     return () => URL.revokeObjectURL(recording.url);
   }, [recording]);
+
+  // Draws the voice's loudness as it arrives, scrolling right to left.
+  const drawWaveform = (media: MediaStream) => {
+    const ctx = new AudioContext();
+    const analyser = ctx.createAnalyser();
+    analyser.fftSize = 1024;
+    ctx.createMediaStreamSource(media).connect(analyser);
+    audio.current = ctx;
+
+    const samples = new Uint8Array(analyser.fftSize);
+    const levels: number[] = [];
+    const tick = () => {
+      const el = canvas.current;
+      const g = el?.getContext("2d");
+      if (el && g) {
+        const dpr = window.devicePixelRatio || 1;
+        const width = el.clientWidth;
+        const height = el.clientHeight;
+        if (el.width !== width * dpr) el.width = width * dpr;
+        if (el.height !== height * dpr) el.height = height * dpr;
+
+        analyser.getByteTimeDomainData(samples);
+        let sum = 0;
+        for (const s of samples) sum += ((s - 128) / 128) ** 2;
+        // Speech sits low on the raw scale; lift it so a normal voice fills the bar.
+        levels.push(Math.min(1, Math.sqrt(sum / samples.length) * 4));
+        const count = Math.floor(width / (BAR + GAP));
+        if (levels.length > count) levels.splice(0, levels.length - count);
+
+        g.setTransform(dpr, 0, 0, dpr, 0, 0);
+        g.clearRect(0, 0, width, height);
+        g.fillStyle = getComputedStyle(el).color;
+        levels.forEach((level, i) => {
+          const h = Math.max(2, level * height);
+          const x = width - (levels.length - i) * (BAR + GAP);
+          g.fillRect(x, (height - h) / 2, BAR, h);
+        });
+      }
+      frame.current = requestAnimationFrame(tick);
+    };
+    frame.current = requestAnimationFrame(tick);
+  };
 
   const start = async () => {
     let media: MediaStream;
@@ -95,6 +154,7 @@ function VoiceRecorder({
     onChange(null);
     rec.start();
     setElapsed(0);
+    drawWaveform(media);
     timer.current = setInterval(() => {
       const s = (Date.now() - startedAt) / 1000;
       setElapsed(s);
@@ -109,53 +169,53 @@ function VoiceRecorder({
   const recordingNow = elapsed !== null;
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-4">
-        <button
-          type="button"
-          onClick={recordingNow ? stop : start}
-          disabled={disabled}
-          aria-label={recordingNow ? "Stop recording" : recording ? "Record again" : "Start recording"}
-          className={cn(
-            "flex size-14 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-60",
-            recordingNow ? "bg-foreground" : "bg-signal hover:bg-signal/85",
-          )}
-        >
-          {recordingNow ? (
-            <span className="size-4 rounded-[3px] bg-background" />
-          ) : (
-            <span className="size-5 rounded-full bg-background" />
-          )}
-        </button>
-        <div className="flex flex-col gap-1">
-          <span className="font-mono text-sm tabular-nums">
-            {recordingNow ? (
-              <>
-                <span className="mr-2 inline-block size-2 animate-pulse rounded-full bg-signal align-middle" />
-                {clock(elapsed)} / {clock(MAX_SECONDS)}
-              </>
-            ) : recording ? (
-              clock(recording.seconds)
-            ) : (
-              "Ready to record"
-            )}
-          </span>
-          <span className="font-mono text-xs text-faint">
-            {recordingNow
-              ? "Recording. Press stop when you're done."
-              : recording
-                ? "Listen back, or record again."
-                : `Press to start. Up to ${MAX_SECONDS / 60} minutes.`}
-          </span>
-        </div>
+    <div className="flex w-full flex-col items-center gap-5 text-center">
+      <button
+        type="button"
+        onClick={recordingNow ? stop : start}
+        disabled={disabled}
+        aria-label={recordingNow ? "Stop recording" : recording ? "Record again" : "Start recording"}
+        className={cn(
+          "relative flex size-20 shrink-0 cursor-pointer items-center justify-center rounded-full text-background transition-colors disabled:cursor-not-allowed disabled:opacity-60",
+          recordingNow ? "bg-foreground" : "bg-signal hover:bg-signal/85",
+        )}
+      >
+        {recordingNow && (
+          <span aria-hidden className="absolute inset-0 animate-ping rounded-full bg-signal/30 motion-reduce:hidden" />
+        )}
+        <HugeiconsIcon icon={recordingNow ? StopIcon : Mic01Icon} strokeWidth={2} className="relative size-8" />
+      </button>
+
+      {/* One slot for the live waveform or the take's player, so nothing jumps. */}
+      <div className="flex h-12 w-full max-w-sm items-center justify-center">
+        {recordingNow ? (
+          <canvas ref={canvas} aria-hidden className="h-12 w-full text-signal" />
+        ) : (
+          recording && <audio controls src={recording.url} className="h-10 w-full" />
+        )}
       </div>
+
+      <div className="flex flex-col items-center gap-1">
+        {recordingNow ? (
+          <span className="font-mono text-sm tabular-nums">
+            {clock(elapsed)} / {clock(MAX_SECONDS)}
+          </span>
+        ) : (
+          recording && <span className="font-mono text-sm tabular-nums">{clock(recording.seconds)}</span>
+        )}
+        <span className="font-mono text-xs text-faint">
+          {recordingNow
+            ? "Recording. Press stop when you're done."
+            : recording
+              ? "Listen back, or press the microphone to record again."
+              : `Press to start. Up to ${MAX_SECONDS / 60} minutes.`}
+        </span>
+      </div>
+
       {recording && !recordingNow && (
-        <div className="flex flex-wrap items-center gap-3">
-          <audio controls src={recording.url} className="h-10 max-w-full flex-1" />
-          <button type="button" onClick={() => onChange(null)} disabled={disabled} className={quietButton}>
-            Discard
-          </button>
-        </div>
+        <button type="button" onClick={() => onChange(null)} disabled={disabled} className={quietButton}>
+          Discard
+        </button>
       )}
     </div>
   );
