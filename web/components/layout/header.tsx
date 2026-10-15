@@ -151,7 +151,7 @@ const Header = () => {
             </nav>
             <div className="mt-auto flex flex-col gap-3 p-6">
               <Link
-                href="/data-lab"
+                href="/build"
                 onClick={() => setMobileNavOpen(false)}
                 className={buttonClasses("signal", "h-11")}
               >
