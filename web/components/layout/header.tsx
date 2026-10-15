@@ -108,7 +108,7 @@ const Header = () => {
             Hugging Face
           </a>
           <Link
-            href="/data-lab"
+            href="/build"
             className={buttonClasses("signal", "max-lg:px-3.5")}
           >
             Get Started
