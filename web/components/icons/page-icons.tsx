@@ -44,30 +44,10 @@ function BenchmarksIcon(props: React.SVGProps<SVGSVGElement>) {
 function BuildIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 28 22" fill="currentColor" aria-hidden {...props}>
-      <path d="M7.519" />
-      <path d="3.481L0" />
-      <path d="11L7.519" />
-      <path d="18.519L9.358" />
-      <path d="16.681L3.677" />
-      <path d="11L9.358" />
-      <path d="5.319Z" />
-      <path d="M20.481" />
-      <path d="3.481L28" />
-      <path d="11L20.481" />
-      <path d="18.519L18.642" />
-      <path d="16.681L24.323" />
-      <path d="11L18.642" />
-      <path d="5.319Z" />
-      <path d="M12.863" />
-      <path d="21.109L14.93" />
-      <path d="12.669L12.404" />
-      <path d="12.051L10.337" />
-      <path d="20.491Z" />
-      <path d="M15.596" />
-      <path d="9.949L17.663" />
-      <path d="1.509L15.137" />
-      <path d="0.891L13.07" />
-      <path d="9.331Z" />
+      <path d="M7.519 3.481L0 11L7.519 18.519L9.358 16.681L3.677 11L9.358 5.319Z" />
+      <path d="M20.481 3.481L28 11L20.481 18.519L18.642 16.681L24.323 11L18.642 5.319Z" />
+      <path d="M12.863 21.109L14.93 12.669L12.404 12.051L10.337 20.491Z" />
+      <path d="M15.596 9.949L17.663 1.509L15.137 0.891L13.07 9.331Z" />
     </svg>
   );
 }
