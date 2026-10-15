@@ -22,6 +22,11 @@ import { canRecordAudio, type Recording, VoiceRecorder } from "./voice-recorder"
 
 const MAX_CHARS = 2000;
 
+// Writing and speaking share one form height, so switching between them (or
+// loading the next task) doesn't move the page. The text box takes whatever
+// the form doesn't need.
+const FORM_HEIGHT = "h-104";
+
 const categoryLabel = (id: string) => civicCategories.find((c) => c.id === id)?.label ?? id;
 
 type View =
@@ -195,7 +200,11 @@ function Contribute({ language }: { language: string }) {
         </FramedCard>
       ) : (
         <>
-          {view.status === "loading" && <p className="font-mono text-xs text-faint">Loading the next task…</p>}
+          {view.status === "loading" && (
+            <p className={cn("flex items-center font-mono text-xs text-faint", FORM_HEIGHT)}>
+              Loading the next task…
+            </p>
+          )}
 
           {view.status === "empty" && (
             <FramedCard panelsClassName="bg-[#1c1a0e] p-6 sm:p-8">
@@ -250,7 +259,7 @@ function Contribute({ language }: { language: string }) {
               </div>
 
               <form
-                className="flex flex-col gap-4 p-6 sm:p-8"
+                className={cn("flex flex-col gap-4 p-6 sm:p-8", FORM_HEIGHT)}
                 onSubmit={(e) => {
                   e.preventDefault();
                   submit(view.task);
@@ -278,7 +287,7 @@ function Contribute({ language }: { language: string }) {
                       autoFocus
                       aria-label={`Your text in ${target?.name ?? language}`}
                       placeholder={view.task.kind === "translate" ? "Write the translation" : "Write your answer"}
-                      className="min-h-48 w-full flex-1 resize-none bg-transparent text-xl leading-snug text-foreground outline-none placeholder:text-foreground/25"
+                      className="min-h-0 w-full flex-1 resize-none bg-transparent text-xl leading-snug text-foreground outline-none placeholder:text-foreground/25"
                     />
                     <CharacterPalette
                       characters={target?.extra_characters ?? []}
