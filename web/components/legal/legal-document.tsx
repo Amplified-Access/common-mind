@@ -61,16 +61,4 @@ function LegalSubheading({ children }: { children: React.ReactNode }) {
   return <h3 className="pt-1 text-sm font-semibold text-foreground">{children}</h3>;
 }
 
-function LegalList({ items }: { items: string[] }) {
-  return (
-    <ul className="flex flex-col gap-0.5 pl-6">
-      {items.map((item) => (
-        <li key={item} className="relative before:absolute before:top-[0.6em] before:-left-4 before:size-1 before:bg-faint">
-          {item}
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-export { LegalDocument, LegalList, LegalSection, LegalSubheading };
+export { LegalDocument, LegalSection, LegalSubheading };

@@ -4,8 +4,8 @@ import { defineArrayMember, defineField, defineType } from "sanity";
 
 // Rich text for legal pages, limited to what the page design draws:
 // numbered sections (Section heading), subheadings, paragraphs and bullet
-// lists, with links, monospace text, and "To confirm" for details still
-// pending (drawn in yellow until replaced).
+// lists, with links, bright and monospace text, and "To confirm" for
+// details still pending (drawn in yellow until replaced).
 const legalText = (sections: boolean) =>
   defineArrayMember({
     type: "block",
@@ -21,6 +21,7 @@ const legalText = (sections: boolean) =>
     lists: sections ? [{ title: "Bullets", value: "bullet" }] : [],
     marks: {
       decorators: [
+        { title: "Bright", value: "bright" },
         { title: "Monospace", value: "code" },
         { title: "To confirm", value: "pending", icon: HighlightIcon },
       ],
