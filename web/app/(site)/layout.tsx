@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Mono, Sora } from "next/font/google";
-import "./globals.css";
+import "../globals.css";
 import { cn } from "@/lib/utils";
 import { announcement, site } from "@/lib/site";
 import { AnnouncementBanner } from "@/components/layout/announcement-banner";
