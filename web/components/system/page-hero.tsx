@@ -113,7 +113,7 @@ function PageHero({
   );
 }
 
-// The CommonMind mark on a yellow tile, at the center of a fine grid that
+// The page's icon on a yellow tile cut like the CommonMind mark, at the center of a fine grid that
 // fades out around it, with a few lit nodes on its intersections: the model
 // at the center of the infrastructure. Measured from the 2026-10 mocks.
 const COL = 31.25;
@@ -158,8 +158,8 @@ function NodeTile({ icon }: { icon: IconSvgElement }) {
           <circle key={`${c}-${r}`} cx={c * COL} cy={r * ROW} r={2.5} fill="white" />
         ))}
       </svg>
-      <div className="absolute top-1/2 left-1/2 flex size-15 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-xl bg-signal">
-        <HugeiconsIcon icon={icon} strokeWidth={1.75} className="size-8 text-background" />
+      <div className="chamfer absolute top-1/2 left-1/2 flex size-15 -translate-x-1/2 -translate-y-1/2 items-center justify-center bg-signal">
+        <HugeiconsIcon icon={icon} strokeWidth={2} className="size-8 text-background" />
       </div>
     </div>
   );
