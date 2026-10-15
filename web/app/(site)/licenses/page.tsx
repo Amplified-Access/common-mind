@@ -1,24 +1,18 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 
 import { LegalDocument, LegalSection } from "@/components/legal/legal-document";
 import { registryModels } from "@/components/models/registry";
 import { getContent } from "@/lib/content";
+import { getPageCopy, pageMetadata } from "@/lib/copy";
 
-export const metadata: Metadata = {
-  title: "Licenses",
-  description: "The licenses CommonMind's models are released under, and where each dataset's terms live.",
-};
+export const generateMetadata = () => pageMetadata("licenses");
 
 const LicensesPage = async () => {
-  const { datasets } = await getContent();
+  const [{ datasets }, copy] = await Promise.all([getContent(), getPageCopy("licenses")]);
   return (
-    <LegalDocument title="Licenses" updated="October 2026">
-      <LegalSection number={1} title="Models">
-        <p>
-          Each model is released under its own license, and adapters also inherit the terms of
-          the base model they load.
-        </p>
+    <LegalDocument title={copy.title} updated={copy.updated}>
+      <LegalSection number={1} title={copy.models.title}>
+        <p>{copy.models.intro}</p>
         <dl className="flex flex-col border-t border-line">
           {registryModels.map((model) => (
             <div key={model.slug} className="grid gap-1 border-b border-line py-4 font-mono text-[13px] sm:grid-cols-2 sm:gap-6">
@@ -30,7 +24,7 @@ const LicensesPage = async () => {
               <dd>
                 {model.license}
                 <span className="block text-xs">
-                  Base:{" "}
+                  {copy.models.base}{" "}
                   <a href={model.base.href} target="_blank" rel="noreferrer" className="hover:text-signal">
                     {model.base.id} ↗
                   </a>
@@ -41,11 +35,8 @@ const LicensesPage = async () => {
         </dl>
       </LegalSection>
 
-      <LegalSection number={2} title="Datasets">
-        <p>
-          The datasets behind the models are published by their own maintainers, under their own
-          terms. Check each publisher&apos;s page before reuse.
-        </p>
+      <LegalSection number={2} title={copy.datasets.title}>
+        <p>{copy.datasets.intro}</p>
         <ul className="flex flex-col border-t border-line">
           {datasets.map((dataset) => (
             <li key={dataset.slug} className="flex items-baseline justify-between gap-6 border-b border-line py-3 font-mono text-[13px]">
@@ -60,8 +51,8 @@ const LicensesPage = async () => {
         </ul>
       </LegalSection>
 
-      <LegalSection number={3} title="This Website">
-        <p className="text-signal">[License for the website&apos;s code and content to be provided.]</p>
+      <LegalSection number={3} title={copy.website.title}>
+        <p className="text-signal">{copy.website.text}</p>
       </LegalSection>
     </LegalDocument>
   );

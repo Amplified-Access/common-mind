@@ -15,6 +15,8 @@ import { ArrowLink, Eyebrow, Panel } from "@/components/system/primitives";
 import { SideNav } from "@/components/system/side-nav";
 import { TagChain } from "@/components/system/tag-chain";
 import { copyFor, getContent } from "@/lib/content";
+import { getPageCopy } from "@/lib/copy";
+import { fill } from "@/lib/copy/fill";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -35,37 +37,19 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return { title: dataset.name, description: dataset.description };
 }
 
-const sections = [
-  { id: "overview", label: "Overview" },
-  { id: "data", label: "Data" },
-  { id: "methodology", label: "Methodology" },
-  { id: "usage", label: "Usage" },
-  { id: "models", label: "Models" },
-  { id: "limitations", label: "Limitations" },
-  { id: "versions", label: "Versions" },
-];
+const SECTIONS = ["overview", "data", "methodology", "usage", "models", "limitations", "versions"] as const;
 
 // Placeholder copy until each dataset's documentation is written up.
-const methodology = [
-  ["Collection", "How the source language data was gathered."],
-  ["Processing", "How speech and related resources were prepared and structured."],
-  ["Annotation", "How language and civic information were organised within the dataset."],
-  ["Review", "How the resulting data was assessed and prepared for use."],
-];
-
-const limitations = [
-  ["Known Limitations", "Document known gaps and constraints within the dataset."],
-  ["Intended Use", "Describe the research and development contexts the dataset is designed to support."],
-  ["Out-of-Scope Use", "Clarify applications or interpretations the dataset was not designed to support."],
-  ["Representation", "Document relevant considerations around language and contextual coverage."],
-];
+const METHODOLOGY = ["collection", "processing", "annotation", "review"] as const;
+const LIMITATIONS = ["known", "intended", "outOfScope", "representation"] as const;
 
 const DatasetPage = async ({ params }: PageProps) => {
   const { slug } = await params;
   const dataset = await getDataset(slug);
   if (!dataset) notFound();
 
-  const content = await getContent();
+  const [content, copy] = await Promise.all([getContent(), getPageCopy("datasetDetail")]);
+  const sections = SECTIONS.map((id) => ({ id, label: copy.nav[id] }));
   const models = registryModels
     .filter((m) => dataset.usedBy.includes(m.name))
     .map((m) => ({ ...m, tagline: copyFor(content, m.slug).tagline }));
@@ -77,7 +61,7 @@ const DatasetPage = async ({ params }: PageProps) => {
       <PageHero
         ruled
         sideGrids
-        eyebrow={`Datasets / ${dataset.kind}`}
+        eyebrow={fill(copy.hero.eyebrow, { kind: dataset.kind })}
         title={dataset.name}
         lede={dataset.description}
         tags={[...dataset.languages, dataset.kind, dataset.source]}
@@ -90,15 +74,15 @@ const DatasetPage = async ({ params }: PageProps) => {
           </aside>
 
           <div className="flex min-w-0 flex-col gap-24">
-            <Block id="overview" eyebrow="Overview" title="The data, in context.">
+            <Block id="overview" eyebrow={copy.overview.eyebrow} title={copy.overview.title}>
               <p className="text-sm text-pretty text-faint">{dataset.description}</p>
               {models.length > 0 && (
                 <p className="text-sm text-pretty text-faint">
-                  CommonMind uses it to train and evaluate {models.map((m) => m.name).join(", ")}.
+                  {fill(copy.overview.usedBy, { models: models.map((m) => m.name).join(", ") })}
                 </p>
               )}
               <InfoTable
-                title="DATASET INFORMATION"
+                title={copy.overview.tableTitle}
                 rows={[
                   { label: "Language", value: languages },
                   { label: "Data type", value: dataset.kind },
@@ -120,9 +104,9 @@ const DatasetPage = async ({ params }: PageProps) => {
               />
             </Block>
 
-            <Block id="data" eyebrow="Data" title="Explore what's in the dataset." lede="Understand the language, content, and structure represented within the corpus.">
+            <Block id="data" eyebrow={copy.data.eyebrow} title={copy.data.title} lede={copy.data.lede}>
               <Panel className="overflow-hidden">
-                <h3 className="border-b border-line px-6 py-4 font-mono text-lg sm:px-10">DATA PREVIEW</h3>
+                <h3 className="border-b border-line px-6 py-4 font-mono text-lg sm:px-10">{copy.data.previewTitle}</h3>
                 <table className="w-full font-mono text-sm">
                   <thead>
                     <tr className="text-left">
@@ -145,15 +129,13 @@ const DatasetPage = async ({ params }: PageProps) => {
                   </tbody>
                 </table>
                 <p className="px-6 pt-4 pb-6 font-mono text-xs text-faint sm:px-10">
-                  Sample rows will appear here once the preview is published.
+                  {copy.data.previewNote}
                 </p>
               </Panel>
 
               <div className="flex flex-col gap-6 pt-6">
-                <h3 className="text-h3">What&apos;s represented.</h3>
-                <p className="text-sm text-faint">
-                  Understand the languages, data types, and contexts covered by this dataset.
-                </p>
+                <h3 className="text-h3">{copy.data.representedTitle}</h3>
+                <p className="text-sm text-faint">{copy.data.representedLede}</p>
                 <dl className="grid grid-cols-2 gap-6 border-y border-line py-6 font-mono text-sm sm:grid-cols-4">
                   {[
                     ["Language", languages],
@@ -169,27 +151,27 @@ const DatasetPage = async ({ params }: PageProps) => {
                 </dl>
                 {dataset.domains && (
                   <div className="flex flex-col gap-4">
-                    <span className="font-mono text-sm">Domains</span>
+                    <span className="font-mono text-sm">{copy.data.domains}</span>
                     <TagChain tags={dataset.domains} />
                   </div>
                 )}
               </div>
             </Block>
 
-            <Block id="methodology" eyebrow="Methodology" title="How the dataset was built." lede="Learn how the data was collected, processed, structured, reviewed, and prepared for civic language research.">
+            <Block id="methodology" eyebrow={copy.methodology.eyebrow} title={copy.methodology.title} lede={copy.methodology.lede}>
               <ol className="flex flex-col gap-8 border-t border-line pt-10">
-                {methodology.map(([step, line], i) => (
-                  <li key={step} className="flex flex-col gap-2">
+                {METHODOLOGY.map((key, i) => (
+                  <li key={key} className="flex flex-col gap-2">
                     <span className="font-mono text-lg">
-                      {String(i + 1).padStart(2, "0")} — {step}
+                      {String(i + 1).padStart(2, "0")} — {copy.methodology[key].title}
                     </span>
-                    <span className="text-sm text-faint">{line}</span>
+                    <span className="text-sm text-faint">{copy.methodology[key].text}</span>
                   </li>
                 ))}
               </ol>
             </Block>
 
-            <Block id="usage" eyebrow="Usage" title={`Use ${dataset.name}.`} lede="Access the dataset for research, model development, evaluation, and civic language experimentation.">
+            <Block id="usage" eyebrow={copy.usage.eyebrow} title={fill(copy.usage.title, { name: dataset.name })} lede={copy.usage.lede}>
               <CodeTabs
                 variant="box"
                 tabs={[
@@ -200,32 +182,30 @@ const DatasetPage = async ({ params }: PageProps) => {
                   })),
                   {
                     id: "documentation",
-                    label: "Documentation",
+                    label: copy.usage.documentationTab,
                     content: (
                       <Panel className="flex flex-col gap-4 p-8">
-                        <p className="text-sm text-faint">
-                          The publisher&apos;s page documents the dataset&apos;s sources, structure and terms of use.
-                        </p>
-                        <ArrowLink href={dataset.href}>Read Documentation</ArrowLink>
+                        <p className="text-sm text-faint">{copy.usage.documentationText}</p>
+                        <ArrowLink href={dataset.href}>{copy.usage.readDocumentation}</ArrowLink>
                       </Panel>
                     ),
                   },
                 ]}
               />
               <InfoTable
-                title="Dataset Details"
+                title={copy.usage.detailsTitle}
                 rows={[{ label: "Format" }, { label: "Version" }, { label: "License" }, { label: "Download Size" }]}
                 footer={
                   <div className="flex flex-wrap gap-8 pt-4">
-                    <ArrowLink href={dataset.href}>Download Dataset</ArrowLink>
-                    <ArrowLink href={dataset.href}>Read Documentation</ArrowLink>
+                    <ArrowLink href={dataset.href}>{copy.usage.download}</ArrowLink>
+                    <ArrowLink href={dataset.href}>{copy.usage.readDocumentation}</ArrowLink>
                   </div>
                 }
               />
             </Block>
 
             {models.length > 0 && (
-              <Block id="models" eyebrow="Connected Models" title="Models connected to this dataset." lede={`Explore models and language tools built with ${dataset.name}.`}>
+              <Block id="models" eyebrow={copy.models.eyebrow} title={copy.models.title} lede={fill(copy.models.lede, { name: dataset.name })}>
                 <ul className="grid gap-3 sm:grid-cols-2">
                   {models.map((m) => (
                     <li key={m.slug}>
@@ -237,7 +217,7 @@ const DatasetPage = async ({ params }: PageProps) => {
                         <span className="text-sm text-faint">{m.tagline}.</span>
                         <TagChain tags={[...servedLanguages(m), taskLabel(m.task)]} size="sm" uppercase />
                         <span className="mt-auto inline-flex items-center gap-2 font-mono text-xs text-signal">
-                          View Model
+                          {copy.models.cardCta}
                           <Arrow direction="right" className="transition-transform group-hover:translate-x-0.5" />
                         </span>
                       </Link>
@@ -247,18 +227,18 @@ const DatasetPage = async ({ params }: PageProps) => {
               </Block>
             )}
 
-            <Block id="limitations" eyebrow="Limitations" title="Understand the boundaries of the data." lede="Review known limitations, representation gaps, intended uses, and areas where additional language data or research may be needed.">
+            <Block id="limitations" eyebrow={copy.limitations.eyebrow} title={copy.limitations.title} lede={copy.limitations.lede}>
               <dl className="flex flex-col gap-8 border-t border-line pt-10">
-                {limitations.map(([title, line]) => (
-                  <div key={title} className="flex flex-col gap-2">
-                    <dt className="font-mono text-lg">{title}</dt>
-                    <dd className="text-sm text-faint">{line}</dd>
+                {LIMITATIONS.map((key) => (
+                  <div key={key} className="flex flex-col gap-2">
+                    <dt className="font-mono text-lg">{copy.limitations[key].title}</dt>
+                    <dd className="text-sm text-faint">{copy.limitations[key].text}</dd>
                   </div>
                 ))}
               </dl>
             </Block>
 
-            <Block id="versions" eyebrow="Versions" title="Dataset history." lede="Track changes, additions, and improvements across releases.">
+            <Block id="versions" eyebrow={copy.versions.eyebrow} title={copy.versions.title} lede={copy.versions.lede}>
               <Panel className="overflow-hidden">
                 <table className="w-full font-mono text-sm">
                   <thead>
@@ -274,14 +254,14 @@ const DatasetPage = async ({ params }: PageProps) => {
                     <tr>
                       <td className="px-6 py-4 sm:pl-10">–</td>
                       <td className="px-6 py-4">–</td>
-                      <td className="px-6 py-4">In use</td>
+                      <td className="px-6 py-4">{copy.versions.inUse}</td>
                       <td className="px-6 py-4">{dataset.used ?? "–"}</td>
                     </tr>
                   </tbody>
                 </table>
                 <div className="px-6 pb-6 sm:px-10">
                   <ArrowLink href={dataset.href} arrow="right">
-                    View Release Notes
+                    {copy.versions.releaseNotes}
                   </ArrowLink>
                 </div>
               </Panel>

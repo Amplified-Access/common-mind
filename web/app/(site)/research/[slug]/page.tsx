@@ -6,6 +6,8 @@ import { PublicationArticle } from "@/components/research/publication-article";
 import { readTimeForPublication } from "@/components/research/read-time";
 import { PageHero } from "@/components/system/page-hero";
 import { getContent } from "@/lib/content";
+import { getPageCopy } from "@/lib/copy";
+import { fill } from "@/lib/copy/fill";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -43,18 +45,23 @@ const ResearchArticlePage = async ({ params }: PageProps) => {
     notFound();
   }
 
+  const copy = await getPageCopy("researchReport");
+
   return (
     <>
       <PageHero
         ruled
-        eyebrow="Research / Technical Report"
+        eyebrow={copy.eyebrow}
         title={publication.title}
         lede={publication.dek}
-        tags={[...publication.tags, `${readTimeForPublication(publication)} MIN READ`]}
+        tags={[
+          ...publication.tags,
+          fill(copy.readTime, { minutes: String(readTimeForPublication(publication)) }),
+        ]}
       />
       <section className="zoom-viewport py-16 sm:py-20">
         <Container size="sm" className="max-w-2xl">
-          <PublicationArticle publication={publication} />
+          <PublicationArticle publication={publication} copy={copy} />
         </Container>
       </section>
     </>

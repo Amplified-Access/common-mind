@@ -14,6 +14,8 @@ import { PageHero } from "@/components/system/page-hero";
 import { PageTabs } from "@/components/system/page-tabs";
 import { ArrowLink, Eyebrow, Panel, Section, StatusDot } from "@/components/system/primitives";
 import { copyFor, getContent } from "@/lib/content";
+import { getPageCopy } from "@/lib/copy";
+import { fill } from "@/lib/copy/fill";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -36,7 +38,7 @@ const ModelPage = async ({ params }: PageProps) => {
   const model = getModel(slug);
   if (!model) notFound();
 
-  const content = await getContent();
+  const [content, text] = await Promise.all([getContent(), getPageCopy("modelDetail")]);
   const copy = copyFor(content, model.slug);
   const languages = servedLanguages(model);
   const evaluation = model.evaluation;
@@ -48,8 +50,8 @@ const ModelPage = async ({ params }: PageProps) => {
   const overview = (
     <TabBody>
       <div className="flex flex-col gap-5">
-        <Eyebrow uppercase={false}>About this model</Eyebrow>
-        <h2 className="text-h2 text-balance">Advancing {pair} translation</h2>
+        <Eyebrow uppercase={false}>{text.overview.eyebrow}</Eyebrow>
+        <h2 className="text-h2 text-balance">{fill(text.overview.title, { pair })}</h2>
         <p className="text-sm text-pretty text-faint">{copy.overview}</p>
         <ul className="flex flex-col gap-2 pt-2 text-sm text-subtle">
           {copy.capabilities.map((capability) => (
@@ -61,12 +63,12 @@ const ModelPage = async ({ params }: PageProps) => {
         </ul>
         {hf?.href && (
           <ArrowLink href={hf.href} className="pt-3">
-            Hugging Face
+            {text.overview.hfLink}
           </ArrowLink>
         )}
       </div>
       <InfoTable
-        title="Model Information"
+        title={text.overview.tableTitle}
         ruled
         rows={[
           { label: "Language", value: languages.join(", ") },
@@ -96,18 +98,18 @@ const ModelPage = async ({ params }: PageProps) => {
   const benchmarks = (
     <TabBody>
       <div className="flex flex-col gap-5">
-        <Eyebrow uppercase={false}>Performance</Eyebrow>
-        <h2 className="text-h2 text-balance">Performance, measured openly.</h2>
+        <Eyebrow uppercase={false}>{text.benchmarks.eyebrow}</Eyebrow>
+        <h2 className="text-h2 text-balance">{text.benchmarks.title}</h2>
         <p className="text-sm text-pretty text-faint">{evaluation.summary}</p>
         <div className="flex flex-col gap-3 pt-3">
-          <ArrowLink href="/benchmarks#methodology">View full benchmark methodology</ArrowLink>
+          <ArrowLink href="/benchmarks#methodology">{text.benchmarks.methodologyLink}</ArrowLink>
           {evaluation.flores && (
-            <ArrowLink href="/benchmarks#results">Compare with other models</ArrowLink>
+            <ArrowLink href="/benchmarks#results">{text.benchmarks.compareLink}</ArrowLink>
           )}
         </div>
       </div>
       <Panel className="overflow-hidden">
-        <h3 className="border-b border-line px-6 py-4 font-mono text-lg sm:px-10">Performance</h3>
+        <h3 className="border-b border-line px-6 py-4 font-mono text-lg sm:px-10">{text.benchmarks.panelTitle}</h3>
         <ul className="flex flex-col gap-4 px-6 py-7 sm:px-10">
           {[
             { label: "BLEU", value: evaluation.bleu, ours: true },
@@ -133,7 +135,7 @@ const ModelPage = async ({ params }: PageProps) => {
             ))}
         </ul>
         <p className="px-6 pb-6 font-mono text-xs text-faint sm:px-10">
-          Scores out of 100 · {evaluation.short}
+          {fill(text.benchmarks.scale, { set: evaluation.short })}
         </p>
       </Panel>
     </TabBody>
@@ -142,13 +144,13 @@ const ModelPage = async ({ params }: PageProps) => {
   const training = (
     <TabBody>
       <div className="flex flex-col gap-6">
-        <h2 className="text-h2 text-balance">How the model was built.</h2>
+        <h2 className="text-h2 text-balance">{text.training.title}</h2>
         <div className="flex flex-col gap-4">
           {trainedOn[0] && (
-            <ArrowLink href={`/datasets/${trainedOn[0].slug}`}>View Dataset</ArrowLink>
+            <ArrowLink href={`/datasets/${trainedOn[0].slug}`}>{text.training.datasetLink}</ArrowLink>
           )}
-          <ArrowLink href={`/research/${model.researchSlug}`}>Read Training Notes</ArrowLink>
-          <ArrowLink href="/research">View Research</ArrowLink>
+          <ArrowLink href={`/research/${model.researchSlug}`}>{text.training.notesLink}</ArrowLink>
+          <ArrowLink href="/research">{text.training.researchLink}</ArrowLink>
         </div>
       </div>
       <InfoTable
@@ -172,10 +174,8 @@ const ModelPage = async ({ params }: PageProps) => {
   const usage = (
     <TabBody stacked>
       <div className="grid gap-5 md:grid-cols-[minmax(0,22rem)_minmax(0,20rem)] md:gap-16">
-        <h2 className="text-h2 text-balance">Build with {model.name}</h2>
-        <p className="text-sm text-pretty text-faint md:pt-2">
-          Integrate the model into your applications using the deployment option that best suits your needs.
-        </p>
+        <h2 className="text-h2 text-balance">{fill(text.usage.title, { name: model.name })}</h2>
+        <p className="text-sm text-pretty text-faint md:pt-2">{text.usage.lede}</p>
       </div>
       <CodeTabs
         tabs={usagePaths(model, copy.usage).map((path) => ({
@@ -189,7 +189,7 @@ const ModelPage = async ({ params }: PageProps) => {
 
   const versions = (
     <TabBody stacked>
-      <h2 className="text-h2">Model history.</h2>
+      <h2 className="text-h2">{text.versions.title}</h2>
       <Panel className="overflow-x-auto">
         <table className="w-full min-w-xl font-mono text-sm">
           <thead>
@@ -206,11 +206,11 @@ const ModelPage = async ({ params }: PageProps) => {
               <td className="px-8 py-6 text-faint">V1.0</td>
               <td className="px-8 py-6 text-faint uppercase">{formatDate(model.release)}</td>
               <td className="px-8 py-6">
-                <StatusDot label="Current" />
+                <StatusDot label={text.versions.current} />
               </td>
-              <td className="px-8 py-6 text-faint">Initial Public Release</td>
+              <td className="px-8 py-6 text-faint">{text.versions.initialRelease}</td>
               <td className="px-8 py-6 text-right">
-                {hf?.href && <ArrowLink href={hf.href}>View</ArrowLink>}
+                {hf?.href && <ArrowLink href={hf.href}>{text.versions.view}</ArrowLink>}
               </td>
             </tr>
           </tbody>
@@ -223,7 +223,7 @@ const ModelPage = async ({ params }: PageProps) => {
     <>
       <PageHero
         tile={AiChipIcon}
-        eyebrow="Model"
+        eyebrow={text.hero.eyebrow}
         title={model.name}
         lede={copy.tagline && `${copy.tagline}.`}
         tags={[...languages, taskLabel(model.task), "Open Model"]}
@@ -231,25 +231,25 @@ const ModelPage = async ({ params }: PageProps) => {
 
       <PageTabs
         tabs={[
-          { id: "overview", label: "Overview", content: overview },
-          { id: "benchmarks", label: "Benchmarks", content: benchmarks },
-          { id: "training", label: "Training", content: training },
-          { id: "usage", label: "Usage", content: usage },
-          { id: "versions", label: "Versions", content: versions },
+          { id: "overview", label: text.tabs.overview, content: overview },
+          { id: "benchmarks", label: text.tabs.benchmarks, content: benchmarks },
+          { id: "training", label: text.tabs.training, content: training },
+          { id: "usage", label: text.tabs.usage, content: usage },
+          { id: "versions", label: text.tabs.versions, content: versions },
         ]}
       />
 
       <Section id="try" className="border-t border-line">
         <Container className="flex flex-col gap-14">
           <div className="flex flex-col gap-4">
-            <Eyebrow>Playground</Eyebrow>
+            <Eyebrow>{text.playground.eyebrow}</Eyebrow>
             <div className="flex flex-col gap-4 md:flex-row md:items-end md:gap-12">
-              <h2 className="text-h2">Try the Model</h2>
+              <h2 className="text-h2">{text.playground.title}</h2>
               <p className="max-w-xs text-sm text-foreground/85">
-                Explore how the model translates civic discourse{" "}
-                {model.directions.length > 1
-                  ? `between English and ${languages.join(", ")}`
-                  : `from English to ${languages.join(", ")}`}
+                {fill(
+                  model.directions.length > 1 ? text.playground.ledeBothWays : text.playground.ledeOneWay,
+                  { languages: languages.join(", ") },
+                )}
               </p>
             </div>
           </div>

@@ -2,15 +2,23 @@ import { formatDate } from "@/components/models/registry";
 import { ArrowLink, Panel } from "@/components/system/primitives";
 
 import type { Publication } from "@/lib/content/types";
+import type { PageCopy } from "@/lib/copy/pages";
 
 // The body of a technical report: headline results, then the write-up in
 // one reading column, then its sources.
-function PublicationArticle({ publication }: { publication: Publication }) {
+function PublicationArticle({
+  publication,
+  copy,
+}: {
+  publication: Publication;
+  copy: PageCopy<"researchReport">;
+}) {
   return (
     <article className="flex flex-col gap-16">
       <p className="font-mono text-sm text-faint">
         <time dateTime={publication.date}>{formatDate(publication.date, "long")}</time>
-        <span className="px-3">·</span>CommonMind Research
+        <span className="px-3">·</span>
+        {copy.byline}
       </p>
 
       {publication.results && (
@@ -44,7 +52,7 @@ function PublicationArticle({ publication }: { publication: Publication }) {
       ))}
 
       <footer className="flex flex-col gap-5 border-t border-line pt-8">
-        <span className="font-mono text-sm">Sources</span>
+        <span className="font-mono text-sm">{copy.sources}</span>
         <ul className="flex flex-col gap-3">
           {publication.sources.map((source) => (
             <li key={source.href}>

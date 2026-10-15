@@ -20,6 +20,7 @@ const spell = (key: string) => {
 
 const HIGHLIGHT_HELP = "Put *stars* around words to highlight them.";
 const LINES_HELP = "Each new line starts a new line on wider screens.";
+const PLACEHOLDER_HELP = "Keep the {words in curly brackets}: the site fills them in.";
 
 function field(name: string, original: CopyValue): FieldDefinition {
   if (typeof original === "string") {
@@ -31,7 +32,11 @@ function field(name: string, original: CopyValue): FieldDefinition {
       ...(long && { rows: Math.min(6, Math.ceil(original.length / 90) + 1) }),
       placeholder: original,
       description:
-        [original.includes("*") && HIGHLIGHT_HELP, original.includes("\n") && LINES_HELP]
+        [
+          original.includes("*") && HIGHLIGHT_HELP,
+          original.includes("\n") && LINES_HELP,
+          /\{\w+\}/.test(original) && PLACEHOLDER_HELP,
+        ]
           .filter(Boolean)
           .join(" ") || undefined,
     });

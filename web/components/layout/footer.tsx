@@ -6,6 +6,7 @@ import { FooterCta } from "@/components/layout/footer-cta";
 import { CmsLogo } from "@/components/system/cms-logo";
 import { isExternalHref } from "@/components/system/primitives";
 import { getContent } from "@/lib/content";
+import { getPageCopy } from "@/lib/copy";
 import { cn } from "@/lib/utils";
 
 // The partner logos scroll in an endless row: two identical runs back to
@@ -16,7 +17,7 @@ import { cn } from "@/lib/utils";
 const SECONDS_PER_LOGO = 4;
 
 const Footer = async () => {
-  const { settings } = await getContent();
+  const [{ settings }, copy] = await Promise.all([getContent(), getPageCopy("footer")]);
   const { partners, footerColumns, legalLinks, organization } = settings;
   const PARTNER_RUN = partners.length
     ? Array.from({ length: Math.ceil(12 / partners.length) }, () => partners).flat()
@@ -27,9 +28,9 @@ const Footer = async () => {
     <footer className="zoom-viewport">
       {/* The last section's bottom padding sets the space above. */}
       <Container className="flex flex-col gap-10">
-        <FooterCta />
+        <FooterCta copy={copy} />
         <div className="flex flex-col gap-6 rounded-card bg-[#1a1608] px-6 py-5 sm:flex-row sm:items-center sm:gap-12 sm:px-8">
-          <span className="shrink-0 text-[13px] text-foreground">Powering:</span>
+          <span className="shrink-0 text-[13px] text-foreground">{copy.powering}</span>
           <div className="min-w-0 flex-1 overflow-hidden mask-[linear-gradient(to_right,transparent,#000_8%,#000_92%,transparent)] motion-reduce:mask-none">
             <ul
               className="flex w-max animate-[cm-marquee_var(--marquee-duration)_linear_infinite] items-center hover:[animation-play-state:paused] has-focus-visible:[animation-play-state:paused] motion-reduce:w-auto motion-reduce:animate-none motion-reduce:flex-wrap motion-reduce:gap-y-5"
@@ -90,7 +91,7 @@ const Footer = async () => {
               className="h-10 w-auto self-start"
             />
             <p className="max-w-xs text-sm text-pretty text-subtle">
-              An open civic AI infrastructure initiative by{" "}
+              {copy.initiative}{" "}
               <a
                 href={organization.href}
                 target="_blank"

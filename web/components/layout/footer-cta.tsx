@@ -4,26 +4,15 @@ import { usePathname } from "next/navigation";
 
 import { Grainient } from "@/components/system/grainient";
 import { LinkButton } from "@/components/system/primitives";
-
-const defaultCopy = {
-  title: "Build with open civic AI infrastructure.",
-  lede: "Use open models, datasets, benchmarks, and developer tools to build AI applications that understands civic discourse across languages and communities.",
-};
-
-// Pages whose closing call to action speaks to what is on them.
-const pageCopy: Record<string, typeof defaultCopy> = {
-  "/datasets": {
-    title: "Build with open language data.",
-    lede: "Bring open datasets, models, and evaluation resources into your multilingual AI applications.",
-  },
-};
+import type { PageCopy } from "@/lib/copy/pages";
 
 // The model index already is the place "Explore Models" points to, so the
-// closing call to action would only point back at the page itself.
-function FooterCta() {
+// closing call to action would only point back at the page itself. The
+// Datasets page has its own wording.
+function FooterCta({ copy: footer }: { copy: PageCopy<"footer"> }) {
   const pathname = usePathname();
   if (pathname === "/models") return null;
-  const copy = pageCopy[pathname] ?? defaultCopy;
+  const copy = pathname === "/datasets" ? footer.datasetsCta : footer.cta;
 
   return (
     <section className="relative isolate overflow-hidden rounded-card bg-signal text-background">
@@ -45,10 +34,10 @@ function FooterCta() {
         </p>
         <div className="flex flex-wrap justify-center gap-3 pt-3">
           <LinkButton href="/build" variant="ink" arrow>
-            Start Building
+            {footer.cta.primary}
           </LinkButton>
           <LinkButton href="/models" variant="bright" arrow>
-            Explore Models
+            {footer.cta.secondary}
           </LinkButton>
         </div>
       </div>

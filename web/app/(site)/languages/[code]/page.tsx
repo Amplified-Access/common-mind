@@ -12,6 +12,8 @@ import { InfoTable } from "@/components/system/info-table";
 import { PageHero } from "@/components/system/page-hero";
 import { ArrowLink, LinkButton, Section, SectionHeader } from "@/components/system/primitives";
 import { getContent } from "@/lib/content";
+import { getPageCopy } from "@/lib/copy";
+import { fill } from "@/lib/copy/fill";
 
 type PageProps = {
   params: Promise<{ code: string }>;
@@ -28,19 +30,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return { title: language.name, description: language.tagline };
 }
 
-const contributions = [
-  ["Civic corpus", "Consented speech and text about public life."],
-  ["Terminology", "How civic ideas are expressed, in context."],
-  ["Models", "Small models that run on modest hardware."],
-  ["Benchmarks", "Test sets reviewed by native speakers."],
-];
+const CONTRIBUTIONS = ["corpus", "terminology", "models", "benchmarks"] as const;
 
 const LanguagePage = async ({ params }: PageProps) => {
   const { code } = await params;
   const language = getLanguage(code);
   if (!language) notFound();
 
-  const content = await getContent();
+  const [content, copy] = await Promise.all([getContent(), getPageCopy("languageDetail")]);
+  const name = { name: language.name };
   const { models, research } = ecosystemFor(language, content);
   const languageData = content.datasets.filter((d) => d.languages.includes(language.name));
   const built = models.length > 0;
@@ -48,7 +46,7 @@ const LanguagePage = async ({ params }: PageProps) => {
   return (
     <>
       <PageHero
-        eyebrow={`Languages / ${built ? "Active" : "Open for contributors"}`}
+        eyebrow={built ? copy.hero.eyebrowActive : copy.hero.eyebrowOpen}
         title={language.name}
         lede={language.tagline}
         tags={[language.family, language.branch, ...language.regions.slice(0, 2)]}
@@ -57,13 +55,13 @@ const LanguagePage = async ({ params }: PageProps) => {
       <Section id="about">
         <Container className="grid gap-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:gap-20">
           <SectionHeader
-            eyebrow="Language"
-            title={`${language.name} in civic contexts`}
-            lede={`Explore the open models, civic discourse datasets, benchmarks, and research advancing AI capabilities for ${language.name}.`}
-            action={research[0] && <ArrowLink href={`/research/${research[0].slug}`}>How it was built</ArrowLink>}
+            eyebrow={copy.about.eyebrow}
+            title={fill(copy.about.title, name)}
+            lede={fill(copy.about.lede, name)}
+            action={research[0] && <ArrowLink href={`/research/${research[0].slug}`}>{copy.about.researchCta}</ArrowLink>}
           />
           <InfoTable
-            title="Language Information"
+            title={copy.about.tableTitle}
             ruled
             rows={[
               { label: "Endonym", value: language.endonym },
@@ -81,7 +79,7 @@ const LanguagePage = async ({ params }: PageProps) => {
         <>
           <Section id="models" className="pt-0 sm:pt-0">
             <Container className="flex flex-col gap-12">
-              <SectionHeader eyebrow="Models" title={`Open models for ${language.name}`} />
+              <SectionHeader eyebrow={copy.models.eyebrow} title={fill(copy.models.title, name)} />
               <ul className="grid gap-5 lg:grid-cols-2">
                 {models.map((m) => (
                   <li key={m.slug} className="flex">
@@ -94,7 +92,7 @@ const LanguagePage = async ({ params }: PageProps) => {
 
           <Section id="corpus" className="pt-0 sm:pt-0">
             <Container className="flex flex-col gap-12">
-              <SectionHeader eyebrow="Data" title={`Datasets for ${language.name}`} />
+              <SectionHeader eyebrow={copy.datasets.eyebrow} title={fill(copy.datasets.title, name)} />
               <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
                 {languageData.map((d, i) => (
                   <li key={d.slug} className="flex">
@@ -103,7 +101,7 @@ const LanguagePage = async ({ params }: PageProps) => {
                       title={d.name}
                       kind={`${d.kind} · ${d.source}`}
                       description={d.description}
-                      cta="View Dataset"
+                      cta={copy.datasets.cardCta}
                       color={cardColor(i)}
                       className="w-full"
                     />
@@ -123,21 +121,21 @@ const LanguagePage = async ({ params }: PageProps) => {
         <Section id="contribute" className="pt-0 sm:pt-0">
           <Container className="flex flex-col gap-12">
             <SectionHeader
-              eyebrow="Contribute"
-              title={`Help build ${language.name}.`}
-              lede="Every ecosystem starts with the people who speak the language."
+              eyebrow={copy.contribute.eyebrow}
+              title={fill(copy.contribute.title, name)}
+              lede={copy.contribute.lede}
             />
             <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-              {contributions.map(([title, line]) => (
-                <li key={title} className="flex flex-col gap-3 rounded-card border border-line bg-surface p-7">
-                  <span className="font-mono text-lg">{title}</span>
-                  <span className="text-sm text-faint">{line}</span>
+              {CONTRIBUTIONS.map((key) => (
+                <li key={key} className="flex flex-col gap-3 rounded-card border border-line bg-surface p-7">
+                  <span className="font-mono text-lg">{copy.contribute[key].title}</span>
+                  <span className="text-sm text-faint">{copy.contribute[key].text}</span>
                 </li>
               ))}
             </ul>
             <div>
               <LinkButton href={content.settings.organization.href} arrow>
-                Get involved
+                {copy.contribute.cta}
               </LinkButton>
             </div>
           </Container>
