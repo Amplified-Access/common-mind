@@ -133,6 +133,8 @@ An import file has one JSON object per line:
 
 `dev/data-lab/sample-items.jsonl` is written for local development (licence CC0) and is not corpus data.
 
+`make datalab-sample-translations` runs `dev/data-lab/sample-translations.sql`: verified Swahili translations of the sample's translate items, by a sample translator and accepted by a sample reviewer (both `@sample.invalid`), so Speak has something to record. It touches only items from the `dev-sample-civic` source and skips any sentence already translated, so it's safe to run again. Development only: it writes verified rows without a real review.
+
 ## Errors
 
 Use cases return the sentinel errors in `usecase/datalab_errors.go`. `handlers.dataLabError` is the one place they become HTTP responses, with stable `code` values the web app branches on:

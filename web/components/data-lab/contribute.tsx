@@ -259,16 +259,24 @@ function Contribute({ language }: { language: string }) {
               </div>
 
               <form
-                className={cn("flex flex-col gap-4 p-6 sm:p-8", FORM_HEIGHT)}
+                className={cn("relative flex flex-col gap-4 p-6 sm:p-8", FORM_HEIGHT)}
                 onSubmit={(e) => {
                   e.preventDefault();
                   submit(view.task);
                 }}
               >
                 {modality === "audio" ? (
-                  <div className="flex flex-1 flex-col justify-center">
-                    <VoiceRecorder recording={recording} onChange={setRecording} disabled={busy} />
-                  </div>
+                  <>
+                    {/* Centred on the whole panel, footer included, so the space
+                        above and below it balances; clicks pass through the
+                        layer to the buttons. */}
+                    <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-6 sm:p-8">
+                      <div className="pointer-events-auto w-full">
+                        <VoiceRecorder recording={recording} onChange={setRecording} disabled={busy} />
+                      </div>
+                    </div>
+                    <div className="flex-1" />
+                  </>
                 ) : (
                   <>
                     <div className="flex items-center justify-between">
@@ -297,7 +305,7 @@ function Contribute({ language }: { language: string }) {
                     />
                   </>
                 )}
-                <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
+                <div className="relative flex flex-wrap items-center justify-end gap-2 pt-2">
                   <button type="button" onClick={next} disabled={busy} className={quietButton}>
                     Skip
                   </button>

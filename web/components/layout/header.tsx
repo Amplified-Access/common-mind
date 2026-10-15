@@ -9,7 +9,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 import { buttonClasses } from "@/components/system/primitives";
-import { isActive, isStandalone, navItems } from "@/lib/site";
+import { isActive, isStandalone, navItems, site } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 import {
@@ -99,17 +99,19 @@ const Header = () => {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
-          <Link
-            href="/models"
+          <a
+            href={site.links.huggingface}
+            target="_blank"
+            rel="noreferrer"
             className={buttonClasses("outline", "max-lg:px-3.5")}
           >
-            Models
-          </Link>
+            Hugging Face
+          </a>
           <Link
             href="/data-lab"
             className={buttonClasses("signal", "max-lg:px-3.5")}
           >
-            Data Lab
+            Get Started
           </Link>
         </div>
 
@@ -153,15 +155,16 @@ const Header = () => {
                 onClick={() => setMobileNavOpen(false)}
                 className={buttonClasses("signal", "h-11")}
               >
-                Data Lab
+                Get Started
               </Link>
-              <Link
-                href="/models"
-                onClick={() => setMobileNavOpen(false)}
+              <a
+                href={site.links.huggingface}
+                target="_blank"
+                rel="noreferrer"
                 className={buttonClasses("outline", "h-11")}
               >
-                Models
-              </Link>
+                Hugging Face
+              </a>
             </div>
           </SheetContent>
         </Sheet>
