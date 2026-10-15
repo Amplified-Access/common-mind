@@ -1,5 +1,5 @@
 // Each language's page (/languages/<code>), original wording. {name} is the
-// language's name.
+// language's name, and {model} the model picked in the playground.
 export const languageDetail = {
   hero: {
     eyebrowActive: "Languages / Active",
@@ -20,6 +20,10 @@ export const languageDetail = {
     eyebrow: "Data",
     title: "Datasets for {name}",
     cardCta: "View Dataset",
+  },
+  playground: {
+    eyebrow: "Playground",
+    title: "Try the {model} model",
   },
   contribute: {
     eyebrow: "Contribute",

@@ -4,8 +4,10 @@
 //   pnpm sanity:seed            creates the documents the dataset lacks
 //   pnpm sanity:seed --replace  overwrites every seed document
 //
-// The default never touches a document that exists, so it is safe to run
-// against a dataset editors work in. Images are given as
+// The default never changes a document that exists, so it is safe to run
+// against a dataset editors work in: it only adds the fields a page
+// document lacks (text added to the page in code since), leaving every
+// existing field as the editors left it. Images are given as
 // "_sanityAsset": "image@file://./public/…" and uploaded once each.
 // Needs SANITY_API_TOKEN (Editor) in web/.env.local; see docs/cms.md.
 import { readFileSync } from "node:fs";
@@ -13,6 +15,7 @@ import { basename, join } from "node:path";
 
 import { createClient } from "@sanity/client";
 
+import type { CopyTree } from "../../lib/copy/overlay";
 import { PAGES, pageDocumentId, pageTypeName, type PageKey } from "../../lib/copy/pages";
 import { SANITY_API_VERSION } from "../apiVersion";
 import { dataset, projectId } from "../env";
@@ -66,23 +69,39 @@ async function withAssets(value: unknown): Promise<unknown> {
   return Object.fromEntries(entries);
 }
 
+// "hero.title" → "Open models", for every text in a page's copy.
+const leaves = (tree: CopyTree, prefix = ""): [string, string | string[]][] =>
+  Object.entries(tree).flatMap(([key, value]) =>
+    typeof value === "string" || Array.isArray(value)
+      ? [[`${prefix}${key}`, value] as [string, string | string[]]]
+      : leaves(value, `${prefix}${key}.`),
+  );
+
 async function main() {
   const existing = new Set(
     await client.fetch<string[]>("*[_id in $ids]._id", { ids: seed.map((d) => d._id) }),
   );
   const todo = replace ? seed : seed.filter((doc) => !existing.has(doc._id));
-  if (todo.length === 0) {
-    console.log("Every seed document is already in the dataset.");
-    return;
-  }
   const transaction = client.transaction();
+  if (!replace) {
+    for (const key of Object.keys(PAGES) as PageKey[]) {
+      const id = pageDocumentId(key);
+      if (existing.has(id)) {
+        transaction.patch(id, (patch) => patch.setIfMissing(Object.fromEntries(leaves(PAGES[key].copy))));
+      }
+    }
+  }
   for (const doc of todo) {
     const ready = (await withAssets(doc)) as Doc;
     if (replace) transaction.createOrReplace(ready);
     else transaction.createIfNotExists(ready);
   }
   await transaction.commit();
-  console.log(`${replace ? "Wrote" : "Created"} ${todo.length} document(s): ${todo.map((d) => d._id).join(", ")}`);
+  console.log(
+    todo.length
+      ? `${replace ? "Wrote" : "Created"} ${todo.length} document(s): ${todo.map((d) => d._id).join(", ")}`
+      : "Every seed document is already in the dataset; page documents have any new fields.",
+  );
 }
 
 main().catch((error) => {

@@ -6,12 +6,19 @@ import { cardColor, ColorCard } from "@/components/system/color-card";
 import { FilterChips, FilterSelect, SearchField } from "@/components/system/filters";
 import { SectionHeader } from "@/components/system/primitives";
 import type { Dataset, DatasetKind } from "@/lib/content/types";
+import type { PageCopy } from "@/lib/copy/pages";
 
 const ALL = "all";
 const kinds: DatasetKind[] = ["Parallel", "Monolingual", "Instruction", "Question Answering", "Evaluation"];
 const unique = (values: string[]) => Array.from(new Set(values)).sort();
 
-function DatasetGrid({ datasets }: { datasets: Dataset[] }) {
+function DatasetGrid({
+  datasets,
+  copy,
+}: {
+  datasets: Dataset[];
+  copy: PageCopy<"datasets">["catalogue"];
+}) {
   const [query, setQuery] = useState("");
   const [kind, setKind] = useState(ALL);
   const [language, setLanguage] = useState(ALL);
@@ -65,7 +72,7 @@ function DatasetGrid({ datasets }: { datasets: Dataset[] }) {
         />
       </div>
 
-      <SectionHeader eyebrow="Dataset Catalogue" title="The open data foundations behind our models." />
+      <SectionHeader eyebrow={copy.eyebrow} title={copy.title} />
 
       {visible.length > 0 ? (
         <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -76,7 +83,7 @@ function DatasetGrid({ datasets }: { datasets: Dataset[] }) {
                 title={d.name}
                 kind={`${d.kind} · ${d.source}`}
                 description={d.description}
-                cta="View Dataset"
+                cta={copy.cardCta}
                 color={cardColor(i)}
                 className="w-full"
               />
@@ -85,7 +92,7 @@ function DatasetGrid({ datasets }: { datasets: Dataset[] }) {
         </ul>
       ) : (
         <p className="py-16 text-center font-mono text-sm text-faint">
-          No datasets match these filters yet.
+          {copy.empty}
         </p>
       )}
     </div>

@@ -61,6 +61,8 @@ export const home = {
     eyebrow: "Language Ecosystems",
     title: "Start with the language.",
     lede: "Every language carries its own expressions, context, and civic vocabulary. Explore the open models, datasets, benchmarks, and research that support civic AI development across languages.",
+    cardDescription:
+      "Explore the models, civic speech resources, benchmarks, and research being developed to help AI understand {name} in civic contexts.",
   },
   civicBench: {
     eyebrow: "CivicBench Africa",

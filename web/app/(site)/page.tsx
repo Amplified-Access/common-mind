@@ -25,6 +25,7 @@ import {
 } from "@/components/system/primitives";
 import { getContent } from "@/lib/content";
 import { getPageCopy } from "@/lib/copy";
+import { fill } from "@/lib/copy/fill";
 
 export default async function Home() {
   const [content, copy] = await Promise.all([getContent(), getPageCopy("home")]);
@@ -40,7 +41,7 @@ export default async function Home() {
         .length,
       benchmark: models.length ? "CivicBench Africa" : undefined,
       researchHref: research[0] && `/research/${research[0].slug}`,
-      description: `Explore the models, civic speech resources, benchmarks, and research being developed to help AI understand ${language.name} in civic contexts.`,
+      description: fill(copy.languages.cardDescription, { name: language.name }),
       scores: [swahiliFlores, lugandaHeldOut].find(
         (set) => set.code === language.code,
       ),

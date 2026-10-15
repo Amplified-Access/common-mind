@@ -113,7 +113,7 @@ const LanguagePage = async ({ params }: PageProps) => {
 
           <Section id="try" className="border-t border-line">
             <Container className="flex flex-col gap-14">
-              <LanguagePlayground initialModel={models[0].slug} />
+              <LanguagePlayground initialModel={models[0].slug} copy={copy.playground} />
             </Container>
           </Section>
         </>

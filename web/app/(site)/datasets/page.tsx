@@ -20,7 +20,7 @@ const DatasetsPage = async () => {
       className="pb-(--section-pad)"
       after={
         <Container id="catalogue" className="scroll-mt-24">
-          <DatasetGrid datasets={datasets} />
+          <DatasetGrid datasets={datasets} copy={copy.catalogue} />
         </Container>
       }
     >

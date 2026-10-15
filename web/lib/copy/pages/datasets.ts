@@ -12,4 +12,10 @@ export const datasets = {
     tags: ["OPEN DATA", "MULTILINGUAL AI", "RESEARCH"],
     cta: "Explore Datasets",
   },
+  catalogue: {
+    eyebrow: "Dataset Catalogue",
+    title: "The open data foundations behind our models.",
+    cardCta: "View Dataset",
+    empty: "No datasets match these filters yet.",
+  },
 };
