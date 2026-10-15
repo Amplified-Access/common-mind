@@ -186,37 +186,39 @@ function VoiceRecorder({
         <HugeiconsIcon icon={recordingNow ? StopIcon : Mic01Icon} strokeWidth={2} className="relative size-8" />
       </button>
 
-      {/* One slot for the live waveform or the take's player, so nothing jumps. */}
-      <div className="flex h-12 w-full max-w-sm items-center justify-center">
-        {recordingNow ? (
-          <canvas ref={canvas} aria-hidden className="h-12 w-full text-signal" />
-        ) : (
-          recording && <audio controls src={recording.url} className="h-10 w-full" />
-        )}
-      </div>
-
-      <div className="flex flex-col items-center gap-1">
-        {recordingNow ? (
-          <span className="font-mono text-sm tabular-nums">
-            {clock(elapsed)} / {clock(MAX_SECONDS)}
-          </span>
-        ) : (
-          recording && <span className="font-mono text-sm tabular-nums">{clock(recording.seconds)}</span>
-        )}
+      {/* Two lines in every state, so the recorder never changes height. */}
+      <div className="-mt-2 flex flex-col items-center gap-1">
+        <span className="font-mono text-sm tabular-nums">
+          {recordingNow
+            ? `${clock(elapsed)} / ${clock(MAX_SECONDS)}`
+            : recording
+              ? clock(recording.seconds)
+              : "Press to start"}
+        </span>
         <span className="font-mono text-xs text-faint">
           {recordingNow
             ? "Recording. Press stop when you're done."
             : recording
               ? "Listen back, or press the microphone to record again."
-              : `Press to start. Up to ${MAX_SECONDS / 60} minutes.`}
+              : `Up to ${MAX_SECONDS / 60} minutes.`}
         </span>
       </div>
 
-      {recording && !recordingNow && (
-        <button type="button" onClick={() => onChange(null)} disabled={disabled} className={quietButton}>
-          Discard
-        </button>
-      )}
+      {/* One slot for the live waveform or the take's player. */}
+      <div className="flex h-12 w-full max-w-md items-center justify-center gap-2">
+        {recordingNow ? (
+          <canvas ref={canvas} aria-hidden className="h-12 w-full text-signal" />
+        ) : (
+          recording && (
+            <>
+              <audio controls src={recording.url} className="h-10 min-w-0 flex-1" />
+              <button type="button" onClick={() => onChange(null)} disabled={disabled} className={quietButton}>
+                Discard
+              </button>
+            </>
+          )
+        )}
+      </div>
     </div>
   );
 }
