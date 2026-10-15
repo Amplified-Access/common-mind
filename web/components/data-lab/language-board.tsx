@@ -39,6 +39,12 @@ function LanguageBoard({
                     translated={p?.translated ?? 0}
                     verified={p?.verified ?? 0}
                   />
+                  {!!p?.recorded && (
+                    <span className="font-mono text-[11px] text-faint tabular-nums">
+                      {p.recorded.toLocaleString("en-US")} recorded · {p.recorded_verified.toLocaleString("en-US")}{" "}
+                      verified
+                    </span>
+                  )}
                 </div>
               </FramedCard>
             </li>

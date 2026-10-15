@@ -144,7 +144,8 @@ function Review({ language }: { language: string }) {
             <div className="flex flex-col gap-5 p-6 sm:p-8">
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                 <Eyebrow>
-                  {view.item.kind === "translate" ? "Translation" : "Answer"} · {target?.name ?? language}
+                  {view.item.modality === "audio" ? "Recording" : view.item.kind === "translate" ? "Translation" : "Answer"}{" "}
+                  · {target?.name ?? language}
                 </Eyebrow>
                 {view.item.pasted && (
                   <span className="inline-flex h-6 items-center rounded-full border border-line-strong px-2.5 font-mono text-[11px] leading-none text-subtle">
@@ -152,6 +153,15 @@ function Review({ language }: { language: string }) {
                   </span>
                 )}
               </div>
+              {view.item.modality === "audio" &&
+                (view.item.audio_url ? (
+                  <audio controls preload="metadata" src={view.item.audio_url} className="h-10 w-full" />
+                ) : (
+                  <p className="font-mono text-xs text-faint">The recording can&apos;t be played right now.</p>
+                ))}
+              {view.item.modality === "audio" && mode !== "correct" && (
+                <span className="font-mono text-xs text-faint">Transcript</span>
+              )}
               {mode === "correct" ? (
                 <>
                   <textarea
@@ -161,7 +171,7 @@ function Review({ language }: { language: string }) {
                     onChange={(e) => setCorrected(e.target.value.slice(0, 2000))}
                     rows={5}
                     autoFocus
-                    aria-label={`Corrected text in ${target?.name ?? language}`}
+                    aria-label={`${view.item.modality === "audio" ? "Transcript" : "Corrected text"} in ${target?.name ?? language}`}
                     className="min-h-36 w-full resize-none rounded-inset border border-signal/60 bg-background p-3 text-xl leading-snug text-foreground outline-none focus:border-signal"
                   />
                   <CharacterPalette
@@ -173,7 +183,9 @@ function Review({ language }: { language: string }) {
                 </>
               ) : (
                 <p lang={language} className="text-xl leading-snug text-pretty whitespace-pre-line">
-                  {view.item.text}
+                  {view.item.text || (
+                    <span className="text-base text-faint">No transcript. Add one with Correct if you like.</span>
+                  )}
                 </p>
               )}
             </div>
@@ -239,7 +251,7 @@ function Review({ language }: { language: string }) {
                     disabled={busy || !corrected.trim() || corrected.trim() === view.item.text.trim()}
                     className={cn(primaryButton, "min-w-32")}
                   >
-                    Save correction
+                    {view.item.modality === "audio" ? "Save transcript" : "Save correction"}
                   </button>
                 </>
               )}
@@ -257,7 +269,7 @@ function Review({ language }: { language: string }) {
                     disabled={busy}
                     className={secondaryButton}
                   >
-                    Correct
+                    {view.item.modality === "audio" ? (view.item.text ? "Correct transcript" : "Add transcript") : "Correct"}
                   </button>
                   <button
                     type="button"

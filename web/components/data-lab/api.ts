@@ -1,6 +1,8 @@
 import type {
   Language,
   LanguageProgress,
+  Modality,
+  RecordingUpload,
   RejectReason,
   ReviewItem,
   Task,
@@ -52,14 +54,30 @@ async function request<T>(
 const dataLabApi = {
   languages: () => request<Language[]>("/languages"),
   progress: () => request<LanguageProgress[]>("/progress"),
+  /** Optional features this server has: voice is false until storage is set up. */
+  features: () => request<{ voice: boolean }>("/features"),
   me: (token: string) => request<Volunteer>("/me", { token }),
   onboard: (token: string, body: { name: string; languages: string[]; consent_version: string }) =>
     request<Volunteer>("/onboarding", { token, method: "POST", body }),
-  nextTask: (token: string, language: string) =>
-    request<Task>(`/tasks/next?language=${encodeURIComponent(language)}`, { token }),
+  acceptVoiceConsent: (token: string) => request<Volunteer>("/consent/voice", { token, method: "POST" }),
+  nextTask: (token: string, language: string, modality: Modality = "text") =>
+    request<Task>(
+      `/tasks/next?language=${encodeURIComponent(language)}&modality=${modality}`,
+      { token },
+    ),
+  startRecording: (token: string, body: { item_id: number; language: string; content_type: string }) =>
+    request<RecordingUpload>("/recordings", { token, method: "POST", body }),
   contribute: (
     token: string,
-    body: { item_id: number; language: string; text: string; pasted: boolean },
+    body: {
+      item_id: number;
+      language: string;
+      modality: Modality;
+      /** The text, or a recording's optional transcript. */
+      text: string;
+      audio_key?: string;
+      pasted: boolean;
+    },
   ) => request<unknown>("/contributions", { token, method: "POST", body }),
   nextReview: (token: string, language: string) =>
     request<ReviewItem>(`/reviews/next?language=${encodeURIComponent(language)}`, { token }),
@@ -75,8 +93,27 @@ const dataLabApi = {
   ) => request<void>("/reviews", { token, method: "POST", body }),
 };
 
+/**
+ * Uploads a recording straight to storage, to the URL the API issued. The
+ * Content-Type must be the one the URL was signed for.
+ */
+async function uploadRecording(upload: RecordingUpload, recording: Blob): Promise<void> {
+  const res = await fetch(upload.upload_url, {
+    method: "PUT",
+    headers: { "Content-Type": upload.content_type },
+    body: recording,
+  }).catch(() => null);
+  if (!res?.ok) {
+    throw new ApiError(
+      res?.status ?? 0,
+      "upload_failed",
+      "The recording didn't upload. Check your connection and try again.",
+    );
+  }
+}
+
 /** The WebSocket URL that streams live progress to a signed-in volunteer. */
 const progressSocketUrl = (token: string) =>
   `${BASE.replace(/^http/, "ws")}/ws?token=${encodeURIComponent(token)}`;
 
-export { ApiError, dataLabApi, progressSocketUrl };
+export { ApiError, dataLabApi, progressSocketUrl, uploadRecording };

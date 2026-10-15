@@ -19,7 +19,12 @@ export type Volunteer = {
   email: string;
   languages: Membership[];
   consent_version: string;
+  /** Whether that consent also covers voice recordings. */
+  voice_consent: boolean;
 };
+
+/** How a contribution is given: written, or said aloud. */
+export type Modality = "text" | "audio";
 
 export type LanguageProgress = {
   code: string;
@@ -29,6 +34,9 @@ export type LanguageProgress = {
   translated: number;
   /** Sentence pairs a second speaker approved. */
   verified: number;
+  /** Recordings pending review or verified, and verified. */
+  recorded: number;
+  recorded_verified: number;
   /** Contributions of any kind waiting for review. */
   pending: number;
   /** Whether the language accepts contributions yet. */
@@ -42,6 +50,14 @@ export type Task = {
   text: string;
   text_language: string;
   target_language: string;
+  modality: Modality;
+};
+
+/** Where to upload one recording, from POST /recordings. */
+export type RecordingUpload = {
+  upload_url: string;
+  key: string;
+  content_type: string;
 };
 
 export type ReviewItem = {
@@ -51,7 +67,11 @@ export type ReviewItem = {
   item_text: string;
   item_language: string;
   language_code: string;
+  modality: Modality;
+  /** The written text, or a recording's transcript ("" when none). */
   text: string;
+  /** Where to play a recording. */
+  audio_url?: string;
   pasted: boolean;
   submitted_at: string;
 };
