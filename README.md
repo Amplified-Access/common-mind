@@ -63,6 +63,7 @@ cd web && pnpm dev                     # site on :3000
 2. A language accepts contributions once it has two reviewers. Create a second account, join the same language, then promote both:
    `cd backend && make datalab-promote email=you@example.com language=sw level=reviewer`
 3. Contribute with one account and review with the other. Counts on `/data-lab` update live.
+4. To record by voice, set the `R2_*` variables in `backend/.env` and add the bucket's CORS rule ([backend/docs/storage.md](backend/docs/storage.md)), then restart the API. The contribute screen gains a Write / Speak switch.
 
 ## Common commands
 
