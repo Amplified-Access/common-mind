@@ -37,7 +37,14 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      - name: Test
+        run: pnpm test
+
       - name: Build
         run: pnpm build
         env:
           NEXT_TELEMETRY_DISABLED: 1
+          # The pages read their content from Sanity at build time. Not
+          # secrets: the dataset is public (web/docs/cms.md).
+          NEXT_PUBLIC_SANITY_PROJECT_ID: 8m5302r8
+          NEXT_PUBLIC_SANITY_DATASET: production

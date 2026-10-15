@@ -6,6 +6,7 @@ import { highlightCode } from "@/components/models/highlight";
 import { registryModels } from "@/components/models/registry";
 import { ArrowLink, SectionHeader } from "@/components/system/primitives";
 import { copyFor, getContent } from "@/lib/content";
+import type { PageCopy } from "@/lib/copy/pages";
 import { cn } from "@/lib/utils";
 
 // Seconds each card takes to drift one card-width, slow enough to read.
@@ -16,7 +17,7 @@ const CODE_LINES = 14;
 // code and fading out toward its foot, which sits right on the next section. The row drifts right to left on a loop, fading out at both edges,
 // and holds still under the pointer or keyboard focus. With reduced motion
 // it's a row to swipe through instead.
-async function ModelCarousel() {
+async function ModelCarousel({ copy }: { copy: PageCopy<"home">["models"] }) {
   const content = await getContent();
   const cards = await Promise.all(
     registryModels.map(async (model) => {
@@ -37,9 +38,9 @@ async function ModelCarousel() {
         <SectionHeader
           size="h1"
           layout="split"
-          title="Open models for multilingual civic AI"
-          lede="Explore, evaluate, and build with open models for transcription, translation, civic discourse analysis, and issue classification."
-          action={<ArrowLink href="/models">Explore Models</ArrowLink>}
+          title={copy.title}
+          lede={copy.lede}
+          action={<ArrowLink href="/models">{copy.cta}</ArrowLink>}
         />
       </Container>
       <div className="scrollbar-none mt-16 overflow-hidden mask-[linear-gradient(to_right,transparent,#000_12%,#000_88%,transparent)] motion-reduce:overflow-x-auto">

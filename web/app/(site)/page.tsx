@@ -24,10 +24,12 @@ import {
   SectionHeader,
 } from "@/components/system/primitives";
 import { getContent } from "@/lib/content";
+import { getPageCopy } from "@/lib/copy";
 
 export default async function Home() {
-  const content = await getContent();
+  const [content, copy] = await Promise.all([getContent(), getPageCopy("home")]);
   const { datasets } = content;
+  const { platform } = copy;
   const ecosystems = languages.map((language) => {
     const { models, research } = ecosystemFor(language, content);
     return {
@@ -47,79 +49,79 @@ export default async function Home() {
 
   return (
     <>
-      <HomeHero />
-      <Foundation />
+      <HomeHero copy={copy.hero} />
+      <Foundation copy={copy.foundation} />
 
       <section id="platform" className="zoom-viewport relative scroll-mt-16">
         <PlatformTour
-          heading="The infrastructure layer for civic AI."
-          intro="Language data, open models, research, and benchmarks are deeply connected. CommonMind brings them together in one open ecosystem so researchers and developers can build AI that understands civic discourse in languages beyond the mainstream."
+          heading={platform.heading}
+          intro={platform.intro}
           panels={[
             {
               id: "languages",
-              title: "Languages",
-              subtitle: "Start with the language.",
-              body: "Languages shape how communities describe public issues, access services, engage with institutions, and express local priorities. Undersranding these differences is the foundation of inclusive civic AI.",
+              title: platform.languages.title,
+              subtitle: platform.languages.subtitle,
+              body: platform.languages.body,
               href: "/languages",
-              cta: "Explore Languages",
+              cta: platform.languages.cta,
               visual: <LanguagesVisual />,
             },
             {
               id: "civic-discourse",
-              title: "Civic Discourse",
-              subtitle: "Understand how communities communicate.",
-              body: "Real civic discourse captures the language, expressions, and context communities use to discuss public issues, services, governance, and local priorities. Common mind transforms this into structured resources for deveoping and evaluating AI systems.",
+              title: platform.civicDiscourse.title,
+              subtitle: platform.civicDiscourse.subtitle,
+              body: platform.civicDiscourse.body,
               href: "/research/civic-corpus",
-              cta: "Explore the Civic Corpus",
+              cta: platform.civicDiscourse.cta,
               visual: <CivicSpeechVisual />,
             },
             {
               id: "open-models",
-              title: "Open models",
-              subtitle: "Small, open, adapted.",
-              body: "Small, open models adapted for multilingual civic applications. Designed for efficient deployment with accessible model weights and documented evaluations.",
+              title: platform.openModels.title,
+              subtitle: platform.openModels.subtitle,
+              body: platform.openModels.body,
               proof: {
-                value: "≤1.37B",
-                label: "parameters. Built to run on modest hardware.",
+                value: platform.openModels.proofValue,
+                label: platform.openModels.proofLabel,
               },
               href: "/models",
-              cta: "Explore Models",
+              cta: platform.openModels.cta,
               visual: <ModelsVisual />,
             },
             {
               id: "benchmarks",
-              title: "Benchmarks",
-              subtitle: "Measure what improves.",
-              body: "Open benchmarks and reproducible evaluations measure model performance across languages and tasks, making progress transparent, comparable and verifiable.",
+              title: platform.benchmarks.title,
+              subtitle: platform.benchmarks.subtitle,
+              body: platform.benchmarks.body,
               proof: {
-                value: "38.74",
-                label: "BLEU on English→Swahili, above Gemini 2.0 Flash.",
+                value: platform.benchmarks.proofValue,
+                label: platform.benchmarks.proofLabel,
               },
               href: "/benchmarks",
-              cta: "View Benchmarks",
+              cta: platform.benchmarks.cta,
               visual: <EvaluationVisual />,
             },
             {
               id: "applications",
-              title: "Civic Applications",
-              subtitle: "From civic discourse to real world impact.",
-              body: "CommonMind enables developers and organisations to build multilingual AI applications that turn civic discourse into meaningful insights, expand access to public information and services, strengthen community participation, and support more informed public decisions.",
+              title: platform.applications.title,
+              subtitle: platform.applications.subtitle,
+              body: platform.applications.body,
               href: "/applications",
-              cta: "Explore Applications",
+              cta: platform.applications.cta,
               visual: <ApplicationsVisual />,
             },
           ]}
         />
       </section>
 
-      <ModelCarousel />
+      <ModelCarousel copy={copy.models} />
 
       <Section id="languages">
         <Container className="flex flex-col gap-16">
           <SectionHeader
-            eyebrow="Language Ecosystems"
-            title="Start with the language."
-            lede="Every language carries its own expressions, context, and civic vocabulary. Explore the open models, datasets, benchmarks, and research that support civic AI development across languages."
+            eyebrow={copy.languages.eyebrow}
+            title={copy.languages.title}
+            lede={copy.languages.lede}
           />
           <LanguageEcosystems ecosystems={ecosystems} />
         </Container>
@@ -129,17 +131,17 @@ export default async function Home() {
         <Container className="flex flex-col gap-16">
           <div className="grid gap-8 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)_minmax(0,0.6fr)] lg:gap-12">
             <div className="flex flex-col gap-3">
-              <Eyebrow>CivicBench Africa</Eyebrow>
-              <h2 className="text-h2 text-balance">Measure what improves</h2>
+              <Eyebrow>{copy.civicBench.eyebrow}</Eyebrow>
+              <h2 className="text-h2 text-balance">{copy.civicBench.title}</h2>
             </div>
             <div className="flex max-w-md flex-col gap-6 lg:pt-8">
               <p className="text-sm text-pretty text-foreground/85">
-                Reliable, reproducible evaluation for multilingual civic AI. CivicBench Africa measures model performance across languages, civic terminology, code-switching, translation, and issue classification, making progress transparent and comparable.
+                {copy.civicBench.body}
               </p>
-              <ArrowLink href="/benchmarks">Explore Benchmarks</ArrowLink>
+              <ArrowLink href="/benchmarks">{copy.civicBench.cta}</ArrowLink>
             </div>
             <p className="max-w-52 font-mono text-xs text-signal lg:pt-9">
-              What gets measured can be improved.
+              {copy.civicBench.aside}
             </p>
           </div>
           <BenchShowcase
@@ -166,9 +168,9 @@ export default async function Home() {
       <Section id="research">
         <Container className="flex flex-col gap-14">
           <SectionHeader
-            eyebrow="Research"
-            title="Understanding civic discourse"
-            lede="Explore the civic corpus, terminology mappings, and research that advance AI's ability to interpret civic discourse, language, and context across communities beyond the mainstream."
+            eyebrow={copy.research.eyebrow}
+            title={copy.research.title}
+            lede={copy.research.lede}
             layout="split"
           />
           <div className="scrollbar-none -mx-4 overflow-x-auto px-4 md:mx-0 md:px-0 lg:mask-[linear-gradient(to_right,transparent,#000_6%,#000_94%,transparent)]">
@@ -195,7 +197,7 @@ export default async function Home() {
             arrow="right"
             className="self-end text-sm"
           >
-            Read More
+            {copy.research.cta}
           </ArrowLink>
         </Container>
       </Section>

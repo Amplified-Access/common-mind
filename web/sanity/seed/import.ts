@@ -1,4 +1,5 @@
-// Writes the seed content (sanity/seed/seed.ndjson) into the dataset:
+// Writes the seed content into the dataset: the documents in seed.ndjson,
+// and one document per page holding its original wording (lib/copy/pages).
 //
 //   pnpm sanity:seed            creates the documents the dataset lacks
 //   pnpm sanity:seed --replace  overwrites every seed document
@@ -12,6 +13,7 @@ import { basename, join } from "node:path";
 
 import { createClient } from "@sanity/client";
 
+import { PAGES, pageDocumentId, pageTypeName, type PageKey } from "../../lib/copy/pages";
 import { SANITY_API_VERSION } from "../apiVersion";
 import { dataset, projectId } from "../env";
 
@@ -25,10 +27,18 @@ if (!projectId || !token) {
 
 const client = createClient({ projectId, dataset, token, apiVersion: SANITY_API_VERSION, useCdn: false });
 const replace = process.argv.includes("--replace");
-const seed: Doc[] = readFileSync(join(import.meta.dirname, "seed.ndjson"), "utf8")
-  .split("\n")
-  .filter(Boolean)
-  .map((line) => JSON.parse(line));
+const pages: Doc[] = (Object.keys(PAGES) as PageKey[]).map((key) => ({
+  _id: pageDocumentId(key),
+  _type: pageTypeName(key),
+  ...PAGES[key].copy,
+}));
+const seed: Doc[] = [
+  ...readFileSync(join(import.meta.dirname, "seed.ndjson"), "utf8")
+    .split("\n")
+    .filter(Boolean)
+    .map((line) => JSON.parse(line)),
+  ...pages,
+];
 
 const uploads = new Map<string, Promise<string>>();
 const upload = (path: string) => {

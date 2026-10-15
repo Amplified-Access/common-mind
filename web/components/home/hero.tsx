@@ -4,6 +4,8 @@ import { getModel, registryModels } from "@/components/models/registry";
 import { Backdrop } from "@/components/system/backdrop";
 import { ArrowLink } from "@/components/system/primitives";
 import { copyFor, getContent, type Content } from "@/lib/content";
+import { Emphasized } from "@/lib/copy/emphasized";
+import type { PageCopy } from "@/lib/copy/pages";
 
 import type { Outcome } from "./funnel";
 import { HeroDeck, type ShowcaseSet } from "./hero-deck";
@@ -50,7 +52,7 @@ function outcomes(): Outcome[] {
   ];
 }
 
-async function HomeHero() {
+async function HomeHero({ copy }: { copy: PageCopy<"home">["hero"] }) {
   const content = await getContent();
   return (
     <section className="zoom-viewport relative isolate overflow-hidden border-b border-line pt-(--header-height)">
@@ -58,19 +60,19 @@ async function HomeHero() {
       <Container className="flex flex-col items-center gap-14 pt-20 sm:pt-24">
         <div className="flex max-w-3xl flex-col items-center gap-6 text-center">
           <h1 className="text-display text-balance">
-            Civic discourse is <span className="text-signal">multilingual</span>{" "}
+            <Emphasized text={copy.titleLine1} />{" "}
             <span className="sm:block">
-              <span className="text-signal">AI infrastructure</span> should be too
+              <Emphasized text={copy.titleLine2} />
             </span>
           </h1>
           <p className="max-w-xl text-sm text-pretty text-foreground/90">
-            CommonMind develops open models, datasets, benchmarks, research, and developer tools that make AI more accessible for civic and public interest applications in languages underserved by the mainstream.
+            {copy.lede}
           </p>
           <div className="flex flex-wrap justify-center gap-x-10 gap-y-3 pt-4">
             <ArrowLink href="/models" tone="foreground">
-              Explore Models
+              {copy.primaryCta}
             </ArrowLink>
-            <ArrowLink href="/models#try">Try a Model</ArrowLink>
+            <ArrowLink href="/models#try">{copy.secondaryCta}</ArrowLink>
           </div>
         </div>
         {/* Runs past the section's bottom edge, which cuts the cards off so

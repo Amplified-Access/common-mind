@@ -1,3 +1,5 @@
+import { pageTypes } from "../pageCopy";
+
 import { application } from "./application";
 import { dataset } from "./dataset";
 import { legalPage } from "./legalPage";
@@ -15,5 +17,6 @@ export const schemaTypes = [
   application,
   siteSettings,
   legalPage,
+  ...pageTypes,
   link,
 ];
