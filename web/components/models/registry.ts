@@ -1,4 +1,4 @@
-import { models, type Model } from "./data";
+import { modelCopy, type ModelCopy } from "./data";
 
 // Registry metadata for each released model. Every field here is checked
 // against the public Hugging Face model card / repo for that model.
@@ -26,6 +26,11 @@ export type Evaluation = {
 };
 
 export type RegistryMeta = {
+  name: string;
+  /** ISO 639 codes of the languages it serves, besides English. */
+  languages: string[];
+  /** Where the weights are published, by platform name. */
+  platforms: string[];
   hfId: string;
   task: TaskId;
   languageNames: string[];
@@ -47,6 +52,9 @@ const hf = (id: string) => `https://huggingface.co/${id}`;
 
 export const registry: Record<string, RegistryMeta> = {
   "luganda-gemma-1b-it": {
+    name: "Luganda-gemma-1B-it",
+    languages: ["lg"],
+    platforms: ["HuggingFace", "Kaggle", "Ollama"],
     hfId: "AmplifiedAccess/Luganda-gemma-1b-it",
     task: "translation",
     languageNames: ["Luganda", "English"],
@@ -83,6 +91,9 @@ export const registry: Record<string, RegistryMeta> = {
     researchSlug: "luganda-gemma-qlora",
   },
   "swahili-gemma-1b-it": {
+    name: "Swahili-gemma-1B-it",
+    languages: ["sw"],
+    platforms: ["HuggingFace", "Kaggle", "Ollama"],
     hfId: "AmplifiedAccess/Swahili-gemma-1b-it",
     task: "translation",
     languageNames: ["Swahili", "English"],
@@ -119,6 +130,9 @@ export const registry: Record<string, RegistryMeta> = {
     researchSlug: "swahili-gemma-cpt-sft",
   },
   "swahili-nllb-1-3b": {
+    name: "Swahili-nllb-1.3B",
+    languages: ["sw"],
+    platforms: ["HuggingFace"],
     hfId: "AmplifiedAccess/Swahili-nllb-1.3b",
     task: "translation",
     languageNames: ["Swahili", "English"],
@@ -151,6 +165,9 @@ export const registry: Record<string, RegistryMeta> = {
     researchSlug: "nllb-lora-vs-chat-llms",
   },
   "swahili-nllb-600m": {
+    name: "Swahili-nllb-600M",
+    languages: ["sw"],
+    platforms: ["HuggingFace"],
     hfId: "AmplifiedAccess/Swahili-nllb-600m",
     task: "translation",
     languageNames: ["Swahili", "English"],
@@ -184,12 +201,12 @@ export const registry: Record<string, RegistryMeta> = {
   },
 };
 
-export type RegistryModel = Model & RegistryMeta;
+export type RegistryModel = RegistryMeta & Omit<ModelCopy, "slug"> & { slug: string };
 
-export const registryModels: RegistryModel[] = models.map((model) => {
-  const meta = registry[model.slug];
-  if (!meta) throw new Error(`Missing registry metadata for ${model.slug}`);
-  return { ...model, ...meta };
+export const registryModels: RegistryModel[] = Object.entries(registry).map(([slug, meta]) => {
+  const copy = modelCopy.find((c) => c.slug === slug);
+  if (!copy) throw new Error(`Missing copy for ${slug}`);
+  return { ...copy, ...meta, slug };
 });
 
 export function getModel(slug: string) {

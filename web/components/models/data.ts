@@ -3,12 +3,11 @@ type Metric = {
   label: string;
 };
 
-export type Model = {
+// Each model's written copy, keyed by registry slug (registry.ts owns the
+// model itself).
+export type ModelCopy = {
   slug: string;
-  name: string;
   tagline: string;
-  platforms: string[];
-  languages: string[];
   overview: string;
   metrics: Metric[];
   capabilities: string[];
@@ -19,14 +18,11 @@ export type Model = {
   };
 };
 
-export const models: Model[] = [
+export const modelCopy: ModelCopy[] = [
   {
     slug: "luganda-gemma-1b-it",
-    name: "Luganda-gemma-1B-it",
     tagline:
       "A Gemma 3 1B Instruct model adapted using QLoRA for English to Luganda and Luganda to English translation",
-    platforms: ["HuggingFace", "Kaggle", "Ollama"],
-    languages: ["lg"],
     overview:
       "Built on Google's Gemma 3 1B Instruct architecture, this model uses QLoRA fine-tuning to improve English-to-Luganda and Luganda-to-English translation. It was trained primarily on the Sunbird SALT parallel corpus, covering agriculture, health, and society, adapting the base model with just 13.05 million trainable parameters in a 52 MB adapter that runs on consumer GPUs.",
     metrics: [
@@ -88,10 +84,7 @@ print(response)`,
   },
   {
     slug: "swahili-gemma-1b-it",
-    name: "Swahili-gemma-1B-it",
     tagline: "A Gemma 3 1B model adapted using LoRA for English to Swahili translation",
-    platforms: ["HuggingFace", "Kaggle", "Ollama"],
-    languages: ["sw"],
     overview:
       "Built on Google's Gemma 3 1B architecture, this model uses LoRA fine-tuning to improve English-to-Swahili translation. It was trained on more than 159,000 examples from MAFAND-MT, Sunbird SALT, Rogendo, Inkuba-Swahili-MMT, Aya, and Alpaca-Swahili, adapting the base model with just 26.09 million trainable parameters merged into full weights.",
     metrics: [
@@ -135,10 +128,7 @@ print(response.strip())`,
   },
   {
     slug: "swahili-nllb-1-3b",
-    name: "Swahili-nllb-1.3B",
     tagline: "An NLLB-200 1.3B model adapted using LoRA for English to Swahili translation",
-    platforms: ["HuggingFace"],
-    languages: ["sw"],
     overview:
       "Built on Meta's NLLB-200 1.3B architecture, this model uses LoRA fine-tuning to improve English-to-Swahili translation. It was trained on more than 145,000 parallel sentence pairs from MAFAND-MT, Sunbird SALT, Rogendo, and Inkuba-Swahili-MMT, adapting the base model with just 23.6 million trainable parameters.",
     metrics: [
@@ -182,10 +172,7 @@ print(tokenizer.batch_decode(outputs, skip_special_tokens=True)[0])`,
   },
   {
     slug: "swahili-nllb-600m",
-    name: "Swahili-nllb-600M",
     tagline: "An NLLB-200 600M model adapted using LoRA for English to Swahili translation",
-    platforms: ["HuggingFace"],
-    languages: ["sw"],
     overview:
       "Built on Meta's NLLB-200 600M architecture, this model uses LoRA fine-tuning to improve English-to-Swahili translation. It was trained on the same corpus mix as Swahili-nllb-1.3B, drawn from MAFAND-MT, Sunbird SALT, Rogendo, and Inkuba-Swahili-MMT, adapting the base model with just 8.65 million trainable parameters for tighter hardware budgets.",
     metrics: [
