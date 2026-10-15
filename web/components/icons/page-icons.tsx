@@ -1,5 +1,6 @@
-// CommonMind's own page icons, exported from the design file. They fill
-// with the current text colour.
+// CommonMind's own page icons, exported from the design file (Build's drawn
+// to match them: square-cut strokes broken by a gap). They fill with the
+// current text colour.
 
 /** Models: four nodes, the registry. */
 function ModelsIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -25,8 +26,8 @@ function ModelIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
-/** Build: sliders, for tuning and deploying. */
-function BuildIcon(props: React.SVGProps<SVGSVGElement>) {
+/** Benchmarks: sliders, for measuring and tuning. */
+function BenchmarksIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 25 28" fill="currentColor" fillRule="evenodd" clipRule="evenodd" aria-hidden {...props}>
       <path d="M7.14286 14V28H3.57143V14H7.14286Z" />
@@ -39,4 +40,36 @@ function BuildIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
-export { BuildIcon, ModelIcon, ModelsIcon };
+/** Build: code brackets, the slash broken like the set's other strokes. */
+function BuildIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 28 22" fill="currentColor" aria-hidden {...props}>
+      <path d="M7.519" />
+      <path d="3.481L0" />
+      <path d="11L7.519" />
+      <path d="18.519L9.358" />
+      <path d="16.681L3.677" />
+      <path d="11L9.358" />
+      <path d="5.319Z" />
+      <path d="M20.481" />
+      <path d="3.481L28" />
+      <path d="11L20.481" />
+      <path d="18.519L18.642" />
+      <path d="16.681L24.323" />
+      <path d="11L18.642" />
+      <path d="5.319Z" />
+      <path d="M12.863" />
+      <path d="21.109L14.93" />
+      <path d="12.669L12.404" />
+      <path d="12.051L10.337" />
+      <path d="20.491Z" />
+      <path d="M15.596" />
+      <path d="9.949L17.663" />
+      <path d="1.509L15.137" />
+      <path d="0.891L13.07" />
+      <path d="9.331Z" />
+    </svg>
+  );
+}
+
+export { BenchmarksIcon, BuildIcon, ModelIcon, ModelsIcon };

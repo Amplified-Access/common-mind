@@ -1,4 +1,3 @@
-import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 
 import { Container } from "@/components/common/container";
 import { Backdrop } from "@/components/system/backdrop";
@@ -12,7 +11,7 @@ type PageHeroProps = {
   lede?: React.ReactNode;
   tags?: string[];
   /** A yellow tile on a grid of nodes, above the eyebrow, holding this
-   *  page's icon: one of ours (components/icons) or a Hugeicon. */
+   *  page's icon (components/icons/page-icons.tsx). */
   tile?: TileIcon;
   /**
    * Centered (default); split, left-aligned with the lede beside the title;
@@ -130,20 +129,9 @@ const NODES: [number, number][] = [
   [4, 3],
 ];
 
-type TileIcon = IconSvgElement | React.ComponentType<React.SVGProps<SVGSVGElement>>;
+type TileIcon = React.ComponentType<React.SVGProps<SVGSVGElement>>;
 
-const isHugeicon = (icon: TileIcon): icon is IconSvgElement => Array.isArray(icon);
-
-// About a third of the tile, as in the mocks. A Hugeicon's box has a margin
-// inside it, so it's drawn a size larger to match.
-function TileGlyph({ icon: Icon }: { icon: TileIcon }) {
-  if (isHugeicon(Icon)) {
-    return <HugeiconsIcon icon={Icon} strokeWidth={2} className="size-6 text-background" />;
-  }
-  return <Icon className="h-5 w-auto text-background" />;
-}
-
-function NodeTile({ icon }: { icon: TileIcon }) {
+function NodeTile({ icon: Icon }: { icon: TileIcon }) {
   const viewBox = `${-GRID_W / 2} ${-GRID_H / 2} ${GRID_W} ${GRID_H}`;
   const svgClass = "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 overflow-visible";
   return (
@@ -172,7 +160,8 @@ function NodeTile({ icon }: { icon: TileIcon }) {
         ))}
       </svg>
       <div className="chamfer absolute top-1/2 left-1/2 flex size-15 -translate-x-1/2 -translate-y-1/2 items-center justify-center bg-signal">
-        <TileGlyph icon={icon} />
+        {/* About a third of the tile, as in the mocks. */}
+        <Icon className="h-5 w-auto text-background" />
       </div>
     </div>
   );

@@ -1,4 +1,3 @@
-import { Analytics01Icon } from "@hugeicons/core-free-icons";
 import Link from "next/link";
 
 import { radarScores } from "@/components/benchmarks/civicbench-preview";
@@ -12,6 +11,7 @@ import {
 import { EfficiencyChart } from "@/components/benchmarks/efficiency-chart";
 import { RadarChart, type RadarModel } from "@/components/benchmarks/radar-chart";
 import { Container } from "@/components/common/container";
+import { BenchmarksIcon } from "@/components/icons/page-icons";
 import { registryModels } from "@/components/models/registry";
 import { Translator } from "@/components/playground/translator";
 import { Arrow } from "@/components/system/arrow";
@@ -35,7 +35,7 @@ const BenchmarksPage = async () => {
   return (
     <>
       <PageHero
-        tile={Analytics01Icon}
+        tile={BenchmarksIcon}
         eyebrow={copy.hero.eyebrow}
         title={copy.hero.title}
         lede={copy.hero.lede}
