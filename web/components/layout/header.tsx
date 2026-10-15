@@ -25,7 +25,7 @@ import {
 // page keeps it floating throughout.
 const PIN_THRESHOLD = 80;
 
-// Shared by the bar and its wrapper so both halves of the morph move together.
+// Timing for the docked/floating morph.
 const MORPH =
   "duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none";
 
@@ -42,23 +42,21 @@ const Header = () => {
 
   if (isStandalone(pathname)) return null;
 
-  // Docked: a full-width bar, 56px tall. Pinned: an 8px drop plus a 48px
-  // bar, still 56px, so the page below never shifts during the morph. The
-  // pinned bar's contents are all 32px tall, framed by an even 8px (1px
-  // border plus 7px padding) on every side.
+  // Docked: a full-width bar, 56px tall. Floating: an 8px drop plus a 62px
+  // bar, sized so the 36px logo sits 13px (1px border plus 12px) from the
+  // top and bottom edges, the same as from the sides.
   return (
     <header
       className={cn(
-        // Takes no room, so the page's hero runs up behind it.
-        "zoom-viewport sticky top-0 z-50 -mb-(--header-height) transition-[padding]",
+        // Takes no room, so the page's hero runs up behind it and nothing
+        // below shifts as the bar changes height.
+        "zoom-viewport sticky top-0 z-50 h-0",
         // Where the page's container content starts: the container's gutter,
         // plus its centering margin once the screen outgrows it. Docked, the
         // black strip runs edge to edge and pads in by this; floating, the
         // bar draws in by it from both edges as it drops.
         "[--gutter:1rem] md:[--gutter:2rem] xl:[--gutter:3rem]",
         "[--inset:max(var(--gutter),calc((100%-90rem)/2+var(--gutter)))]",
-        MORPH,
-        floating && "pt-2",
       )}
     >
       <div
@@ -66,8 +64,8 @@ const Header = () => {
           "relative flex items-center justify-between gap-6 border transition-[height,margin,padding,background-color,border-color,box-shadow,backdrop-filter]",
           MORPH,
           floating
-            ? "mx-(--inset) h-12 border-line bg-background/70 px-1.75 shadow-[0_8px_30px_rgb(0_0_0/0.45)] backdrop-blur-xl"
-            : "mx-0 h-14 border-transparent bg-background px-(--inset)",
+            ? "mx-(--inset) mt-2 h-15.5 border-line bg-background/70 px-3 shadow-[0_8px_30px_rgb(0_0_0/0.45)] backdrop-blur-xl"
+            : "mx-0 mt-0 h-14 border-transparent bg-background px-(--inset)",
         )}
       >
         <Link href="/" aria-label="CommonMind home" className="shrink-0">
@@ -77,11 +75,7 @@ const Header = () => {
             width={138}
             height={49}
             priority
-            className={cn(
-              "w-auto transition-[height]",
-              MORPH,
-              floating ? "h-8" : "h-9",
-            )}
+            className="h-9 w-auto"
           />
         </Link>
 
