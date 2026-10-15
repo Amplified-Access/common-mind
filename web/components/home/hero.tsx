@@ -1,0 +1,99 @@
+import { lugandaHeldOut, swahiliFlores, type LanguageBenchmark } from "@/components/benchmarks/data";
+import { Container } from "@/components/common/container";
+import { getModel, registryModels } from "@/components/models/registry";
+import { Backdrop } from "@/components/system/backdrop";
+import { ArrowLink } from "@/components/system/primitives";
+import { copyFor, getContent, type Content } from "@/lib/content";
+import { Emphasized } from "@/lib/copy/emphasized";
+import type { PageCopy } from "@/lib/copy/pages";
+
+import type { Outcome } from "./funnel";
+import { HeroDeck, type ShowcaseSet } from "./hero-deck";
+
+function showcaseModel(content: Content, slug: string): ShowcaseSet["model"] {
+  const model = getModel(slug);
+  if (!model) throw new Error(`Unknown model slug: ${slug}`);
+  const { tagline, overview } = copyFor(content, slug);
+  return {
+    slug: model.slug,
+    name: model.name,
+    tagline,
+    platforms: model.platforms,
+    overview,
+  };
+}
+
+const byBleu = (set: LanguageBenchmark) => [...set.entries].sort((a, b) => b.bleu - a.bleu);
+
+// What comes out of the whole platform, flipped through on the funnel's
+// CommonMind card; every figure is read from the benchmark data.
+function outcomes(): Outcome[] {
+  const swahili = byBleu(swahiliFlores);
+  const ours = swahili.find((e) => e.isOurs)!;
+  const rival = swahili.find((e) => !e.isOurs)!;
+  const luganda = byBleu(lugandaHeldOut);
+  const largest = registryModels.reduce((a, b) => (b.base.paramsNumeric > a.base.paramsNumeric ? b : a));
+  return [
+    {
+      value: ours.bleu.toFixed(2),
+      label: `BLEU on English→Swahili, above ${rival.model}`,
+      href: "/benchmarks#results",
+    },
+    {
+      value: `≤${largest.base.params}`,
+      label: "parameters. Built to run on modest hardware",
+      href: "/benchmarks#efficiency",
+    },
+    {
+      value: `${luganda.at(-1)!.bleu}→${luganda[0].bleu}`,
+      label: "BLEU on Luganda after civic adaptation",
+      href: "/models/luganda-gemma-1b-it",
+    },
+  ];
+}
+
+async function HomeHero({ copy }: { copy: PageCopy<"home">["hero"] }) {
+  const content = await getContent();
+  return (
+    <section className="zoom-viewport relative isolate overflow-hidden border-b border-line pt-(--header-height)">
+      <Backdrop wash warmGrain sweep glow />
+      <Container className="flex flex-col items-center gap-14 pt-20 sm:pt-24">
+        <div className="flex max-w-3xl flex-col items-center gap-6 text-center">
+          <h1 className="text-display text-balance">
+            <Emphasized text={copy.titleLine1} />{" "}
+            <span className="sm:block">
+              <Emphasized text={copy.titleLine2} />
+            </span>
+          </h1>
+          <p className="max-w-xl text-sm text-pretty text-foreground/90">
+            {copy.lede}
+          </p>
+          <div className="flex flex-wrap justify-center gap-x-10 gap-y-3 pt-4">
+            <ArrowLink href="/models" tone="foreground">
+              {copy.primaryCta}
+            </ArrowLink>
+            <ArrowLink href="/models#try">{copy.secondaryCta}</ArrowLink>
+          </div>
+        </div>
+        {/* Runs past the section's bottom edge, which cuts the cards off so
+            they read as sitting behind the next section. */}
+        <HeroDeck
+          outcomes={outcomes()}
+          className="-mb-5 sm:-mb-8"
+          sets={[
+            {
+              id: "sw",
+              from: "English",
+              to: "Swahili",
+              model: showcaseModel(content, "swahili-gemma-1b-it"),
+              entries: swahiliFlores.entries,
+              evalSet: swahiliFlores.evalSet,
+            },
+          ]}
+        />
+      </Container>
+    </section>
+  );
+}
+
+export { HomeHero };

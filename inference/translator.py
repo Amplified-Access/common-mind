@@ -1,6 +1,6 @@
 # CommonMind translation worker — serves all four published models behind
 # one GPU-warm worker. Prompt formats below are copied verbatim from each
-# model's published usage example (components/models/data.ts in the main
+# model's published usage example (web/components/models/data.ts in the main
 # repo) — this is the same, already-verified inference code, not a new
 # implementation.
 #

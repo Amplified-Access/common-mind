@@ -1,0 +1,27 @@
+# Labels applied automatically by actions/labeler@v5.
+# Matching uses glob patterns; any matching file in the PR triggers the label.
+# Manually-applied labels (type, priority, needs, blocked, etc.) are not listed here.
+
+"area: backend":
+  - changed-files:
+    - any-glob-to-any-file: ["backend/**"]
+
+"area: web":
+  - changed-files:
+    - any-glob-to-any-file: ["web/**"]
+
+"area: inference":
+  - changed-files:
+    - any-glob-to-any-file: ["inference/**"]
+
+"area: infra":
+  - changed-files:
+    - any-glob-to-any-file: [".github/**"]
+
+"type: chore":
+  - changed-files:
+    - any-glob-to-any-file:
+      - "backend/go.mod"
+      - "backend/go.sum"
+      - "web/package.json"
+      - "web/pnpm-lock.yaml"

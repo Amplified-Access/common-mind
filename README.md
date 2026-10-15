@@ -1,36 +1,91 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CommonMind
 
-## Getting Started
+Open language models, datasets, and benchmarks for African languages, and the Data Lab, where volunteers create civic language datasets, starting with the Civic Corpus.
 
-First, run the development server:
+## Project structure
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```
+common-mind/
+├── web/          # Next.js 16 site — models, datasets, research, Playground; later the Data Lab at /data-lab
+├── backend/      # Go + Gin API — Data Lab, release engine (Postgres, Redis/Asynq, R2)
+├── inference/    # Python model server on a Runpod GPU pod, behind the Playground
+├── docs/adr/     # Architectural decision records
+├── scripts/      # setup, dev, staging sync, production deploy
+├── .github/      # CI per layer, backend CD to Railway, PR labeler
+└── .claude/      # Agent subagents, commands, and hooks
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The layout follows the fullstack template shared with Blaze and ActionChallenge (see [ADR 0009](docs/adr/0009-monorepo-layout.md)).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Tech stack
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Layer | Technology |
+|---|---|
+| Web | Next.js 16, React 19, TypeScript 5, Tailwind CSS 4 |
+| Backend | Go 1.25, Gin, `database/sql` + pgx v5 |
+| Data | PostgreSQL 16 (goose migrations), Redis 7 + Asynq, Cloudflare R2 |
+| Auth | Firebase Authentication |
+| Inference | Python, FastAPI, Runpod |
+| Testing | Testcontainers (Go) |
+| Observability | Prometheus, Grafana, Sentry |
 
-## Learn More
+## Getting started
 
-To learn more about Next.js, take a look at the following resources:
+Prerequisites: Go 1.25+, Node.js 22+, pnpm, and Docker (running).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+make setup   # checks tools, installs web deps, copies .env files, starts Postgres + Redis, migrates
+make dev     # Postgres + Redis, backend (:8080, hot reload), and web (:3000) in one terminal
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Or start each part on its own:
 
-## Deploy on Vercel
+```bash
+cd backend && make docker-run   # Postgres :5434, Redis :6380, Auth Emulator :9099 (UI :4000), Prometheus :9092, Grafana :3012
+cd backend && make watch        # API → http://localhost:8080 (Swagger at /swagger/index.html)
+cd web && pnpm dev              # site → http://localhost:3000
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The Playground needs a running inference pod; see [inference/README.md](inference/README.md). Without one, the rest of the site works and `/api/translate` returns 503.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Try the Data Lab locally
+
+Sign-in runs against the Firebase Auth Emulator that `make docker-run` starts, so no Firebase project is needed.
+
+```bash
+cd backend && make docker-run          # Postgres, Redis, Auth Emulator (UI at http://localhost:4000)
+cd backend && make migrate-up && make datalab-sample   # schema + sample civic items
+cd backend && make watch               # API on :8080
+cd web && pnpm dev                     # site on :3000
+```
+
+1. Open http://localhost:3000/data-lab, create an account with any email, and join one or more languages.
+2. A language accepts contributions once it has two reviewers. Create a second account, join the same language, then promote both:
+   `cd backend && make datalab-promote email=you@example.com language=sw level=reviewer`
+3. Contribute with one account and review with the other. Counts on `/data-lab` update live.
+4. To record by voice, set the `R2_*` variables in `backend/.env` and add the bucket's CORS rule ([backend/docs/storage.md](backend/docs/storage.md)), then restart the API. The contribute screen gains a Write / Speak switch.
+
+## Common commands
+
+| Command | What it does |
+|---|---|
+| `make test` | Backend unit and integration tests (Docker required) |
+| `make lint` | `go vet` and ESLint |
+| `make build` | Backend binary and production web build |
+| `cd backend && make migrate-create name=<slug>` | New SQL migration |
+| `cd backend && make datalab-sample` | Load sample Data Lab items into the local database |
+| `cd backend && make datalab-promote email=… language=sw level=reviewer` | Promote a volunteer in a language |
+| `cd backend && make swagger` | Regenerate API docs after changing handler annotations |
+| `make deploy-prod` | Advance `production` to `main` (see [RUNBOOK.md](RUNBOOK.md)) |
+
+## Documentation
+
+- [AGENTS.md](AGENTS.md) and [CLAUDE.md](CLAUDE.md) — conventions and workflow for contributors and coding agents
+- [backend/docs/](backend/docs/_index.md) — backend topics: database, routing, auth, queue, storage, testing
+- [docs/adr/](docs/adr/0000-index.md) — why things are the way they are
+- [RUNBOOK.md](RUNBOOK.md) — deploying and operating each layer
+- [CONTRIBUTING.md](CONTRIBUTING.md) — how to propose changes
+
+## License
+
+[MIT](LICENSE). Datasets and models published by CommonMind carry their own licences, listed on their pages.
