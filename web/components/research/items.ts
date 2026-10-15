@@ -1,7 +1,5 @@
-import { datasets } from "@/components/datasets/data";
 import { getModel } from "@/components/models/registry";
-
-import { publications, releases } from "./data";
+import type { Content } from "@/lib/content/types";
 
 export type ResearchItem = {
   id: string;
@@ -21,7 +19,11 @@ const LANGUAGES = ["Luganda", "Swahili"];
 
 // Everything on the research index, newest first, as plain data for the
 // client-side grid (the full reports stay on the server).
-export function researchItems(): ResearchItem[] {
+export function researchItems({
+  datasets,
+  publications,
+  releases,
+}: Pick<Content, "datasets" | "publications" | "releases">): ResearchItem[] {
   const reports: ResearchItem[] = publications.map((p) => {
     const languages = p.tags.filter((t) => LANGUAGES.includes(t));
     const topics = p.tags.filter((t) => !LANGUAGES.includes(t));

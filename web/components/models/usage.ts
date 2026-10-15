@@ -1,5 +1,7 @@
 import { playgroundModels } from "@/components/playground/data";
 
+import type { ModelCopy } from "@/lib/content/types";
+
 import type { RegistryModel } from "./registry";
 
 export type UsagePath = {
@@ -12,7 +14,7 @@ export type UsagePath = {
 
 // The ways to run one model, generated from its registry entry. Paths that
 // don't apply (Ollama for a model that isn't published there) are left out.
-export function usagePaths(model: RegistryModel): UsagePath[] {
+export function usagePaths(model: RegistryModel, usage: ModelCopy["usage"]): UsagePath[] {
   const ollama = model.availability.find((a) => a.label === "Ollama")?.href;
   const ollamaId = ollama?.replace("https://ollama.com/", "");
   const direction =
@@ -22,9 +24,9 @@ export function usagePaths(model: RegistryModel): UsagePath[] {
     {
       id: "python",
       label: "Python",
-      language: model.usage.language,
+      language: usage.language,
       title: "inference.py",
-      code: model.usage.code,
+      code: usage.code,
     },
     {
       id: "huggingface",

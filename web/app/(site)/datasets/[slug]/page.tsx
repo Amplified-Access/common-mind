@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 
 import { Container } from "@/components/common/container";
 import { accessSnippets } from "@/components/datasets/access";
-import { datasets } from "@/components/datasets/data";
 import { servedLanguages, taskLabel } from "@/components/models/catalog";
 import { registryModels } from "@/components/models/registry";
 import { Arrow } from "@/components/system/arrow";
@@ -15,20 +14,23 @@ import { PageHero } from "@/components/system/page-hero";
 import { ArrowLink, Eyebrow, Panel } from "@/components/system/primitives";
 import { SideNav } from "@/components/system/side-nav";
 import { TagChain } from "@/components/system/tag-chain";
+import { copyFor, getContent } from "@/lib/content";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
 };
 
-const getDataset = (slug: string) => datasets.find((d) => d.slug === slug);
+const getDataset = async (slug: string) =>
+  (await getContent()).datasets.find((d) => d.slug === slug);
 
-export function generateStaticParams() {
+export async function generateStaticParams() {
+  const { datasets } = await getContent();
   return datasets.map((dataset) => ({ slug: dataset.slug }));
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const dataset = getDataset(slug);
+  const dataset = await getDataset(slug);
   if (!dataset) return {};
   return { title: dataset.name, description: dataset.description };
 }
@@ -60,10 +62,13 @@ const limitations = [
 
 const DatasetPage = async ({ params }: PageProps) => {
   const { slug } = await params;
-  const dataset = getDataset(slug);
+  const dataset = await getDataset(slug);
   if (!dataset) notFound();
 
-  const models = registryModels.filter((m) => dataset.usedBy.includes(m.name));
+  const content = await getContent();
+  const models = registryModels
+    .filter((m) => dataset.usedBy.includes(m.name))
+    .map((m) => ({ ...m, tagline: copyFor(content, m.slug).tagline }));
   const languages = dataset.languages.join(", ");
   const access = accessSnippets(dataset);
 

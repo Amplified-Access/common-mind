@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { Container } from "@/components/common/container";
-import { datasets } from "@/components/datasets/data";
 import { getLanguage, languages } from "@/components/languages/data";
 import { ecosystemFor } from "@/components/languages/ecosystem";
 import { LanguagePlayground } from "@/components/languages/language-playground";
@@ -12,7 +11,7 @@ import { cardColor, ColorCard } from "@/components/system/color-card";
 import { InfoTable } from "@/components/system/info-table";
 import { PageHero } from "@/components/system/page-hero";
 import { ArrowLink, LinkButton, Section, SectionHeader } from "@/components/system/primitives";
-import { site } from "@/lib/site";
+import { getContent } from "@/lib/content";
 
 type PageProps = {
   params: Promise<{ code: string }>;
@@ -41,8 +40,9 @@ const LanguagePage = async ({ params }: PageProps) => {
   const language = getLanguage(code);
   if (!language) notFound();
 
-  const { models, research } = ecosystemFor(language);
-  const languageData = datasets.filter((d) => d.languages.includes(language.name));
+  const content = await getContent();
+  const { models, research } = ecosystemFor(language, content);
+  const languageData = content.datasets.filter((d) => d.languages.includes(language.name));
   const built = models.length > 0;
 
   return (
@@ -136,7 +136,7 @@ const LanguagePage = async ({ params }: PageProps) => {
               ))}
             </ul>
             <div>
-              <LinkButton href={site.org.href} arrow>
+              <LinkButton href={content.settings.organization.href} arrow>
                 Get involved
               </LinkButton>
             </div>

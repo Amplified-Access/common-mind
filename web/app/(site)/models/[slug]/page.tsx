@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { Container } from "@/components/common/container";
-import { datasets } from "@/components/datasets/data";
 import { servedLanguages, taskLabel } from "@/components/models/catalog";
 import { formatDate, getModel, registryModels } from "@/components/models/registry";
 import { usagePaths } from "@/components/models/usage";
@@ -14,6 +13,7 @@ import { InfoTable } from "@/components/system/info-table";
 import { PageHero } from "@/components/system/page-hero";
 import { PageTabs } from "@/components/system/page-tabs";
 import { ArrowLink, Eyebrow, Panel, Section, StatusDot } from "@/components/system/primitives";
+import { copyFor, getContent } from "@/lib/content";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -27,7 +27,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { slug } = await params;
   const model = getModel(slug);
   if (!model) return {};
-  return { title: model.name, description: model.tagline };
+  const { tagline } = copyFor(await getContent(), slug);
+  return { title: model.name, description: tagline };
 }
 
 const ModelPage = async ({ params }: PageProps) => {
@@ -35,10 +36,12 @@ const ModelPage = async ({ params }: PageProps) => {
   const model = getModel(slug);
   if (!model) notFound();
 
+  const content = await getContent();
+  const copy = copyFor(content, model.slug);
   const languages = servedLanguages(model);
   const evaluation = model.evaluation;
   const hf = model.availability.find((a) => a.label === "Hugging Face");
-  const trainedOn = datasets.filter((d) => d.usedBy.includes(model.name));
+  const trainedOn = content.datasets.filter((d) => d.usedBy.includes(model.name));
   // "English to Swahili" for one direction, "English and Luganda" for both.
   const pair = `English ${model.directions.length > 1 ? "and" : "to"} ${languages.join(", ")}`;
 
@@ -47,9 +50,9 @@ const ModelPage = async ({ params }: PageProps) => {
       <div className="flex flex-col gap-5">
         <Eyebrow uppercase={false}>About this model</Eyebrow>
         <h2 className="text-h2 text-balance">Advancing {pair} translation</h2>
-        <p className="text-sm text-pretty text-faint">{model.overview}</p>
+        <p className="text-sm text-pretty text-faint">{copy.overview}</p>
         <ul className="flex flex-col gap-2 pt-2 text-sm text-subtle">
-          {model.capabilities.map((capability) => (
+          {copy.capabilities.map((capability) => (
             <li key={capability} className="flex gap-3">
               <span className="mt-2 size-1 shrink-0 rounded-full bg-signal" />
               {capability}
@@ -175,7 +178,7 @@ const ModelPage = async ({ params }: PageProps) => {
         </p>
       </div>
       <CodeTabs
-        tabs={usagePaths(model).map((path) => ({
+        tabs={usagePaths(model, copy.usage).map((path) => ({
           id: path.id,
           label: path.label,
           content: <Code code={path.code} language={path.language} title={path.title} />,
@@ -222,7 +225,7 @@ const ModelPage = async ({ params }: PageProps) => {
         tile={AiChipIcon}
         eyebrow="Model"
         title={model.name}
-        lede={`${model.tagline}.`}
+        lede={copy.tagline && `${copy.tagline}.`}
         tags={[...languages, taskLabel(model.task), "Open Model"]}
       />
 

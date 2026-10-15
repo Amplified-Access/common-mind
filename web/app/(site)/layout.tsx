@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { IBM_Plex_Mono, Sora } from "next/font/google";
 import "../globals.css";
 import { cn } from "@/lib/utils";
-import { announcement, site } from "@/lib/site";
+import { getContent } from "@/lib/content";
+import { site } from "@/lib/site";
 import { AnnouncementBanner } from "@/components/layout/announcement-banner";
 import { SmoothScroll } from "@/components/common/smooth-scroll";
 import Footer from "@/components/layout/footer";
@@ -22,15 +23,19 @@ const plexMono = IBM_Plex_Mono({
   weight: ["400", "500"],
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: `${site.name} · ${site.statement}`,
-    template: `%s · ${site.name}`,
-  },
-  description: site.tagline,
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { settings } = await getContent();
+  return {
+    title: {
+      default: `${site.name} · ${settings.statement}`,
+      template: `%s · ${site.name}`,
+    },
+    description: settings.tagline,
+  };
+}
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const { settings } = await getContent();
   return (
     <html
       lang="en"
@@ -45,7 +50,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="flex min-h-full flex-col bg-background text-foreground">
         <SmoothScroll>
-          <AnnouncementBanner {...announcement} />
+          {settings.announcement && (
+            <AnnouncementBanner announcement={settings.announcement} />
+          )}
           <Header />
           <main className="flex-1">{children}</main>
           <HideOnStandalone>

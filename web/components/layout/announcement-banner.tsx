@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { useState, useSyncExternalStore } from "react";
 
 import { Arrow } from "@/components/system/arrow";
+import type { Announcement } from "@/lib/content/types";
 
 import { Container } from "../common/container";
 
@@ -23,15 +24,10 @@ function readDismissed() {
 
 const noopSubscribe = () => () => {};
 
-type AnnouncementBannerProps = {
-  id: string;
-  message: string;
-  linkLabel: string;
-  href: string;
-};
-
-// Shown on the home page only, for now.
-function AnnouncementBanner({ id, message, linkLabel, href }: AnnouncementBannerProps) {
+// Shown on the home page only, for now. Dismissing it remembers its key,
+// so a new announcement (a new key) shows again.
+function AnnouncementBanner({ announcement }: { announcement: Announcement }) {
+  const { key: id, message, link } = announcement;
   const pathname = usePathname();
   const [dismissedNow, setDismissed] = useState(false);
   const storedId = useSyncExternalStore(noopSubscribe, readDismissed, () => null);
@@ -43,13 +39,15 @@ function AnnouncementBanner({ id, message, linkLabel, href }: AnnouncementBanner
       <Container className="flex items-center justify-center py-2.5 pr-12 text-center text-xs sm:text-[13px]">
         <p className="flex flex-wrap items-center justify-center gap-x-3 gap-y-0.5">
           <span>{message}</span>
-          <Link
-            href={href}
-            className="group inline-flex items-center gap-2 font-mono text-xs text-signal transition-colors hover:text-foreground"
-          >
-            {linkLabel}
-            <Arrow direction="right" className="transition-transform group-hover:translate-x-0.5" />
-          </Link>
+          {link && (
+            <Link
+              href={link.href}
+              className="group inline-flex items-center gap-2 font-mono text-xs text-signal transition-colors hover:text-foreground"
+            >
+              {link.label}
+              <Arrow direction="right" className="transition-transform group-hover:translate-x-0.5" />
+            </Link>
+          )}
         </p>
       </Container>
       <button

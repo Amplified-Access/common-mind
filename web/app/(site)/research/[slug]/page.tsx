@@ -2,25 +2,28 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { Container } from "@/components/common/container";
-import { publications, readTimeForPublication } from "@/components/research/data";
 import { PublicationArticle } from "@/components/research/publication-article";
+import { readTimeForPublication } from "@/components/research/read-time";
 import { PageHero } from "@/components/system/page-hero";
+import { getContent } from "@/lib/content";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
 };
 
-function getPublication(slug: string) {
+async function getPublication(slug: string) {
+  const { publications } = await getContent();
   return publications.find((publication) => publication.slug === slug);
 }
 
-export function generateStaticParams() {
+export async function generateStaticParams() {
+  const { publications } = await getContent();
   return publications.map((publication) => ({ slug: publication.slug }));
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const publication = getPublication(slug);
+  const publication = await getPublication(slug);
 
   if (!publication) {
     return {};
@@ -34,7 +37,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 const ResearchArticlePage = async ({ params }: PageProps) => {
   const { slug } = await params;
-  const publication = getPublication(slug);
+  const publication = await getPublication(slug);
 
   if (!publication) {
     notFound();

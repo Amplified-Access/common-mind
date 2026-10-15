@@ -1,7 +1,7 @@
 import { formatDate } from "@/components/models/registry";
 import { ArrowLink, Panel } from "@/components/system/primitives";
 
-import type { Publication } from "./data";
+import type { Publication } from "@/lib/content/types";
 
 // The body of a technical report: headline results, then the write-up in
 // one reading column, then its sources.

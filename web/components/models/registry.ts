@@ -1,5 +1,3 @@
-import { modelCopy, type ModelCopy } from "./data";
-
 // Registry metadata for each released model. Every field here is checked
 // against the public Hugging Face model card / repo for that model.
 
@@ -201,13 +199,13 @@ export const registry: Record<string, RegistryMeta> = {
   },
 };
 
-export type RegistryModel = RegistryMeta & Omit<ModelCopy, "slug"> & { slug: string };
+// Each model's written copy (tagline, overview, usage example) is edited in
+// the Studio and read with copyFor (lib/content).
+export type RegistryModel = RegistryMeta & { slug: string };
 
-export const registryModels: RegistryModel[] = Object.entries(registry).map(([slug, meta]) => {
-  const copy = modelCopy.find((c) => c.slug === slug);
-  if (!copy) throw new Error(`Missing copy for ${slug}`);
-  return { ...copy, ...meta, slug };
-});
+export const registryModels: RegistryModel[] = Object.entries(registry).map(
+  ([slug, meta]) => ({ ...meta, slug }),
+);
 
 export function getModel(slug: string) {
   return registryModels.find((model) => model.slug === slug);

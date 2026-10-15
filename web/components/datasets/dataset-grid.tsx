@@ -5,21 +5,20 @@ import { useMemo, useState } from "react";
 import { cardColor, ColorCard } from "@/components/system/color-card";
 import { FilterChips, FilterSelect, SearchField } from "@/components/system/filters";
 import { SectionHeader } from "@/components/system/primitives";
-
-import { datasets, type DatasetKind } from "./data";
+import type { Dataset, DatasetKind } from "@/lib/content/types";
 
 const ALL = "all";
 const kinds: DatasetKind[] = ["Parallel", "Monolingual", "Instruction", "Question Answering", "Evaluation"];
 const unique = (values: string[]) => Array.from(new Set(values)).sort();
 
-function DatasetGrid() {
+function DatasetGrid({ datasets }: { datasets: Dataset[] }) {
   const [query, setQuery] = useState("");
   const [kind, setKind] = useState(ALL);
   const [language, setLanguage] = useState(ALL);
   const [source, setSource] = useState(ALL);
 
-  const languages = useMemo(() => unique(datasets.flatMap((d) => d.languages)), []);
-  const sources = useMemo(() => unique(datasets.map((d) => d.source)), []);
+  const languages = useMemo(() => unique(datasets.flatMap((d) => d.languages)), [datasets]);
+  const sources = useMemo(() => unique(datasets.map((d) => d.source)), [datasets]);
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -30,7 +29,7 @@ function DatasetGrid() {
         (source === ALL || d.source === source) &&
         (!q || [d.name, d.description, d.kind, ...d.languages].join(" ").toLowerCase().includes(q)),
     );
-  }, [query, kind, language, source]);
+  }, [datasets, query, kind, language, source]);
 
   return (
     <div className="flex flex-col gap-14">

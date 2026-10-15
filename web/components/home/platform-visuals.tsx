@@ -3,6 +3,7 @@ import { swahiliFlores } from "@/components/benchmarks/data";
 import { registryModels } from "@/components/models/registry";
 import { ParticleOrb } from "@/components/system/particle-orb";
 import { TagChain } from "@/components/system/tag-chain";
+import { getContent } from "@/lib/content";
 
 import { ApplicationFlipper } from "./application-flipper";
 import { LanguageTypewriter } from "./language-typewriter";
@@ -97,10 +98,11 @@ function EvaluationVisual() {
   );
 }
 
-function ApplicationsVisual() {
+async function ApplicationsVisual() {
+  const { applications } = await getContent();
   return (
     <div className="flex size-full items-center justify-center p-8">
-      <ApplicationFlipper className="w-[72%] max-w-md" />
+      <ApplicationFlipper applications={applications} className="w-[72%] max-w-md" />
     </div>
   );
 }

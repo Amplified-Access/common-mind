@@ -1,6 +1,5 @@
 import { lugandaHeldOut, swahiliFlores } from "@/components/benchmarks/data";
 import { Container } from "@/components/common/container";
-import { datasets } from "@/components/datasets/data";
 import { BenchShowcase } from "@/components/home/bench-showcase";
 import { Foundation } from "@/components/home/foundation";
 import { HomeHero } from "@/components/home/hero";
@@ -24,10 +23,13 @@ import {
   Section,
   SectionHeader,
 } from "@/components/system/primitives";
+import { getContent } from "@/lib/content";
 
-export default function Home() {
+export default async function Home() {
+  const content = await getContent();
+  const { datasets } = content;
   const ecosystems = languages.map((language) => {
-    const { models, research } = ecosystemFor(language);
+    const { models, research } = ecosystemFor(language, content);
     return {
       code: language.code,
       name: language.name,
@@ -171,7 +173,7 @@ export default function Home() {
           />
           <div className="scrollbar-none -mx-4 overflow-x-auto px-4 md:mx-0 md:px-0 lg:mask-[linear-gradient(to_right,transparent,#000_6%,#000_94%,transparent)]">
             <ul className="grid w-max auto-cols-[16rem] grid-flow-col gap-5 md:w-full md:auto-cols-auto md:grid-flow-row md:grid-cols-4">
-              {researchItems()
+              {researchItems(content)
                 .slice(0, 4)
                 .map((item, i) => (
                   <li key={item.id} className="flex">

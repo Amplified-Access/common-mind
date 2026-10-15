@@ -3,19 +3,20 @@ import Link from "next/link";
 
 import { Container } from "@/components/common/container";
 import { formatDate } from "@/components/models/registry";
-import { releases } from "@/components/research/data";
 import { researchItems } from "@/components/research/items";
 import { ResearchGrid } from "@/components/research/research-grid";
 import { Arrow } from "@/components/system/arrow";
 import { PageHero } from "@/components/system/page-hero";
 import { Section, SectionHeader } from "@/components/system/primitives";
+import { getContent } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Research",
   description: "Research at the intersection of language, civic discourse, models, data, and evaluation.",
 };
 
-const ResearchPage = () => {
+const ResearchPage = async () => {
+  const content = await getContent();
   return (
     <>
       <PageHero
@@ -27,7 +28,7 @@ const ResearchPage = () => {
         className="pb-(--section-pad)"
         after={
           <Container id="papers" className="scroll-mt-24">
-            <ResearchGrid items={researchItems()} />
+            <ResearchGrid items={researchItems(content)} />
           </Container>
         }
       />
@@ -40,7 +41,7 @@ const ResearchPage = () => {
             lede="Every release contributes to a growing foundation for multilingual civic AI, with accessible model artifacts, evaluation results, and technical documentation."
           />
           <ol className="flex flex-col border-t border-line">
-            {releases.map((release) => (
+            {content.releases.map((release) => (
               <li key={release.date} className="border-b border-line">
                 <Link
                   href={release.href}

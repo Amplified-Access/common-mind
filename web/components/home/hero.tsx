@@ -3,19 +3,21 @@ import { Container } from "@/components/common/container";
 import { getModel, registryModels } from "@/components/models/registry";
 import { Backdrop } from "@/components/system/backdrop";
 import { ArrowLink } from "@/components/system/primitives";
+import { copyFor, getContent, type Content } from "@/lib/content";
 
 import type { Outcome } from "./funnel";
 import { HeroDeck, type ShowcaseSet } from "./hero-deck";
 
-function showcaseModel(slug: string): ShowcaseSet["model"] {
+function showcaseModel(content: Content, slug: string): ShowcaseSet["model"] {
   const model = getModel(slug);
   if (!model) throw new Error(`Unknown model slug: ${slug}`);
+  const { tagline, overview } = copyFor(content, slug);
   return {
     slug: model.slug,
     name: model.name,
-    tagline: model.tagline,
+    tagline,
     platforms: model.platforms,
-    overview: model.overview,
+    overview,
   };
 }
 
@@ -48,7 +50,8 @@ function outcomes(): Outcome[] {
   ];
 }
 
-function HomeHero() {
+async function HomeHero() {
+  const content = await getContent();
   return (
     <section className="zoom-viewport relative isolate overflow-hidden border-b border-line pt-(--header-height)">
       <Backdrop wash warmGrain sweep glow />
@@ -80,7 +83,7 @@ function HomeHero() {
               id: "sw",
               from: "English",
               to: "Swahili",
-              model: showcaseModel("swahili-gemma-1b-it"),
+              model: showcaseModel(content, "swahili-gemma-1b-it"),
               entries: swahiliFlores.entries,
               evalSet: swahiliFlores.evalSet,
             },

@@ -1,16 +1,15 @@
-import Image from "next/image";
-
 import { Arrow } from "@/components/system/arrow";
+import { CmsLogo } from "@/components/system/cms-logo";
 import { FRAME, FRAME_PANELS } from "@/components/system/framed-card";
 import { TagChain } from "@/components/system/tag-chain";
+import { getContent } from "@/lib/content";
 import { cn } from "@/lib/utils";
-
-import { applications } from "./data";
 
 // Each application as a framed card that links to its site: the logo on a
 // dark panel lit by a fine grid from the right edge, as the model cards are,
 // and the application's own description below it.
-function ApplicationGrid() {
+async function ApplicationGrid() {
+  const { applications } = await getContent();
   return (
     <ul className="grid gap-5 md:grid-cols-2">
       {applications.map((app) => (
@@ -27,12 +26,11 @@ function ApplicationGrid() {
                   aria-hidden
                   className="absolute inset-0 -z-10 bg-grid [--grid-line:rgb(255_255_255/0.09)] mask-[radial-gradient(260px_115px_at_100%_50%,#000,rgb(0_0_0/0.45)_40%,rgb(0_0_0/0.12)_75%,transparent)]"
                 />
-                <Image
-                  src={app.logo}
+                <CmsLogo
+                  image={app.logo}
+                  size={app.logoSize}
                   alt={app.name}
-                  width={app.width}
-                  height={app.height}
-                  className={cn("w-auto transition-transform duration-500 group-hover:scale-105", app.logoSize)}
+                  className="transition-transform duration-500 group-hover:scale-105"
                 />
               </div>
               <div className="flex flex-1 flex-col gap-5 bg-surface-warm p-6 sm:p-8">

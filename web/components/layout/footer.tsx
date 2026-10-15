@@ -3,8 +3,9 @@ import Link from "next/link";
 
 import { Container } from "@/components/common/container";
 import { FooterCta } from "@/components/layout/footer-cta";
+import { CmsLogo } from "@/components/system/cms-logo";
 import { isExternalHref } from "@/components/system/primitives";
-import { footerColumns, legalLinks, partners, site } from "@/lib/site";
+import { getContent } from "@/lib/content";
 import { cn } from "@/lib/utils";
 
 // The partner logos scroll in an endless row: two identical runs back to
@@ -12,11 +13,16 @@ import { cn } from "@/lib/utils";
 // until it holds at least a dozen, so it's wider than the strip at any
 // width and never shows a gap. Hovering or focusing a logo pauses it;
 // reduced motion shows them still.
-const PARTNER_RUN = Array.from({ length: Math.ceil(12 / partners.length) }, () => partners).flat();
-const PARTNER_LOOP = [...PARTNER_RUN, ...PARTNER_RUN];
 const SECONDS_PER_LOGO = 4;
 
-const Footer = () => {
+const Footer = async () => {
+  const { settings } = await getContent();
+  const { partners, footerColumns, legalLinks, organization } = settings;
+  const PARTNER_RUN = partners.length
+    ? Array.from({ length: Math.ceil(12 / partners.length) }, () => partners).flat()
+    : [];
+  const PARTNER_LOOP = [...PARTNER_RUN, ...PARTNER_RUN];
+
   return (
     <footer className="zoom-viewport">
       {/* The last section's bottom padding sets the space above. */}
@@ -33,12 +39,11 @@ const Footer = () => {
                 // Only the first pass is real; the rest repeat it for the loop.
                 const copy = i >= partners.length;
                 const logo = (
-                  <Image
-                    src={partner.logo}
+                  <CmsLogo
+                    image={partner.logo}
+                    size={partner.logoSize}
                     alt={partner.name}
-                    width={partner.width}
-                    height={partner.height}
-                    className={cn("w-auto opacity-90 transition-opacity group-hover:opacity-100", partner.size)}
+                    className="opacity-90 transition-opacity group-hover:opacity-100"
                   />
                 );
                 return (
@@ -87,12 +92,12 @@ const Footer = () => {
             <p className="max-w-xs text-sm text-pretty text-subtle">
               An open civic AI infrastructure initiative by{" "}
               <a
-                href={site.org.href}
+                href={organization.href}
                 target="_blank"
                 rel="noreferrer"
                 className="text-foreground/80 underline decoration-line-strong underline-offset-4 transition-colors hover:text-signal"
               >
-                {site.org.name}
+                {organization.name}
               </a>
               .
             </p>

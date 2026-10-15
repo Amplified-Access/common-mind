@@ -5,6 +5,7 @@ import { servedLanguages, taskLabel } from "@/components/models/catalog";
 import { highlightCode } from "@/components/models/highlight";
 import { registryModels } from "@/components/models/registry";
 import { ArrowLink, SectionHeader } from "@/components/system/primitives";
+import { copyFor, getContent } from "@/lib/content";
 import { cn } from "@/lib/utils";
 
 // Seconds each card takes to drift one card-width, slow enough to read.
@@ -16,11 +17,15 @@ const CODE_LINES = 14;
 // and holds still under the pointer or keyboard focus. With reduced motion
 // it's a row to swipe through instead.
 async function ModelCarousel() {
+  const content = await getContent();
   const cards = await Promise.all(
-    registryModels.map(async (model) => ({
-      model,
-      code: await highlightCode(model.usage.code.split("\n").slice(0, CODE_LINES).join("\n"), model.usage.language),
-    })),
+    registryModels.map(async (model) => {
+      const { usage } = copyFor(content, model.slug);
+      return {
+        model,
+        code: await highlightCode(usage.code.split("\n").slice(0, CODE_LINES).join("\n"), usage.language),
+      };
+    }),
   );
 
   // Two copies back to back: the loop slides exactly one copy over.

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 
 import { Container } from "@/components/common/container";
-import { datasets } from "@/components/datasets/data";
 import { languages } from "@/components/languages/data";
 import { ecosystemFor } from "@/components/languages/ecosystem";
 import { LanguageGlobe } from "@/components/languages/language-globe";
@@ -9,15 +8,18 @@ import { LanguageGrid } from "@/components/languages/language-grid";
 import { registryModels } from "@/components/models/registry";
 import { Backdrop } from "@/components/system/backdrop";
 import { Eyebrow, Section, SectionHeader } from "@/components/system/primitives";
+import { getContent } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Languages",
   description: "Every language carries its own civic vocabulary.",
 };
 
-const LanguagesPage = () => {
+const LanguagesPage = async () => {
+  const content = await getContent();
+  const { datasets } = content;
   const entries = languages.map((language) => {
-    const { models } = ecosystemFor(language);
+    const { models } = ecosystemFor(language, content);
     return {
       code: language.code,
       name: language.name,

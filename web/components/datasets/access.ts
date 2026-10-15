@@ -1,4 +1,4 @@
-import type { Dataset } from "./data";
+import type { Dataset } from "@/lib/content/types";
 
 export type AccessSnippet = {
   id: "python" | "download" | "api";

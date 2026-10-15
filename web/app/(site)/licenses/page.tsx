@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { datasets } from "@/components/datasets/data";
 import { LegalDocument, LegalSection } from "@/components/legal/legal-document";
 import { registryModels } from "@/components/models/registry";
+import { getContent } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Licenses",
   description: "The licenses CommonMind's models are released under, and where each dataset's terms live.",
 };
 
-const LicensesPage = () => {
+const LicensesPage = async () => {
+  const { datasets } = await getContent();
   return (
     <LegalDocument title="Licenses" updated="October 2026">
       <LegalSection number={1} title="Models">
