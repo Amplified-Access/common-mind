@@ -8,6 +8,7 @@ See `AGENTS.md` for setup, Data Lab rules, and security rules; `docs/adr/` for a
 | Frontend | Next.js 16, React 19, TypeScript 5, Tailwind CSS 4 |
 | Backend | Go 1.25, Gin, `database/sql` + pgx v5 stdlib |
 | Database | PostgreSQL 16 + Redis 7 via Docker Compose |
+| Content | Sanity, Studio embedded at `/studio` — see `web/docs/cms.md` |
 | Inference | Python (FastAPI) on a Runpod GPU pod — see `inference/README.md` |
 | Dev tools | pnpm, Air (Go hot reload), Testcontainers |
 
@@ -19,7 +20,8 @@ cd web && pnpm dev              # web dev → :3000
 
 cd backend && make test         # all tests
 cd backend && make itest        # integration tests only (requires Docker)
-cd web && pnpm lint && pnpm build
+cd web && pnpm lint && pnpm test && pnpm build
+cd web && pnpm sanity:seed      # seed Sanity / add new page-copy fields (web/docs/cms.md)
 ```
 
 ## Migration commands (run from backend/)
@@ -49,7 +51,7 @@ Use `/project:implement` to run this workflow end-to-end.
 ## Documentation locations
 ```
 backend/docs/    # database, migrations, routing, testing, error-handling, environment, …
-web/docs/        # not created yet — add with the first web topic
+web/docs/        # cms (Sanity: what lives where, page copy, seeding)
 docs/adr/        # architectural decisions
 ```
 Each doc file has `last_verified` and `sources` frontmatter. The `docs` agent maintains these.
@@ -104,7 +106,11 @@ backend/
   .env                          # never commit secrets
   Makefile
 web/
-  app/                          # Next.js App Router
+  app/(site)/                   # Next.js App Router: the site's pages, under its own root layout
+  app/studio/                   # embedded Sanity Studio, its own root layout
+  lib/content/                  # editorial content from Sanity (getContent, getLegalPage)
+  lib/copy/                     # page copy: original wording (pages/) + overlay of published text
+  sanity/                       # Studio schemas, sidebar, seed (sanity.config.ts at web root)
   CLAUDE.md → AGENTS.md         # web-specific rules (read before writing Next.js)
 inference/
   server.py                     # FastAPI model server that runs on the Runpod pod
@@ -165,7 +171,7 @@ Test-first, scoped to behaviour: what to test and what to skip is in [AGENTS.md 
 - See `backend/docs/testing.md` for full patterns.
 
 ### Web (Next.js)
-- No test suite yet. When adding one, use Vitest + `@testing-library/react` (`jsdom`), and Playwright for full-page flows.
+- Vitest for `lib/` logic (`pnpm test`; tests sit beside the code as `*.test.ts`). Add `@testing-library/react` (`jsdom`) for interactive components, and Playwright for full-page flows.
 
 ## Hard rules (hooks enforce some of these)
 - No secrets in committed files.

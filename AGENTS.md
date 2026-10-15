@@ -60,10 +60,11 @@ Container ports are shifted from the defaults so CommonMind runs alongside Actio
 cd backend && make test         # unit + integration (Docker must be running)
 cd backend && make itest        # integration only
 cd web && pnpm lint
+cd web && pnpm test
 cd web && pnpm build
 ```
 
-The web app has no test suite yet. When adding one, use Vitest + `@testing-library/react` for `lib/` logic and interactive client components that have behaviour (not render-only or snapshot tests), and add a `test` step to `.github/workflows/web-ci.yml`.
+The web app uses Vitest (`cd web && pnpm test`, run in CI) for `lib/` logic. For interactive client components that have behaviour, add `@testing-library/react` with `jsdom` (not render-only or snapshot tests).
 
 ---
 
