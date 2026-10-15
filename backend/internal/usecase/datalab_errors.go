@@ -18,6 +18,10 @@ var (
 	ErrOwnContribution    = errors.New("volunteers cannot review their own contributions")
 	ErrAlreadyReviewed    = errors.New("contribution has already been reviewed")
 	ErrNoReviews          = errors.New("nothing to review in this language")
+	// ErrVoiceUnavailable: object storage isn't configured, so nothing can be recorded.
+	ErrVoiceUnavailable = errors.New("voice recording is not set up")
+	// ErrVoiceConsentRequired: the volunteer hasn't agreed to record their voice.
+	ErrVoiceConsentRequired = errors.New("volunteer must accept the voice consent")
 )
 
 // invalid wraps ErrInvalidInput with a message safe to show the volunteer.

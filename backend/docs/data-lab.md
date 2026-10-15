@@ -1,6 +1,6 @@
 ---
 topic: data-lab
-last_verified: 2026-10-14
+last_verified: 2026-10-15
 sources:
   - internal/domain/datalab.go
   - internal/usecase/datalab.go
@@ -14,6 +14,8 @@ sources:
   - internal/infrastructure/database/migrations/20261014061424_add_reviews.sql
   - internal/infrastructure/database/migrations/20261014061844_add_items_unique_text.sql
   - internal/infrastructure/database/migrations/20261014100628_add_review_corrections.sql
+  - internal/infrastructure/database/migrations/20261015101841_add_voice_recordings.sql
+  - internal/usecase/storage.go
   - internal/usecase/datalab_import.go
   - internal/infrastructure/database/postgres/datalab_import_repository.go
   - cmd/datalab/main.go
@@ -43,22 +45,45 @@ A volunteer is a `users` row plus `language_members` (one row per language, with
 - **Onboarding** (`DataLab.Onboard`) takes a name, target languages, and the consent version the volunteer accepted. The version must equal `domain.CurrentConsentVersion`, or it fails with `ErrConsentOutdated`. Calling it again adds languages; `ON CONFLICT DO NOTHING` keeps any existing level.
 - **Levels** are per language: `contributor` → `reviewer` → `lead`. New memberships start at `contributor`. Promotion is manual and done by the team with `make datalab-promote` (see Admin); there is no in-app promotion yet.
 - **Consent**: bump `CurrentConsentVersion` when the consent text changes. Volunteers then accept again (by onboarding) before contributing.
+- **Voice consent** is separate and optional: `AcceptVoiceConsent` sets `consents.covers_voice` on the volunteer's current consent row. `Volunteer.VoiceConsent` reports it, and `Volunteer.CanRecord()` (current consent that covers voice) gates every recording. A consent version bump asks for it again.
 
 ## Items, tasks, and contributions
 
 - **Sources** (`sources`) record where items come from: a stable `key` from the import file, licence, and the `train`/`test` split, fixed at ingestion (ADR 0011).
 - **Items** (`items`) are what volunteers work on. `translate` items are segments in a source language; `write` items are civic prompts to answer. One item serves every target language. `category` is one of `domain.CivicCategories`, which match the site's civic categories.
 - **A task** is an item offered in one target language. `NextItem` picks at random among items that have no pending or verified contribution in that language and that the volunteer hasn't done. A rejected contribution reopens the item for everyone except its author.
-- **Contributions** start `pending`. `(item_id, language_code, contributor_id)` is unique, so a volunteer submits an item once per language. Each row records the consent version in force and whether the text was pasted.
+- **Contributions** start `pending`, written (`modality = 'text'`) or recorded (`'audio'`, see Voice recordings). `(item_id, language_code, contributor_id, modality)` is unique, so a volunteer submits an item once per language in each modality. Each row records the consent version in force and whether the text was pasted.
+- **Text and voice are tracked separately.** `NextItem` takes a modality: an item is open in a language and modality until it has a pending or verified contribution there, so an item already written can still be spoken, and the other way round.
 
 Contributing (`NextTask`, `Contribute`) requires, in order: onboarded, current consent, membership in the language, and the language **open**, meaning at least `domain.MinReviewersToOpen` (2) reviewers or leads. Text is trimmed and capped at `domain.MaxContributionLength` characters.
+
+## Voice recordings
+
+Volunteers can say a task instead of writing it: speak the translation of a segment, or speak their answer to a prompt. A transcript is optional. Recordings live in object storage (Cloudflare R2, `docs/storage.md`); without storage configured, `VoiceAvailable()` is false, `GET /data-lab/features` says `voice: false`, and voice requests fail with `ErrVoiceUnavailable`.
+
+1. **Agree** once: `POST /data-lab/consent/voice` (`AcceptVoiceConsent`).
+2. **Get a task** with `modality=audio`.
+3. **Upload**: `POST /data-lab/recordings` (`StartRecording`) with the item, language and the browser's recording type. It returns a presigned `upload_url` (15 minutes), the `key`, and the `content_type` to upload with. The browser `PUT`s the file straight to R2; the API never handles the audio.
+4. **Submit** the contribution with `modality: "audio"`, the `audio_key`, and an optional transcript in `text`.
+
+On submit, `checkRecording` accepts the key only if:
+
+- it sits under the volunteer's own prefix for the language, `data-lab/voice/<language>/<user id>/` (`domain.RecordingPrefix`); `StartRecording` names files with 16 random bytes in hex;
+- the object exists (`StorageService.Stat`), so the upload finished;
+- it is audio and at most `domain.MaxRecordingBytes` (10 MB).
+
+Accepted types are `domain.RecordingTypes`: WebM and Ogg (Chrome, Edge, Firefox), MP4 (Safari), MP3 and WAV. Codec parameters are dropped (`audio/webm;codecs=opus` uploads as `audio/webm`), because the presigned URL is bound to the type.
+
+The bucket is **public**: a recording's URL is `R2_PUBLIC_URL/<key>`, which reviewers play from (`ReviewItem.audio_url`). The voice consent tells volunteers their recordings are published with the dataset. Keys are random, so recordings can't be listed or guessed, but anyone with a URL can play it.
+
+The bucket needs a CORS rule that allows `PUT` from the web app's origins with the `Content-Type` header; see `docs/storage.md`.
 
 ## Reviews
 
 A reviewer (level `reviewer` or `lead` in the language) takes the oldest pending contribution written by someone else (`NextPendingContribution`), then accepts or rejects it (`Review`):
 
 - **Accept** sets the contribution to `verified`. It is part of the live corpus from that moment.
-- **Correct** sets it to `verified` with the reviewer's `corrected_text`. The translator's text stays on `contributions.text` and the correction goes on `reviews.corrected_text`, so both versions and both authors are kept; a row's verified text is `COALESCE(reviews.corrected_text, contributions.text)`. A correction must change the text (otherwise it's an Accept) and needs no further review: reviewers are chosen by the team (see below).
+- **Correct** sets it to `verified` with the reviewer's `corrected_text` (for a recording: the corrected transcript, or one the reviewer adds to a recording that had none). The translator's text stays on `contributions.text` and the correction goes on `reviews.corrected_text`, so both versions and both authors are kept; a row's verified text is `COALESCE(reviews.corrected_text, contributions.text)`. A correction must change the text (otherwise it's an Accept) and needs no further review: reviewers are chosen by the team (see below).
 - **Reject** needs a reason from `domain.RejectReasons` (`inaccurate`, `incomplete`, `machine_translated`, `off_topic`, `other`) and sets it to `rejected`, which reopens the item for other volunteers.
 - Nobody reviews their own work (`ErrOwnContribution`).
 - `SaveReview` changes status only `WHERE status = 'pending'`, inside the same transaction as the review insert, so two reviewers racing on one contribution get one review and one `ErrAlreadyReviewed`.
@@ -67,7 +92,7 @@ One review per contribution for now (`reviews.contribution_id` is unique). Dispu
 
 ## Live progress
 
-`Progress` returns, per enabled target language, the output in sentence pairs with English (contributions to `translate` items): `available` (translate items, the whole every language works from), `translated` (pending review or verified), and `verified`. It also returns `pending`, the review queue across all kinds, and `open` (reviewers ≥ `MinReviewersToOpen`). Reviewer and member counts stay internal: `Reviewers` is `json:"-"`. It's public at `GET /api/v1/data-lab/progress`.
+`Progress` returns, per enabled target language, the written output in sentence pairs with English (written contributions to `translate` items): `available` (translate items, the whole every language works from), `translated` (pending review or verified), and `verified`. Recordings count separately: `recorded` (pending or verified, any item kind) and `recorded_verified`. It also returns `pending`, the review queue across all kinds and both modalities, and `open` (reviewers ≥ `MinReviewersToOpen`). Reviewer and member counts stay internal: `Reviewers` is `json:"-"`. It's public at `GET /api/v1/data-lab/progress`.
 
 Answers to `write` prompts are original text, not pairs, so they count in `pending` while in review and in neither `translated` nor `verified`.
 
@@ -120,6 +145,8 @@ Use cases return the sentinel errors in `usecase/datalab_errors.go`. `handlers.d
 | `ErrOwnContribution` | 403 | `own_contribution` |
 | `ErrAlreadyReviewed` | 409 | `already_reviewed` |
 | `ErrNoReviews` | 404 | `no_reviews` |
+| `ErrVoiceUnavailable` | 503 | `voice_unavailable` |
+| `ErrVoiceConsentRequired` | 403 | `voice_consent_required` |
 | `ErrInvalidInput` (via `invalid(msg)`) | 400 | `invalid_input` — message shown to the volunteer |
 | anything else | 500 | `internal_error` — logged, detail hidden |
 
@@ -129,9 +156,12 @@ Use cases return the sentinel errors in `usecase/datalab_errors.go`. `handlers.d
 |---|---|---|---|
 | GET | `/api/v1/data-lab/languages` | none | `ListLanguagesHandler` — enabled languages, targets first |
 | GET | `/api/v1/data-lab/progress` | none | `ProgressHandler` — live counts per target language |
+| GET | `/api/v1/data-lab/features` | none | `FeaturesHandler` — `{voice}`: whether recordings can be stored |
 | GET | `/api/v1/data-lab/me` | Firebase | `DataLabMeHandler` — profile, or 403 `onboarding_required` |
 | POST | `/api/v1/data-lab/onboarding` | Firebase | `OnboardHandler` — join or add languages |
-| GET | `/api/v1/data-lab/tasks/next?language=` | Firebase | `NextTaskHandler` — next item, or 404 `no_tasks` |
+| POST | `/api/v1/data-lab/consent/voice` | Firebase | `AcceptVoiceConsentHandler` — agree to record |
+| GET | `/api/v1/data-lab/tasks/next?language=&modality=` | Firebase | `NextTaskHandler` — next item to write (`text`, default) or say (`audio`), or 404 `no_tasks` |
+| POST | `/api/v1/data-lab/recordings` | Firebase | `StartRecordingHandler` — 201 with an upload URL and key |
 | POST | `/api/v1/data-lab/contributions` | Firebase | `ContributeHandler` — 201 with the pending contribution |
 | GET | `/api/v1/data-lab/reviews/next?language=` | Firebase (reviewer) | `NextReviewHandler` — oldest pending, or 404 `no_reviews` |
 | POST | `/api/v1/data-lab/reviews` | Firebase (reviewer) | `ReviewHandler` — 204 |

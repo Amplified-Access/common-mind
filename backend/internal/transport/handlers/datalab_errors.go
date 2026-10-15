@@ -38,6 +38,10 @@ func dataLabError(c *gin.Context, err error) {
 		JSONError(c, http.StatusConflict, "already_reviewed", "this one has already been reviewed")
 	case errors.Is(err, usecase.ErrNoReviews):
 		JSONError(c, http.StatusNotFound, "no_reviews", "nothing waiting for review in this language")
+	case errors.Is(err, usecase.ErrVoiceUnavailable):
+		JSONError(c, http.StatusServiceUnavailable, "voice_unavailable", "recording isn't set up yet")
+	case errors.Is(err, usecase.ErrVoiceConsentRequired):
+		JSONError(c, http.StatusForbidden, "voice_consent_required", "agree to record your voice first")
 	case errors.Is(err, usecase.ErrInvalidInput):
 		JSONError(c, http.StatusBadRequest, "invalid_input", err.Error())
 	default:

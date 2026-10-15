@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"fmt"
 	"hash/fnv"
 	"time"
 )
@@ -51,11 +52,19 @@ type Volunteer struct {
 	Email          string       `json:"email"`
 	Languages      []Membership `json:"languages"`
 	ConsentVersion string       `json:"consent_version"` // latest accepted, "" if none
+	// VoiceConsent reports whether that consent also covers voice recordings,
+	// which volunteers accept separately before recording.
+	VoiceConsent bool `json:"voice_consent"`
 }
 
 // ConsentCurrent reports whether the volunteer has accepted the current consent.
 func (v Volunteer) ConsentCurrent() bool {
 	return v.ConsentVersion == CurrentConsentVersion
+}
+
+// CanRecord reports whether the volunteer's current consent covers voice.
+func (v Volunteer) CanRecord() bool {
+	return v.ConsentCurrent() && v.VoiceConsent
 }
 
 // Membership returns the volunteer's standing in a language.
@@ -84,6 +93,32 @@ const (
 // MaxContributionLength bounds a single contribution, in characters.
 const MaxContributionLength = 2000
 
+// Modalities: how a contribution was given. Text and voice are tracked
+// separately, so an item can get one of each per language.
+const (
+	ModalityText  = "text"
+	ModalityAudio = "audio"
+)
+
+// MaxRecordingBytes bounds one recording: a few minutes of compressed speech.
+const MaxRecordingBytes = 10 << 20
+
+// RecordingTypes are the audio types browsers record, with the file
+// extension each is stored under.
+var RecordingTypes = map[string]string{
+	"audio/webm": ".webm", // Chrome, Edge, Firefox
+	"audio/ogg":  ".ogg",  // Firefox
+	"audio/mp4":  ".m4a",  // Safari
+	"audio/mpeg": ".mp3",
+	"audio/wav":  ".wav",
+}
+
+// RecordingPrefix is where a volunteer's recordings in a language are
+// stored. A recording is only accepted from under its contributor's prefix.
+func RecordingPrefix(language string, userID int64) string {
+	return fmt.Sprintf("data-lab/voice/%s/%d/", language, userID)
+}
+
 // MinReviewersToOpen is how many reviewers a language needs before it accepts
 // contributions, so every row can get a second speaker (ADR 0010).
 const MinReviewersToOpen = 2
@@ -104,6 +139,7 @@ type Task struct {
 	Text           string `json:"text"`            // the segment to translate, or the prompt to answer
 	TextLanguage   string `json:"text_language"`   // language Text is written in
 	TargetLanguage string `json:"target_language"` // language the volunteer writes in
+	Modality       string `json:"modality"`        // text: write it; audio: say it
 }
 
 // Contribution is a volunteer's translation or answer for one item.
@@ -111,7 +147,9 @@ type Contribution struct {
 	ID           int64     `json:"id"`
 	ItemID       int64     `json:"item_id"`
 	LanguageCode string    `json:"language_code"`
-	Text         string    `json:"text"`
+	Modality     string    `json:"modality"`
+	Text         string    `json:"text"` // for a recording, its transcript ("" if none)
+	AudioKey     string    `json:"-"`
 	Pasted       bool      `json:"pasted"`
 	Status       string    `json:"status"`
 	CreatedAt    time.Time `json:"created_at"`
@@ -138,7 +176,10 @@ type ReviewItem struct {
 	ItemText       string    `json:"item_text"`
 	ItemLanguage   string    `json:"item_language"`
 	LanguageCode   string    `json:"language_code"`
-	Text           string    `json:"text"`
+	Modality       string    `json:"modality"`
+	Text           string    `json:"text"` // for a recording, its transcript ("" if none)
+	AudioKey       string    `json:"-"`
+	AudioURL       string    `json:"audio_url,omitempty"` // where the reviewer plays a recording
 	Pasted         bool      `json:"pasted"`
 	SubmittedAt    time.Time `json:"submitted_at"`
 }
@@ -149,6 +190,7 @@ type ContributionRef struct {
 	LanguageCode  string
 	ContributorID int64
 	Status        string
+	Modality      string
 	Text          string
 }
 
@@ -156,17 +198,20 @@ type ContributionRef struct {
 const ProgressEvent = "data-lab.progress"
 
 // LanguageProgress is a target language's live counts. Translated and
-// Verified measure the output: sentence pairs with English, from translate
-// items. Pending and Open serve volunteers (the review queue, whether the
+// Verified measure the written output: sentence pairs with English, from
+// translate items; Recorded and RecordedVerified count recordings. Pending and Open serve volunteers (the review queue, whether the
 // language accepts contributions); Reviewers stays internal.
 type LanguageProgress struct {
 	Code       string `json:"code"`
 	Available  int    `json:"available"`  // translate items, the whole every language works from
 	Translated int    `json:"translated"` // pairs pending review or verified
 	Verified   int    `json:"verified"`   // pairs a second speaker approved
-	Pending    int    `json:"pending"`    // contributions of any kind awaiting review
-	Open       bool   `json:"open"`       // enough reviewers to accept contributions
-	Reviewers  int    `json:"-"`
+	// Recordings, of any kind of item, pending review or verified, and verified.
+	Recorded         int  `json:"recorded"`
+	RecordedVerified int  `json:"recorded_verified"`
+	Pending          int  `json:"pending"` // contributions of any kind awaiting review
+	Open             bool `json:"open"`    // enough reviewers to accept contributions
+	Reviewers        int  `json:"-"`
 }
 
 // Dataset splits. A source's split is fixed when it is first imported.

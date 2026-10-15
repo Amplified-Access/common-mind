@@ -18,6 +18,7 @@ type fakeStore struct {
 	contributed *ContributionRecord
 	ref         *domain.ContributionRef
 	reviewed    *ReviewRecord
+	voiceFor    int64 // the volunteer whose voice consent was saved
 }
 
 // fakeBroadcaster records published messages.
@@ -40,8 +41,13 @@ func (f *fakeStore) CountReviewers(context.Context, string) (int, error) {
 	return f.reviewers, nil
 }
 
-func (f *fakeStore) NextItem(context.Context, int64, string) (*domain.Task, error) {
-	return nil, nil
+func (f *fakeStore) NextItem(_ context.Context, _ int64, language, modality string) (*domain.Task, error) {
+	return &domain.Task{ItemID: 1, TargetLanguage: language, Modality: modality}, nil
+}
+
+func (f *fakeStore) SaveVoiceConsent(_ context.Context, userID int64, _ string) error {
+	f.voiceFor = userID
+	return nil
 }
 
 func (f *fakeStore) CreateContribution(_ context.Context, rec ContributionRecord) (*domain.Contribution, error) {
@@ -85,7 +91,7 @@ func TestOnboard_ValidatesLanguagesNameAndConsent(t *testing.T) {
 			in.Languages = append([]string(nil), valid.Languages...)
 			tt.mutate(&in)
 
-			_, err := NewDataLab(store, nil).Onboard(context.Background(), tok, in)
+			_, err := NewDataLab(store, nil, nil).Onboard(context.Background(), tok, in)
 
 			if !errors.Is(err, tt.wantErr) {
 				t.Fatalf("Onboard() error = %v, want %v", err, tt.wantErr)
@@ -158,7 +164,7 @@ func TestContribute_RequiresOpenLanguageMembershipAndText(t *testing.T) {
 				tt.mutate(&in)
 			}
 
-			_, err := NewDataLab(store, nil).Contribute(context.Background(), tok, in)
+			_, err := NewDataLab(store, nil, nil).Contribute(context.Background(), tok, in)
 
 			if !errors.Is(err, tt.wantErr) {
 				t.Fatalf("Contribute() error = %v, want %v", err, tt.wantErr)
@@ -215,7 +221,7 @@ func TestReview_EnforcesReviewerRulesAndReasons(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			store := &fakeStore{volunteer: tt.volunteer, ref: tt.ref}
 
-			err := NewDataLab(store, nil).Review(context.Background(), tok, tt.in)
+			err := NewDataLab(store, nil, nil).Review(context.Background(), tok, tt.in)
 
 			if !errors.Is(err, tt.wantErr) {
 				t.Fatalf("Review() error = %v, want %v", err, tt.wantErr)
@@ -240,7 +246,7 @@ func TestContribute_PublishesLanguageProgress(t *testing.T) {
 	store := &fakeStore{volunteer: swahiliContributor(), reviewers: 2}
 	bc := &fakeBroadcaster{}
 
-	_, err := NewDataLab(store, bc).Contribute(context.Background(), &FirebaseToken{UID: "uid-7"},
+	_, err := NewDataLab(store, bc, nil).Contribute(context.Background(), &FirebaseToken{UID: "uid-7"},
 		ContributionInput{ItemID: 1, Language: "sw", Text: "Kisima kimeharibika."})
 	if err != nil {
 		t.Fatalf("Contribute: %v", err)

@@ -46,6 +46,23 @@ func (h *Handler) ProgressHandler(c *gin.Context) {
 	JSON(c, progress)
 }
 
+type featuresResponse struct {
+	// Voice is true when recordings can be stored (object storage is set up).
+	Voice bool `json:"voice"`
+}
+
+// FeaturesHandler godoc
+//
+//	@Summary		Data Lab features
+//	@Description	Which optional features this server has: voice is true when recordings can be stored.
+//	@Tags			data-lab
+//	@Produce		json
+//	@Success		200	{object}	featuresResponse
+//	@Router			/api/v1/data-lab/features [get]
+func (h *Handler) FeaturesHandler(c *gin.Context) {
+	JSON(c, featuresResponse{Voice: h.dataLab.VoiceAvailable()})
+}
+
 // DataLabMeHandler godoc
 //
 //	@Summary		Get my Data Lab profile
@@ -111,33 +128,64 @@ func (h *Handler) OnboardHandler(c *gin.Context) {
 	JSON(c, v)
 }
 
+// AcceptVoiceConsentHandler godoc
+//
+//	@Summary		Agree to record your voice
+//	@Description	Extends the volunteer's current consent to voice recordings, which are published with the dataset. Needed before recording.
+//	@Tags			data-lab
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200	{object}	VolunteerAlias
+//	@Failure		401	{object}	map[string]string
+//	@Failure		403	{object}	map[string]string	"onboarding_required or consent_required"
+//	@Router			/api/v1/data-lab/consent/voice [post]
+func (h *Handler) AcceptVoiceConsentHandler(c *gin.Context) {
+	tok, ok := currentToken(c)
+	if !ok {
+		return
+	}
+	v, err := h.dataLab.AcceptVoiceConsent(c.Request.Context(), tok)
+	if err != nil {
+		dataLabError(c, err)
+		return
+	}
+	JSON(c, v)
+}
+
 type languageQuery struct {
 	Language string `form:"language" binding:"required"`
+}
+
+type taskQuery struct {
+	Language string `form:"language" binding:"required"`
+	Modality string `form:"modality"`
 }
 
 // NextTaskHandler godoc
 //
 //	@Summary		Get the next task in a language
-//	@Description	Returns an item to translate or a prompt to answer. 404 no_tasks when the language has nothing left for this volunteer; 409 language_closed until it has two reviewers.
+//	@Description	Returns an item to translate or a prompt to answer, to write (modality=text, the default) or to say (modality=audio). Text and voice are tracked separately. 404 no_tasks when the language has nothing left for this volunteer; 409 language_closed until it has two reviewers.
 //	@Tags			data-lab
 //	@Produce		json
 //	@Security		BearerAuth
 //	@Param			language	query		string	true	"Target language code, e.g. sw"
+//	@Param			modality	query		string	false	"text (default) or audio"
 //	@Success		200			{object}	TaskAlias
 //	@Failure		403			{object}	map[string]string
 //	@Failure		404			{object}	map[string]string	"no_tasks"
 //	@Failure		409			{object}	map[string]string	"language_closed"
+//	@Failure		503			{object}	map[string]string	"voice_unavailable"
 //	@Router			/api/v1/data-lab/tasks/next [get]
 func (h *Handler) NextTaskHandler(c *gin.Context) {
 	tok, ok := currentToken(c)
 	if !ok {
 		return
 	}
-	var q languageQuery
+	var q taskQuery
 	if !bindQuery(c, &q) {
 		return
 	}
-	task, err := h.dataLab.NextTask(c.Request.Context(), tok, q.Language)
+	task, err := h.dataLab.NextTask(c.Request.Context(), tok, q.Language, q.Modality)
 	if err != nil {
 		dataLabError(c, err)
 		return
@@ -145,17 +193,63 @@ func (h *Handler) NextTaskHandler(c *gin.Context) {
 	JSON(c, task)
 }
 
+type recordingRequest struct {
+	ItemID      int64  `json:"item_id" binding:"required"`
+	Language    string `json:"language" binding:"required"`
+	ContentType string `json:"content_type" binding:"required"`
+}
+
+// StartRecordingHandler godoc
+//
+//	@Summary		Get a URL to upload a recording to
+//	@Description	Returns a presigned URL (valid 15 minutes) the browser PUTs the recording to, with the returned content_type, then the key to submit with the contribution. Needs voice consent.
+//	@Tags			data-lab
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			body	body		recordingRequest	true	"Recording"
+//	@Success		201		{object}	RecordingUploadAlias
+//	@Failure		400		{object}	map[string]string
+//	@Failure		403		{object}	map[string]string	"voice_consent_required"
+//	@Failure		503		{object}	map[string]string	"voice_unavailable"
+//	@Router			/api/v1/data-lab/recordings [post]
+func (h *Handler) StartRecordingHandler(c *gin.Context) {
+	tok, ok := currentToken(c)
+	if !ok {
+		return
+	}
+	var req recordingRequest
+	if !bindJSON(c, &req) {
+		return
+	}
+	upload, err := h.dataLab.StartRecording(c.Request.Context(), tok, usecase.RecordingInput{
+		ItemID:      req.ItemID,
+		Language:    req.Language,
+		ContentType: req.ContentType,
+	})
+	if err != nil {
+		dataLabError(c, err)
+		return
+	}
+	JSONStatus(c, http.StatusCreated, upload)
+}
+
 type contributionRequest struct {
 	ItemID   int64  `json:"item_id" binding:"required"`
 	Language string `json:"language" binding:"required"`
-	Text     string `json:"text"`
+	// Modality is "text" (the default) or "audio".
+	Modality string `json:"modality"`
+	// Text is the written contribution, or a recording's optional transcript.
+	Text string `json:"text"`
+	// AudioKey is the key StartRecording returned, for a recording.
+	AudioKey string `json:"audio_key"`
 	Pasted   bool   `json:"pasted"`
 }
 
 // ContributeHandler godoc
 //
 //	@Summary		Submit a contribution
-//	@Description	Saves a translation or answer as pending review. `pasted` is set by the editor when text was pasted in.
+//	@Description	Saves a translation or answer as pending review, written or recorded. A recording (modality=audio) carries the audio_key it was uploaded to and an optional transcript in text. `pasted` is set by the editor when text was pasted in.
 //	@Tags			data-lab
 //	@Accept			json
 //	@Produce		json
@@ -178,7 +272,9 @@ func (h *Handler) ContributeHandler(c *gin.Context) {
 	contribution, err := h.dataLab.Contribute(c.Request.Context(), tok, usecase.ContributionInput{
 		ItemID:   req.ItemID,
 		Language: req.Language,
+		Modality: req.Modality,
 		Text:     req.Text,
+		AudioKey: req.AudioKey,
 		Pasted:   req.Pasted,
 	})
 	if err != nil {
@@ -191,7 +287,7 @@ func (h *Handler) ContributeHandler(c *gin.Context) {
 // NextReviewHandler godoc
 //
 //	@Summary		Get the next contribution to review
-//	@Description	Returns the oldest pending contribution in the language written by someone else. 404 no_reviews when the queue is empty.
+//	@Description	Returns the oldest pending contribution in the language by someone else. A recording comes with audio_url to play it and its transcript (possibly empty) in text. 404 no_reviews when the queue is empty.
 //	@Tags			data-lab
 //	@Produce		json
 //	@Security		BearerAuth
@@ -228,7 +324,7 @@ type reviewRequest struct {
 // ReviewHandler godoc
 //
 //	@Summary		Review a contribution
-//	@Description	Accept verifies the contribution. Correct verifies it with the reviewer's corrected_text, keeping the original on the contribution. Reject needs a reason (inaccurate, incomplete, machine_translated, off_topic, other) and reopens the item for others.
+//	@Description	Accept verifies the contribution. Correct verifies it with the reviewer's corrected_text (for a recording, the corrected or added transcript), keeping the original on the contribution. Reject needs a reason (inaccurate, incomplete, machine_translated, off_topic, other) and reopens the item for others.
 //	@Tags			data-lab
 //	@Accept			json
 //	@Security		BearerAuth

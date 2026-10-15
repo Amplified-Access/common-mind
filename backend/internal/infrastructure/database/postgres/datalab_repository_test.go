@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 
 	"backend/internal/domain"
@@ -110,6 +111,85 @@ func contribute(t *testing.T, item, contributor int64, status string) {
 	}
 }
 
+// record adds a recording in sw; voice is tracked apart from text.
+func record(t *testing.T, item, contributor int64, status string) {
+	t.Helper()
+	key := fmt.Sprintf("data-lab/voice/sw/%d/%d.webm", contributor, item)
+	if _, err := testDB.Exec(`INSERT INTO contributions (item_id, language_code, contributor_id, text, modality, audio_key, consent_version, status) VALUES ($1, 'sw', $2, '', 'audio', $3, $4, $5)`, item, contributor, key, domain.CurrentConsentVersion, status); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestDataLab_Voice_TrackedApartFromText(t *testing.T) {
+	truncate(t, "users", "sources")
+	ctx := context.Background()
+	repo := NewDataLabRepository(testDB)
+	me := seedVolunteer(t, "uid-me", "sw")
+	other := seedVolunteer(t, "uid-other", "sw")
+	ids := seedItems(t, "written already", "spoken already")
+	contribute(t, ids[0], other, domain.StatusVerified)
+	record(t, ids[1], other, domain.StatusVerified)
+
+	// Each modality offers the items it hasn't covered.
+	if task, err := repo.NextItem(ctx, me, "sw", domain.ModalityText); err != nil || task == nil || task.ItemID != ids[1] {
+		t.Errorf("next text task = %+v, %v, want item %d", task, err, ids[1])
+	}
+	if task, err := repo.NextItem(ctx, me, "sw", domain.ModalityAudio); err != nil || task == nil || task.ItemID != ids[0] {
+		t.Errorf("next voice task = %+v, %v, want item %d", task, err, ids[0])
+	}
+
+	// One volunteer can give an item both ways, but each only once.
+	text := usecase.ContributionRecord{ItemID: ids[0], Language: "sw", ContributorID: me, Modality: domain.ModalityText, Text: "Imeandikwa.", ConsentVersion: domain.CurrentConsentVersion}
+	if _, err := repo.CreateContribution(ctx, text); err != nil {
+		t.Fatalf("text contribution: %v", err)
+	}
+	voice := usecase.ContributionRecord{ItemID: ids[0], Language: "sw", ContributorID: me, Modality: domain.ModalityAudio, AudioKey: "data-lab/voice/sw/1/a.webm", ConsentVersion: domain.CurrentConsentVersion}
+	got, err := repo.CreateContribution(ctx, voice)
+	if err != nil {
+		t.Fatalf("voice contribution: %v", err)
+	}
+	if got.Modality != domain.ModalityAudio || got.Text != "" {
+		t.Errorf("voice contribution = %+v, want audio without a transcript", got)
+	}
+	voice.AudioKey = "data-lab/voice/sw/1/b.webm"
+	if _, err := repo.CreateContribution(ctx, voice); !errors.Is(err, usecase.ErrAlreadyContributed) {
+		t.Errorf("second recording error = %v, want ErrAlreadyContributed", err)
+	}
+
+	// Reviewers get the recording to play. The written one is older, so
+	// verify it first to bring the recording to the front of the queue.
+	if _, err := testDB.Exec(`UPDATE contributions SET status = 'verified' WHERE modality = 'text' AND contributor_id = $1`, me); err != nil {
+		t.Fatal(err)
+	}
+	pending, err := repo.NextPendingContribution(ctx, other, "sw")
+	if err != nil || pending == nil {
+		t.Fatalf("NextPendingContribution = %+v, %v", pending, err)
+	}
+	if pending.Modality != domain.ModalityAudio || pending.AudioKey != "data-lab/voice/sw/1/a.webm" {
+		t.Errorf("pending = %+v, want the recording with its key", pending)
+	}
+	if ref, err := repo.GetContributionRef(ctx, pending.ContributionID); err != nil || ref.Modality != domain.ModalityAudio {
+		t.Errorf("GetContributionRef = %+v, %v, want an audio contribution", ref, err)
+	}
+}
+
+func TestDataLab_SaveVoiceConsent_CoversVoice(t *testing.T) {
+	truncate(t, "users")
+	ctx := context.Background()
+	repo := NewDataLabRepository(testDB)
+	id := seedVolunteer(t, "uid-me", "sw")
+	if v, _ := repo.GetVolunteer(ctx, "uid-me"); v.VoiceConsent {
+		t.Fatal("voice consent before accepting it")
+	}
+
+	if err := repo.SaveVoiceConsent(ctx, id, domain.CurrentConsentVersion); err != nil {
+		t.Fatalf("SaveVoiceConsent: %v", err)
+	}
+	if v, _ := repo.GetVolunteer(ctx, "uid-me"); !v.VoiceConsent {
+		t.Error("no voice consent after accepting it")
+	}
+}
+
 func TestDataLab_NextItem_SkipsTakenAndOwnItems(t *testing.T) {
 	truncate(t, "users", "sources")
 	ctx := context.Background()
@@ -122,7 +202,7 @@ func TestDataLab_NextItem_SkipsTakenAndOwnItems(t *testing.T) {
 	contribute(t, ids[2], other, domain.StatusRejected)
 	contribute(t, ids[3], me, domain.StatusRejected)
 
-	task, err := repo.NextItem(ctx, me, "sw")
+	task, err := repo.NextItem(ctx, me, "sw", domain.ModalityText)
 	if err != nil {
 		t.Fatalf("NextItem: %v", err)
 	}
@@ -134,7 +214,7 @@ func TestDataLab_NextItem_SkipsTakenAndOwnItems(t *testing.T) {
 	}
 
 	contribute(t, ids[2], me, domain.StatusPending)
-	if task, err := repo.NextItem(ctx, me, "sw"); err != nil || task != nil {
+	if task, err := repo.NextItem(ctx, me, "sw", domain.ModalityText); err != nil || task != nil {
 		t.Errorf("NextItem after everything is taken = %+v, %v, want nil, nil", task, err)
 	}
 }
@@ -145,7 +225,7 @@ func TestDataLab_CreateContribution_RejectsRepeatsAndUnknownItems(t *testing.T) 
 	repo := NewDataLabRepository(testDB)
 	me := seedVolunteer(t, "uid-me", "sw")
 	ids := seedItems(t, "The borehole is broken.")
-	rec := usecase.ContributionRecord{ItemID: ids[0], Language: "sw", ContributorID: me, Text: "Kisima kimeharibika.", Pasted: true, ConsentVersion: domain.CurrentConsentVersion}
+	rec := usecase.ContributionRecord{ItemID: ids[0], Language: "sw", ContributorID: me, Modality: domain.ModalityText, Text: "Kisima kimeharibika.", Pasted: true, ConsentVersion: domain.CurrentConsentVersion}
 
 	got, err := repo.CreateContribution(ctx, rec)
 	if err != nil {
@@ -251,6 +331,9 @@ func TestDataLab_Progress_CountsSentencePairsPerLanguage(t *testing.T) {
 		t.Fatal(err)
 	}
 	contribute(t, prompt, a, domain.StatusVerified)
+	// Recordings count apart from the written pairs.
+	record(t, ids[0], a, domain.StatusVerified)
+	record(t, ids[1], a, domain.StatusPending)
 
 	all, err := NewDataLabRepository(testDB).Progress(ctx, "")
 	if err != nil {
@@ -263,7 +346,7 @@ func TestDataLab_Progress_CountsSentencePairsPerLanguage(t *testing.T) {
 	if err != nil || len(sw) != 1 {
 		t.Fatalf("Progress(sw) = %v, %v", sw, err)
 	}
-	want := domain.LanguageProgress{Code: "sw", Available: 3, Translated: 2, Verified: 1, Pending: 1, Reviewers: 1, Open: false}
+	want := domain.LanguageProgress{Code: "sw", Available: 3, Translated: 2, Verified: 1, Recorded: 2, RecordedVerified: 1, Pending: 2, Reviewers: 1, Open: false}
 	if sw[0] != want {
 		t.Errorf("sw progress = %+v, want %+v", sw[0], want)
 	}

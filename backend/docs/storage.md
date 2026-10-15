@@ -55,6 +55,23 @@ The S3 client is configured with `UsePathStyle: true` and region `"auto"`.
 
 None of its own. The service is used by features that decide what may be stored and under which key, so a client can never choose an arbitrary key. The template's open `POST /storage/presign` and `DELETE /storage/:key` routes were removed for that reason: any signed-in user could overwrite or delete any object, including volunteers' recordings.
 
+## Bucket setup for browser uploads
+
+Features upload straight from the browser to a presigned URL, so the bucket needs a CORS policy. In the Cloudflare dashboard → R2 → the bucket → Settings → CORS policy:
+
+```json
+[
+  {
+    "AllowedOrigins": ["http://localhost:3000", "https://<the site's domain>"],
+    "AllowedMethods": ["PUT", "GET", "HEAD"],
+    "AllowedHeaders": ["Content-Type"],
+    "MaxAgeSeconds": 3600
+  }
+]
+```
+
+The Data Lab's recordings are served from the bucket's public URL (`R2_PUBLIC_URL`): enable the `r2.dev` subdomain or connect a custom domain under Settings → Public access.
+
 ## Bootstrap wiring
 In `bootstrap.Run`:
 ```go

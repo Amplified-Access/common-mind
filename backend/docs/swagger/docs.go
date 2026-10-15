@@ -56,6 +56,49 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/data-lab/consent/voice": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Extends the volunteer's current consent to voice recordings, which are published with the dataset. Needed before recording.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "data-lab"
+                ],
+                "summary": "Agree to record your voice",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.VolunteerAlias"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "onboarding_required or consent_required",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/data-lab/contributions": {
             "post": {
                 "security": [
@@ -63,7 +106,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Saves a translation or answer as pending review. ` + "`" + `pasted` + "`" + ` is set by the editor when text was pasted in.",
+                "description": "Saves a translation or answer as pending review, written or recorded. A recording (modality=audio) carries the audio_key it was uploaded to and an optional transcript in text. ` + "`" + `pasted` + "`" + ` is set by the editor when text was pasted in.",
                 "consumes": [
                     "application/json"
                 ],
@@ -117,6 +160,26 @@ const docTemplate = `{
                             "additionalProperties": {
                                 "type": "string"
                             }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/data-lab/features": {
+            "get": {
+                "description": "Which optional features this server has: voice is true when recordings can be stored.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "data-lab"
+                ],
+                "summary": "Data Lab features",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.featuresResponse"
                         }
                     }
                 }
@@ -295,6 +358,72 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/data-lab/recordings": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns a presigned URL (valid 15 minutes) the browser PUTs the recording to, with the returned content_type, then the key to submit with the contribution. Needs voice consent.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "data-lab"
+                ],
+                "summary": "Get a URL to upload a recording to",
+                "parameters": [
+                    {
+                        "description": "Recording",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.recordingRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.RecordingUploadAlias"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "voice_consent_required",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "voice_unavailable",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/data-lab/reviews": {
             "post": {
                 "security": [
@@ -302,7 +431,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Accept verifies the contribution. Correct verifies it with the reviewer's corrected_text, keeping the original on the contribution. Reject needs a reason (inaccurate, incomplete, machine_translated, off_topic, other) and reopens the item for others.",
+                "description": "Accept verifies the contribution. Correct verifies it with the reviewer's corrected_text (for a recording, the corrected or added transcript), keeping the original on the contribution. Reject needs a reason (inaccurate, incomplete, machine_translated, off_topic, other) and reopens the item for others.",
                 "consumes": [
                     "application/json"
                 ],
@@ -362,7 +491,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Returns the oldest pending contribution in the language written by someone else. 404 no_reviews when the queue is empty.",
+                "description": "Returns the oldest pending contribution in the language by someone else. A recording comes with audio_url to play it and its transcript (possibly empty) in text. 404 no_reviews when the queue is empty.",
                 "produces": [
                     "application/json"
                 ],
@@ -414,7 +543,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Returns an item to translate or a prompt to answer. 404 no_tasks when the language has nothing left for this volunteer; 409 language_closed until it has two reviewers.",
+                "description": "Returns an item to translate or a prompt to answer, to write (modality=text, the default) or to say (modality=audio). Text and voice are tracked separately. 404 no_tasks when the language has nothing left for this volunteer; 409 language_closed until it has two reviewers.",
                 "produces": [
                     "application/json"
                 ],
@@ -429,6 +558,12 @@ const docTemplate = `{
                         "name": "language",
                         "in": "query",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "text (default) or audio",
+                        "name": "modality",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -458,6 +593,15 @@ const docTemplate = `{
                     },
                     "409": {
                         "description": "language_closed",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "voice_unavailable",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -716,6 +860,9 @@ const docTemplate = `{
                 "language_code": {
                     "type": "string"
                 },
+                "modality": {
+                    "type": "string"
+                },
                 "pasted": {
                     "type": "boolean"
                 },
@@ -723,6 +870,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "text": {
+                    "description": "for a recording, its transcript (\"\" if none)",
                     "type": "string"
                 }
             }
@@ -827,6 +975,13 @@ const docTemplate = `{
                     "description": "contributions of any kind awaiting review",
                     "type": "integer"
                 },
+                "recorded": {
+                    "description": "Recordings, of any kind of item, pending review or verified, and verified.",
+                    "type": "integer"
+                },
+                "recorded_verified": {
+                    "type": "integer"
+                },
                 "translated": {
                     "description": "pairs pending review or verified",
                     "type": "integer"
@@ -837,9 +992,27 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.RecordingUploadAlias": {
+            "type": "object",
+            "properties": {
+                "content_type": {
+                    "type": "string"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "upload_url": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.ReviewItemAlias": {
             "type": "object",
             "properties": {
+                "audio_url": {
+                    "description": "where the reviewer plays a recording",
+                    "type": "string"
+                },
                 "category": {
                     "type": "string"
                 },
@@ -858,6 +1031,9 @@ const docTemplate = `{
                 "language_code": {
                     "type": "string"
                 },
+                "modality": {
+                    "type": "string"
+                },
                 "pasted": {
                     "type": "boolean"
                 },
@@ -865,6 +1041,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "text": {
+                    "description": "for a recording, its transcript (\"\" if none)",
                     "type": "string"
                 }
             }
@@ -879,6 +1056,10 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "kind": {
+                    "type": "string"
+                },
+                "modality": {
+                    "description": "text: write it; audio: say it",
                     "type": "string"
                 },
                 "target_language": {
@@ -942,6 +1123,10 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                },
+                "voice_consent": {
+                    "description": "VoiceConsent reports whether that consent also covers voice recordings,\nwhich volunteers accept separately before recording.",
+                    "type": "boolean"
                 }
             }
         },
@@ -952,17 +1137,35 @@ const docTemplate = `{
                 "language"
             ],
             "properties": {
+                "audio_key": {
+                    "description": "AudioKey is the key StartRecording returned, for a recording.",
+                    "type": "string"
+                },
                 "item_id": {
                     "type": "integer"
                 },
                 "language": {
                     "type": "string"
                 },
+                "modality": {
+                    "description": "Modality is \"text\" (the default) or \"audio\".",
+                    "type": "string"
+                },
                 "pasted": {
                     "type": "boolean"
                 },
                 "text": {
+                    "description": "Text is the written contribution, or a recording's optional transcript.",
                     "type": "string"
+                }
+            }
+        },
+        "handlers.featuresResponse": {
+            "type": "object",
+            "properties": {
+                "voice": {
+                    "description": "Voice is true when recordings can be stored (object storage is set up).",
+                    "type": "boolean"
                 }
             }
         },
@@ -979,6 +1182,25 @@ const docTemplate = `{
                     }
                 },
                 "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.recordingRequest": {
+            "type": "object",
+            "required": [
+                "content_type",
+                "item_id",
+                "language"
+            ],
+            "properties": {
+                "content_type": {
+                    "type": "string"
+                },
+                "item_id": {
+                    "type": "integer"
+                },
+                "language": {
                     "type": "string"
                 }
             }

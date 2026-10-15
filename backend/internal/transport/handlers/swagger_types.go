@@ -34,3 +34,6 @@ type ReviewItemAlias = domain.ReviewItem
 
 // LanguageProgressAlias is a type alias so swaggo can resolve domain.LanguageProgress.
 type LanguageProgressAlias = domain.LanguageProgress
+
+// RecordingUploadAlias is a type alias so swaggo can resolve usecase.RecordingUpload.
+type RecordingUploadAlias = usecase.RecordingUpload

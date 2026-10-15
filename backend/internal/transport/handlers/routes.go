@@ -78,6 +78,7 @@ func (h *Handler) RegisterRoutes(rps float64, burst int, sentryDSN string, allow
 	publicLab := r.Group("/api/v1/data-lab")
 	publicLab.GET("/languages", h.ListLanguagesHandler)
 	publicLab.GET("/progress", h.ProgressHandler)
+	publicLab.GET("/features", h.FeaturesHandler)
 
 	api := r.Group("/api/v1")
 	if h.verifier != nil {
@@ -88,7 +89,9 @@ func (h *Handler) RegisterRoutes(rps float64, burst int, sentryDSN string, allow
 	lab := api.Group("/data-lab")
 	lab.GET("/me", h.DataLabMeHandler)
 	lab.POST("/onboarding", h.OnboardHandler)
+	lab.POST("/consent/voice", h.AcceptVoiceConsentHandler)
 	lab.GET("/tasks/next", h.NextTaskHandler)
+	lab.POST("/recordings", h.StartRecordingHandler)
 	lab.POST("/contributions", h.ContributeHandler)
 	lab.GET("/reviews/next", h.NextReviewHandler)
 	lab.POST("/reviews", h.ReviewHandler)
