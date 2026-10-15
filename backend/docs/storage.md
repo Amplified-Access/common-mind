@@ -62,7 +62,7 @@ Features upload straight from the browser to a presigned URL, so the bucket need
 ```json
 [
   {
-    "AllowedOrigins": ["http://localhost:3000", "https://<the site's domain>"],
+    "AllowedOrigins": ["http://localhost:3000", "https://thecommonmind.org", "https://www.thecommonmind.org"],
     "AllowedMethods": ["PUT", "GET", "HEAD"],
     "AllowedHeaders": ["Content-Type"],
     "MaxAgeSeconds": 3600
@@ -70,7 +70,9 @@ Features upload straight from the browser to a presigned URL, so the bucket need
 ]
 ```
 
-The Data Lab's recordings are served from the bucket's public URL (`R2_PUBLIC_URL`): enable the `r2.dev` subdomain or connect a custom domain under Settings → Public access.
+The Data Lab's recordings are served from the bucket's public URL (`R2_PUBLIC_URL`): connect a custom domain under Settings → Custom Domains (the sister projects use `cdn.<domain>`, e.g. `cdn.thecommonmind.org`), or enable the `r2.dev` subdomain for testing.
+
+The bucket is `common-mind`, in the Amplified Access Cloudflare account.
 
 ## Bootstrap wiring
 In `bootstrap.Run`:
