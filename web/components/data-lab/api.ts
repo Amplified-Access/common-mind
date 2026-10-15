@@ -73,7 +73,7 @@ const dataLabApi = {
       item_id: number;
       language: string;
       modality: Modality;
-      /** The text, or a recording's optional transcript. */
+      /** The text; empty for a recording, which reads its item's verified translation. */
       text: string;
       audio_key?: string;
       pasted: boolean;

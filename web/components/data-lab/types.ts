@@ -48,6 +48,7 @@ export type Task = {
   kind: "translate" | "write";
   category: string;
   text: string;
+  /** For a recording task, the verified translation to read, in the target language. */
   text_language: string;
   target_language: string;
   modality: Modality;
@@ -68,14 +69,16 @@ export type ReviewItem = {
   item_language: string;
   language_code: string;
   modality: Modality;
-  /** The written text, or a recording's transcript ("" when none). */
+  /** The written text; "" for a recording. */
   text: string;
+  /** For a recording: the verified translation it reads. */
+  read_text?: string;
   /** Where to play a recording. */
   audio_url?: string;
   pasted: boolean;
   submitted_at: string;
 };
 
-export type RejectReason = "inaccurate" | "incomplete" | "machine_translated" | "off_topic" | "other";
+export type RejectReason = "inaccurate" | "incomplete" | "machine_translated" | "off_topic" | "unclear" | "other";
 
 export const canReview = (level: Level) => level === "reviewer" || level === "lead";

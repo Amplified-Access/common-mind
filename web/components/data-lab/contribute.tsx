@@ -127,9 +127,9 @@ function Contribute({ language }: { language: string }) {
           item_id: task.item_id,
           language,
           modality,
-          text,
+          text: "",
           audio_key: upload.key,
-          pasted,
+          pasted: false,
         });
       } else {
         await dataLabApi.contribute(token, { item_id: task.item_id, language, modality, text, pasted });
@@ -199,11 +199,21 @@ function Contribute({ language }: { language: string }) {
 
           {view.status === "empty" && (
             <FramedCard panelsClassName="bg-[#1c1a0e] p-6 sm:p-8">
-              <p className="text-lg">
-                You&apos;ve {modality === "audio" ? "recorded" : "done"} every task in {target?.name ?? language} for
-                now.
-              </p>
-              <p className="pt-2 text-sm text-subtle">New items are added regularly. Check back soon.</p>
+              {modality === "audio" ? (
+                <>
+                  <p className="text-lg">
+                    No verified translations in {target?.name ?? language} are waiting to be recorded.
+                  </p>
+                  <p className="pt-2 text-sm text-subtle">
+                    Recording opens as translations are verified. Write some meanwhile, or check back soon.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-lg">You&apos;ve done every task in {target?.name ?? language} for now.</p>
+                  <p className="pt-2 text-sm text-subtle">New items are added regularly. Check back soon.</p>
+                </>
+              )}
             </FramedCard>
           )}
 
@@ -221,9 +231,11 @@ function Contribute({ language }: { language: string }) {
               <div className="flex flex-col gap-5 bg-[#1c1a0e] p-6 sm:p-8">
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                   <Eyebrow>
-                    {view.task.kind === "translate"
-                      ? `${modality === "audio" ? "Say" : "Translate"} from ${nameOf(view.task.text_language)}`
-                      : `${modality === "audio" ? "Answer aloud" : "Write"} in ${target?.name ?? language}`}
+                    {modality === "audio"
+                      ? `Read aloud in ${target?.name ?? language}`
+                      : view.task.kind === "translate"
+                        ? `Translate from ${nameOf(view.task.text_language)}`
+                        : `Write in ${target?.name ?? language}`}
                   </Eyebrow>
                   <span className="font-mono text-xs text-faint">{categoryLabel(view.task.category)}</span>
                 </div>
@@ -232,9 +244,7 @@ function Contribute({ language }: { language: string }) {
                 </p>
                 <p className="mt-auto text-sm text-subtle">
                   {modality === "audio"
-                    ? view.task.kind === "translate"
-                      ? `Say it in ${target?.name ?? language}, naturally, as you would to a neighbour.`
-                      : "Answer in your own words, as you would say it to a neighbour."
+                    ? "A verified translation. Read it exactly as written, clearly and at a natural pace."
                     : view.task.kind === "write" && "Answer in your own words, as you would say it to a neighbour."}
                 </p>
               </div>
@@ -246,48 +256,38 @@ function Contribute({ language }: { language: string }) {
                   submit(view.task);
                 }}
               >
-                {modality === "audio" && (
-                  <VoiceRecorder recording={recording} onChange={setRecording} disabled={busy} />
+                {modality === "audio" ? (
+                  <div className="flex flex-1 flex-col justify-center">
+                    <VoiceRecorder recording={recording} onChange={setRecording} disabled={busy} />
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-xs text-faint">{target?.name ?? language}</span>
+                      <span className="font-mono text-xs text-faint tabular-nums">
+                        {text.length}/{MAX_CHARS}
+                      </span>
+                    </div>
+                    <textarea
+                      ref={editor}
+                      lang={language}
+                      value={text}
+                      onChange={(e) => setText(e.target.value.slice(0, MAX_CHARS))}
+                      onPaste={() => setPasted(true)}
+                      rows={7}
+                      autoFocus
+                      aria-label={`Your text in ${target?.name ?? language}`}
+                      placeholder={view.task.kind === "translate" ? "Write the translation" : "Write your answer"}
+                      className="min-h-48 w-full flex-1 resize-none bg-transparent text-xl leading-snug text-foreground outline-none placeholder:text-foreground/25"
+                    />
+                    <CharacterPalette
+                      characters={target?.extra_characters ?? []}
+                      editor={editor}
+                      value={text}
+                      onChange={setText}
+                    />
+                  </>
                 )}
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-xs text-faint">
-                    {modality === "audio" ? "Transcript (optional)" : (target?.name ?? language)}
-                  </span>
-                  <span className="font-mono text-xs text-faint tabular-nums">
-                    {text.length}/{MAX_CHARS}
-                  </span>
-                </div>
-                <textarea
-                  ref={editor}
-                  lang={language}
-                  value={text}
-                  onChange={(e) => setText(e.target.value.slice(0, MAX_CHARS))}
-                  onPaste={() => setPasted(true)}
-                  rows={modality === "audio" ? 4 : 7}
-                  autoFocus={modality === "text"}
-                  aria-label={
-                    modality === "audio"
-                      ? `Transcript of your recording in ${target?.name ?? language} (optional)`
-                      : `Your text in ${target?.name ?? language}`
-                  }
-                  placeholder={
-                    modality === "audio"
-                      ? "Type what you said, if you like"
-                      : view.task.kind === "translate"
-                        ? "Write the translation"
-                        : "Write your answer"
-                  }
-                  className={cn(
-                    "w-full flex-1 resize-none bg-transparent leading-snug text-foreground outline-none placeholder:text-foreground/25",
-                    modality === "audio" ? "min-h-28 text-lg" : "min-h-48 text-xl",
-                  )}
-                />
-                <CharacterPalette
-                  characters={target?.extra_characters ?? []}
-                  editor={editor}
-                  value={text}
-                  onChange={setText}
-                />
                 <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
                   <button type="button" onClick={next} disabled={busy} className={quietButton}>
                     Skip

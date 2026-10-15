@@ -16,11 +16,18 @@ import { CharacterPalette } from "./character-palette";
 import { fieldClasses, primaryButton, quietButton, secondaryButton } from "./styles";
 import type { Language, RejectReason, ReviewItem } from "./types";
 
-const reasons: { value: RejectReason; label: string }[] = [
+const textReasons: { value: RejectReason; label: string }[] = [
   { value: "inaccurate", label: "Meaning is wrong" },
   { value: "incomplete", label: "Something is missing" },
   { value: "machine_translated", label: "Reads as machine-translated" },
   { value: "off_topic", label: "Doesn't answer the prompt" },
+  { value: "other", label: "Other" },
+];
+
+const recordingReasons: { value: RejectReason; label: string }[] = [
+  { value: "inaccurate", label: "Doesn't match the text" },
+  { value: "incomplete", label: "Cut off or incomplete" },
+  { value: "unclear", label: "Hard to hear" },
   { value: "other", label: "Other" },
 ];
 
@@ -153,16 +160,19 @@ function Review({ language }: { language: string }) {
                   </span>
                 )}
               </div>
-              {view.item.modality === "audio" &&
-                (view.item.audio_url ? (
-                  <audio controls preload="metadata" src={view.item.audio_url} className="h-10 w-full" />
-                ) : (
-                  <p className="font-mono text-xs text-faint">The recording can&apos;t be played right now.</p>
-                ))}
-              {view.item.modality === "audio" && mode !== "correct" && (
-                <span className="font-mono text-xs text-faint">Transcript</span>
-              )}
-              {mode === "correct" ? (
+              {view.item.modality === "audio" ? (
+                <>
+                  <p lang={language} className="text-xl leading-snug text-pretty whitespace-pre-line">
+                    {view.item.read_text}
+                  </p>
+                  <p className="text-sm text-subtle">Listen, and check the recording says exactly this, clearly.</p>
+                  {view.item.audio_url ? (
+                    <audio controls preload="metadata" src={view.item.audio_url} className="h-10 w-full" />
+                  ) : (
+                    <p className="font-mono text-xs text-faint">The recording can&apos;t be played right now.</p>
+                  )}
+                </>
+              ) : mode === "correct" ? (
                 <>
                   <textarea
                     ref={editor}
@@ -171,7 +181,7 @@ function Review({ language }: { language: string }) {
                     onChange={(e) => setCorrected(e.target.value.slice(0, 2000))}
                     rows={5}
                     autoFocus
-                    aria-label={`${view.item.modality === "audio" ? "Transcript" : "Corrected text"} in ${target?.name ?? language}`}
+                    aria-label={`Corrected text in ${target?.name ?? language}`}
                     className="min-h-36 w-full resize-none rounded-inset border border-signal/60 bg-background p-3 text-xl leading-snug text-foreground outline-none focus:border-signal"
                   />
                   <CharacterPalette
@@ -183,9 +193,7 @@ function Review({ language }: { language: string }) {
                 </>
               ) : (
                 <p lang={language} className="text-xl leading-snug text-pretty whitespace-pre-line">
-                  {view.item.text || (
-                    <span className="text-base text-faint">No transcript. Add one with Correct if you like.</span>
-                  )}
+                  {view.item.text}
                 </p>
               )}
             </div>
@@ -196,7 +204,7 @@ function Review({ language }: { language: string }) {
               <fieldset className="flex flex-col gap-4">
                 <legend className="pb-3 font-mono text-xs text-faint">Why isn&apos;t it ready?</legend>
                 <div className="flex flex-wrap gap-2">
-                  {reasons.map((r) => (
+                  {(view.item.modality === "audio" ? recordingReasons : textReasons).map((r) => (
                     <button
                       key={r.value}
                       type="button"
@@ -251,7 +259,7 @@ function Review({ language }: { language: string }) {
                     disabled={busy || !corrected.trim() || corrected.trim() === view.item.text.trim()}
                     className={cn(primaryButton, "min-w-32")}
                   >
-                    {view.item.modality === "audio" ? "Save transcript" : "Save correction"}
+                    Save correction
                   </button>
                 </>
               )}
@@ -260,17 +268,19 @@ function Review({ language }: { language: string }) {
                   <button type="button" onClick={() => setMode("reject")} disabled={busy} className={secondaryButton}>
                     Needs changes
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCorrected(view.item.text);
-                      setMode("correct");
-                    }}
-                    disabled={busy}
-                    className={secondaryButton}
-                  >
-                    {view.item.modality === "audio" ? (view.item.text ? "Correct transcript" : "Add transcript") : "Correct"}
-                  </button>
+                  {view.item.modality === "text" && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCorrected(view.item.text);
+                        setMode("correct");
+                      }}
+                      disabled={busy}
+                      className={secondaryButton}
+                    >
+                      Correct
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => decide(view.item, "accept")}
