@@ -22,8 +22,6 @@ print(tok.decode(out[0], skip_special_tokens=True))`;
 export const journey = [
   {
     id: "discover",
-    label: "Discover",
-    copy: "Explore available models, supported languages, capabilities, and evaluation results.",
     lang: "bash",
     title: "terminal",
     code: `curl -s "https://huggingface.co/api/models?author=AmplifiedAccess" \\
@@ -31,8 +29,6 @@ export const journey = [
   },
   {
     id: "install",
-    label: "Install",
-    copy: "Access model weights, adapters, and dependencies through familiar developer tools.",
     lang: "bash",
     title: "terminal",
     code: `pip install transformers peft torch sentencepiece accelerate
@@ -41,16 +37,12 @@ pip install bitsandbytes`,
   },
   {
     id: "run",
-    label: "Run",
-    copy: "Test model inference locally with your own inputs.",
     lang: "bash",
     title: "terminal",
     code: `ollama run amplifiedaccessorg/Swahili-gemma-1b-it`,
   },
   {
     id: "build",
-    label: "Build",
-    copy: "Integrate language capabilities into applications and workflows.",
     lang: "ts",
     title: "app/report.ts",
     code: `const res = await fetch(\`\${process.env.COMMONMIND_URL}/translate\`, {
@@ -70,8 +62,6 @@ const { translation } = await res.json();`,
   },
   {
     id: "deploy",
-    label: "Deploy",
-    copy: "Run models in production using infrastructure suited to your application.",
     lang: "bash",
     title: "inference/server.py",
     code: `pip install fastapi uvicorn transformers peft accelerate sentencepiece bitsandbytes
@@ -82,7 +72,7 @@ HF_TOKEN=<hf-token> TRANSLATE_API_KEY=<secret> \\
 curl localhost:8000/health
 # {"status":"ok","models_loaded":[...]}`,
   },
-];
+] as const;
 
 export const apiResponse = `{
   "translation": "...",
@@ -92,16 +82,12 @@ export const apiResponse = `{
 export const paths = [
   {
     id: "python",
-    label: "Python",
-    copy: "Model inference using Transformers and PEFT.",
     lang: "python",
     title: "translate.py",
     code: quickstart,
   },
   {
     id: "huggingface",
-    label: "Hugging Face",
-    copy: "Open weights, adapters, and model documentation.",
     lang: "bash",
     title: "terminal",
     code: `# Download weights for offline / air-gapped use
@@ -113,8 +99,6 @@ open https://huggingface.co/AmplifiedAccess`,
   },
   {
     id: "ollama",
-    label: "Ollama",
-    copy: "Local inference for compatible quantized models.",
     lang: "bash",
     title: "terminal",
     code: `ollama pull amplifiedaccessorg/Swahili-gemma-1b-it
@@ -124,8 +108,6 @@ ollama run amplifiedaccessorg/Luganda-gemma-1b-it`,
   },
   {
     id: "api",
-    label: "API",
-    copy: "Programmatic access through supported endpoints.",
     lang: "bash",
     title: "POST /translate",
     code: `curl -X POST "$COMMONMIND_URL/translate" \\
@@ -138,8 +120,6 @@ ollama run amplifiedaccessorg/Luganda-gemma-1b-it`,
   },
   {
     id: "local",
-    label: "Local",
-    copy: "Deployment on personal machines or dedicated GPUs.",
     lang: "bash",
     title: "terminal",
     code: `pip install fastapi uvicorn transformers peft accelerate sentencepiece bitsandbytes
@@ -150,8 +130,6 @@ HF_TOKEN=<hf-token> TRANSLATE_API_KEY=dev \\
   },
   {
     id: "edge",
-    label: "Edge",
-    copy: "Lightweight inference for compatible models in resource-constrained environments.",
     lang: "bash",
     title: "terminal",
     code: `# CPU-only device, offline after first pull
@@ -160,4 +138,4 @@ ollama pull amplifiedaccessorg/Swahili-gemma-1b-it
 # Serve on the local network
 OLLAMA_HOST=0.0.0.0 ollama serve`,
   },
-];
+] as const;

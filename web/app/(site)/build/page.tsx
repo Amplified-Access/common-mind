@@ -1,5 +1,4 @@
 import { SourceCodeIcon } from "@hugeicons/core-free-icons";
-import type { Metadata } from "next";
 
 import { apiResponse, journey, paths, quickstart } from "@/components/build/snippets";
 import { Container } from "@/components/common/container";
@@ -8,33 +7,31 @@ import { CodeTabs } from "@/components/system/code-tabs";
 import { InfoTable } from "@/components/system/info-table";
 import { PageHero } from "@/components/system/page-hero";
 import { ArrowLink, LinkButton, Section, SectionHeader } from "@/components/system/primitives";
+import { getPageCopy, pageMetadata } from "@/lib/copy";
 import { site } from "@/lib/site";
 
-export const metadata: Metadata = {
-  title: "Build",
-  description: "Open models, APIs, and deployment options for civic applications.",
-};
+export const generateMetadata = () => pageMetadata("build");
 
-const requestFields = [
-  { label: "model_slug", value: "Identifier of the model to run" },
-  { label: "text", value: "Input text, up to 500 characters" },
-  { label: "direction", value: "Translation direction for supported models" },
-];
-
-const BuildPage = () => {
+const BuildPage = async () => {
+  const copy = await getPageCopy("build");
+  const requestFields = [
+    { label: "model_slug", value: copy.api.modelSlug },
+    { label: "text", value: copy.api.text },
+    { label: "direction", value: copy.api.direction },
+  ];
   return (
     <>
       <PageHero
         tile={SourceCodeIcon}
-        eyebrow="Build"
-        title="Build with CommonMind."
-        lede="From experimentation to production. Open models, APIs, and deployment tools for building multilingual AI applications grounded in civic discourse."
-        tags={["OPEN MODELS", "APIs", "DEPLOYMENT"]}
+        eyebrow={copy.hero.eyebrow}
+        title={copy.hero.title}
+        lede={copy.hero.lede}
+        tags={copy.hero.tags}
       >
         <div className="flex flex-wrap justify-center gap-3">
-          <LinkButton href="#journey">Get Started</LinkButton>
+          <LinkButton href="#journey">{copy.hero.primaryCta}</LinkButton>
           <LinkButton href="#api" variant="outline">
-            Read the Docs
+            {copy.hero.secondaryCta}
           </LinkButton>
         </div>
       </PageHero>
@@ -42,9 +39,9 @@ const BuildPage = () => {
       <Section id="quickstart">
         <Container className="grid gap-12 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-20">
           <SectionHeader
-            eyebrow="Quickstart"
-            title="From code to inference in minutes."
-            lede="Load an open model with Transformers and PEFT to run English-to-Swahili translation locally."
+            eyebrow={copy.quickstart.eyebrow}
+            title={copy.quickstart.title}
+            lede={copy.quickstart.lede}
           />
           <Code code={quickstart} language="python" title="quickstart.py" />
         </Container>
@@ -53,17 +50,17 @@ const BuildPage = () => {
       <Section id="journey" className="border-t border-line">
         <Container className="flex flex-col gap-12">
           <SectionHeader
-            eyebrow="Developer Journey"
-            title="Discover. Install. Run. Build. Deploy."
-            lede="A clear path from exploring open models to integrating multilingual capabilities into real-world applications."
+            eyebrow={copy.journey.eyebrow}
+            title={copy.journey.title}
+            lede={copy.journey.lede}
           />
           <CodeTabs
             tabs={journey.map((step) => ({
               id: step.id,
-              label: step.label,
+              label: copy.journey[step.id].label,
               content: (
                 <div className="grid gap-8 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-20">
-                  <p className="text-h3 text-pretty text-subtle">{step.copy}</p>
+                  <p className="text-h3 text-pretty text-subtle">{copy.journey[step.id].text}</p>
                   <Code code={step.code} language={step.lang} title={step.title} />
                 </div>
               ),
@@ -75,16 +72,16 @@ const BuildPage = () => {
       <Section id="paths" className="border-t border-line">
         <Container className="flex flex-col gap-12">
           <SectionHeader
-            eyebrow="Deployment"
-            title="Built for your infrastructure."
-            lede="Integrate CommonMind models into existing development environments, from local experimentation to production systems."
+            eyebrow={copy.paths.eyebrow}
+            title={copy.paths.title}
+            lede={copy.paths.lede}
           />
           <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {paths.map((p, i) => (
               <li key={p.id} className="flex flex-col gap-3 rounded-card border border-line bg-surface p-7">
                 <span className="font-mono text-xs text-faint">{String(i + 1).padStart(2, "0")}</span>
-                <span className="font-mono text-lg">{p.label}</span>
-                <span className="text-sm text-faint">{p.copy}</span>
+                <span className="font-mono text-lg">{copy.paths[p.id].label}</span>
+                <span className="text-sm text-faint">{copy.paths[p.id].text}</span>
               </li>
             ))}
           </ul>
@@ -95,12 +92,12 @@ const BuildPage = () => {
         <Container className="grid gap-12 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-20">
           <div className="flex flex-col gap-10">
             <SectionHeader
-              eyebrow="API"
-              title="One interface. Multiple models."
-              lede="Access multilingual translation through a consistent API, with simple requests for model selection, text input, and language direction."
+              eyebrow={copy.api.eyebrow}
+              title={copy.api.title}
+              lede={copy.api.lede}
             />
             <InfoTable title="POST /translate" ruled rows={requestFields} />
-            <ArrowLink href={site.links.huggingface}>Explore Model Cards</ArrowLink>
+            <ArrowLink href={site.links.huggingface}>{copy.api.cta}</ArrowLink>
           </div>
           <div className="flex min-w-0 flex-col gap-5">
             <Code title="Request" language="bash" code={paths.find((p) => p.id === "api")!.code} />

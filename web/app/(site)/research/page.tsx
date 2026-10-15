@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 
 import { Container } from "@/components/common/container";
@@ -9,21 +8,19 @@ import { Arrow } from "@/components/system/arrow";
 import { PageHero } from "@/components/system/page-hero";
 import { Section, SectionHeader } from "@/components/system/primitives";
 import { getContent } from "@/lib/content";
+import { getPageCopy, pageMetadata } from "@/lib/copy";
 
-export const metadata: Metadata = {
-  title: "Research",
-  description: "Research at the intersection of language, civic discourse, models, data, and evaluation.",
-};
+export const generateMetadata = () => pageMetadata("research");
 
 const ResearchPage = async () => {
-  const content = await getContent();
+  const [content, copy] = await Promise.all([getContent(), getPageCopy("research")]);
   return (
     <>
       <PageHero
-        eyebrow="Research"
-        title="Understanding civic discourse."
-        lede="Open research advancing the language resources, models, and evaluation methods needed to build AI that understands civic discourse across languages and communities beyond the mainstream."
-        tags={["CIVIC AI", "LANGUAGE", "OPEN RESEARCH"]}
+        eyebrow={copy.hero.eyebrow}
+        title={copy.hero.title}
+        lede={copy.hero.lede}
+        tags={copy.hero.tags}
         sideGrids
         className="pb-(--section-pad)"
         after={
@@ -36,9 +33,9 @@ const ResearchPage = async () => {
       <Section id="releases">
         <Container className="flex flex-col gap-14">
           <SectionHeader
-            eyebrow="Releases"
-            title="Open progress, documented."
-            lede="Every release contributes to a growing foundation for multilingual civic AI, with accessible model artifacts, evaluation results, and technical documentation."
+            eyebrow={copy.releases.eyebrow}
+            title={copy.releases.title}
+            lede={copy.releases.lede}
           />
           <ol className="flex flex-col border-t border-line">
             {content.releases.map((release) => (

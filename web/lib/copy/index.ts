@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { Metadata } from "next";
 import { cache } from "react";
 
 import { sanityFetch } from "@/lib/sanity/client";
@@ -14,3 +15,13 @@ export const getPageCopy = cache(async <K extends PageKey>(key: K): Promise<Page
   const edits = await sanityFetch<unknown>("*[_id == $id][0]", { id: pageDocumentId(key) });
   return overlay(PAGES[key].copy, edits);
 });
+
+type PageWithMeta = {
+  [K in PageKey]: PageCopy<K> extends { meta: { title: string; description: string } } ? K : never;
+}[PageKey];
+
+/** A page's title and description for search results and link previews. */
+export async function pageMetadata(key: PageWithMeta): Promise<Metadata> {
+  const { meta } = await getPageCopy(key);
+  return { title: meta.title, description: meta.description };
+}

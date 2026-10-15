@@ -1,20 +1,17 @@
-import type { Metadata } from "next";
-
 import { ApplicationGrid } from "@/components/applications/application-grid";
 import { Container } from "@/components/common/container";
 import { PageHero } from "@/components/system/page-hero";
+import { getPageCopy, pageMetadata } from "@/lib/copy";
 
-export const metadata: Metadata = {
-  title: "Applications",
-  description: "Multilingual applications built on CommonMind, turning civic discourse into real world impact.",
-};
+export const generateMetadata = () => pageMetadata("applications");
 
-const ApplicationsPage = () => {
+const ApplicationsPage = async () => {
+  const copy = await getPageCopy("applications");
   return (
     <PageHero
-      eyebrow="Applications"
-      title="From civic discourse to real world impact."
-      lede="CommonMind enables developers and organisations to build multilingual AI applications that turn civic discourse into meaningful insights, expand access to public information and services, strengthen community participation, and support more informed public decisions."
+      eyebrow={copy.hero.eyebrow}
+      title={copy.hero.title}
+      lede={copy.hero.lede}
       sideGrids
       className="pb-(--section-pad)"
       after={

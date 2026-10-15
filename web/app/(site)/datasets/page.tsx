@@ -1,27 +1,22 @@
-import type { Metadata } from "next";
-
 import { Container } from "@/components/common/container";
 import { DatasetGrid } from "@/components/datasets/dataset-grid";
 import { PageHero } from "@/components/system/page-hero";
 import { LinkButton } from "@/components/system/primitives";
 import { getContent } from "@/lib/content";
+import { getPageCopy, pageMetadata } from "@/lib/copy";
 
-export const metadata: Metadata = {
-  title: "Datasets",
-  description:
-    "Explore the open datasets supporting language model development, training, and evaluation across languages beyond the mainstream.",
-};
+export const generateMetadata = () => pageMetadata("datasets");
 
 const DatasetsPage = async () => {
-  const { datasets } = await getContent();
+  const [{ datasets }, copy] = await Promise.all([getContent(), getPageCopy("datasets")]);
   return (
     <PageHero
       align="split"
       sideGrids
-      eyebrow="Datasets"
-      title="Language data for multilingual AI."
-      lede="Explore the open datasets supporting language model development, training, and evaluation across languages beyond the mainstream."
-      tags={["OPEN DATA", "MULTILINGUAL AI", "RESEARCH"]}
+      eyebrow={copy.hero.eyebrow}
+      title={copy.hero.title}
+      lede={copy.hero.lede}
+      tags={copy.hero.tags}
       className="pb-(--section-pad)"
       after={
         <Container id="catalogue" className="scroll-mt-24">
@@ -30,7 +25,7 @@ const DatasetsPage = async () => {
       }
     >
       <div>
-        <LinkButton href="#catalogue">Explore Datasets</LinkButton>
+        <LinkButton href="#catalogue">{copy.hero.cta}</LinkButton>
       </div>
     </PageHero>
   );

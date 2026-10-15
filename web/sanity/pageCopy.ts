@@ -19,6 +19,7 @@ const spell = (key: string) => {
 };
 
 const HIGHLIGHT_HELP = "Put *stars* around words to highlight them.";
+const LINES_HELP = "Each new line starts a new line on wider screens.";
 
 function field(name: string, original: CopyValue): FieldDefinition {
   if (typeof original === "string") {
@@ -29,7 +30,10 @@ function field(name: string, original: CopyValue): FieldDefinition {
       type: long ? "text" : "string",
       ...(long && { rows: Math.min(6, Math.ceil(original.length / 90) + 1) }),
       placeholder: original,
-      description: original.includes("*") ? HIGHLIGHT_HELP : undefined,
+      description:
+        [original.includes("*") && HIGHLIGHT_HELP, original.includes("\n") && LINES_HELP]
+          .filter(Boolean)
+          .join(" ") || undefined,
     });
   }
   if (Array.isArray(original)) {

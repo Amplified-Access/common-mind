@@ -1,17 +1,12 @@
-import type { Metadata } from "next";
-
 import { CivicExplorer } from "@/components/civic/civic-explorer";
 import { TerminologyViewer } from "@/components/civic/terminology-viewer";
 import { Container } from "@/components/common/container";
 import { PageHero } from "@/components/system/page-hero";
 import { LinkButton, Panel, Section, SectionHeader } from "@/components/system/primitives";
+import { getPageCopy, pageMetadata } from "@/lib/copy";
 import { cn } from "@/lib/utils";
 
-export const metadata: Metadata = {
-  title: "Civic corpus",
-  description:
-    "Language data, local terminology, and contextual knowledge that help AI interpret civic discourse in context.",
-};
+export const generateMetadata = () => pageMetadata("civicCorpus");
 
 // Training mixtures as reported in each technical report. Totals are the sum
 // of the listed sources.
@@ -42,39 +37,29 @@ const mixtures = [
 
 const shades = ["bg-signal", "bg-teal", "bg-ocean", "bg-lilac", "bg-other", "bg-white/25"];
 
-const principles = [
-  ["Informed consent", "People understand how their contributions will be collected, used, and shared."],
-  ["Purpose limitation", "Data is collected and used for clearly defined research and development purposes."],
-  [
-    "Privacy protection",
-    "Personal information is minimised and protected, with additional safeguards for sensitive contributions.",
-  ],
-  [
-    "Community validation",
-    "Language speakers and local experts help review terminology, interpretation, and contextual meaning.",
-  ],
-];
+const PRINCIPLES = ["consent", "purpose", "privacy", "validation"] as const;
 
-const CivicCorpusPage = () => {
+const CivicCorpusPage = async () => {
+  const copy = await getPageCopy("civicCorpus");
   return (
     <>
       <PageHero
-        eyebrow="Research / Civic Corpus"
-        title="Understanding civic language in context."
-        lede="Civic discourse is shaped by language, place, and lived experience. The Civic Corpus brings together language data, local terminology, and contextual knowledge to help AI systems interpret community expression beyond literal translation."
-        tags={["CIVIC DISCOURSE", "TERMINOLOGY", "RESPONSIBLE DATA"]}
+        eyebrow={copy.hero.eyebrow}
+        title={copy.hero.title}
+        lede={copy.hero.lede}
+        tags={copy.hero.tags}
       >
         <div>
-          <LinkButton href="/data-lab">Data Lab</LinkButton>
+          <LinkButton href="/data-lab">{copy.hero.cta}</LinkButton>
         </div>
       </PageHero>
 
       <Section id="scope">
         <Container className="flex flex-col gap-14">
           <SectionHeader
-            eyebrow="Scope"
-            title="The dimensions of civic discourse."
-            lede="From everyday concerns to public decision-making, civic discourse reflects the issues, institutions, and experiences that shape community life."
+            eyebrow={copy.scope.eyebrow}
+            title={copy.scope.title}
+            lede={copy.scope.lede}
             layout="split"
           />
           <CivicExplorer />
@@ -84,9 +69,9 @@ const CivicCorpusPage = () => {
       <Section id="terminology" className="border-t border-line">
         <Container className="flex flex-col gap-14">
           <SectionHeader
-            eyebrow="Terminology"
-            title="Beyond literal translation."
-            lede="The terminology layer connects local expressions to shared civic concepts while preserving the linguistic and institutional context that gives them meaning."
+            eyebrow={copy.terminology.eyebrow}
+            title={copy.terminology.title}
+            lede={copy.terminology.lede}
             layout="split"
           />
           <TerminologyViewer />
@@ -96,9 +81,9 @@ const CivicCorpusPage = () => {
       <Section id="composition" className="border-t border-line">
         <Container className="flex flex-col gap-14">
           <SectionHeader
-            eyebrow="Composition"
-            title="The data behind the models."
-            lede="Explore the language datasets used to develop and adapt CommonMind models, from parallel translation corpora to instruction-tuning resources."
+            eyebrow={copy.composition.eyebrow}
+            title={copy.composition.title}
+            lede={copy.composition.lede}
             layout="split"
           />
           <div className="grid gap-5 lg:grid-cols-2">
@@ -138,12 +123,12 @@ const CivicCorpusPage = () => {
 
       <Section id="collection" className="border-t border-line">
         <Container className="flex flex-col gap-14">
-          <SectionHeader eyebrow="Collection" title="Trust is part of the infrastructure." />
+          <SectionHeader eyebrow={copy.collection.eyebrow} title={copy.collection.title} />
           <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {principles.map(([title, line]) => (
-              <li key={title} className="flex flex-col gap-3 rounded-card border border-line bg-surface p-7">
-                <span className="font-mono text-lg">{title}</span>
-                <span className="text-sm text-faint">{line}</span>
+            {PRINCIPLES.map((key) => (
+              <li key={key} className="flex flex-col gap-3 rounded-card border border-line bg-surface p-7">
+                <span className="font-mono text-lg">{copy.collection[key].title}</span>
+                <span className="text-sm text-faint">{copy.collection[key].text}</span>
               </li>
             ))}
           </ul>

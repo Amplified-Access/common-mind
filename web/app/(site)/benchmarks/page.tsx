@@ -1,5 +1,4 @@
 import { ChartHistogramIcon } from "@hugeicons/core-free-icons";
-import type { Metadata } from "next";
 import Link from "next/link";
 
 import { radarScores } from "@/components/benchmarks/civicbench-preview";
@@ -20,14 +19,13 @@ import { CountUp } from "@/components/system/count-up";
 import { FramedCard, HALO } from "@/components/system/framed-card";
 import { PageHero } from "@/components/system/page-hero";
 import { Eyebrow, Panel, Section, SectionHeader } from "@/components/system/primitives";
+import { getPageCopy, pageMetadata } from "@/lib/copy";
 import { cn } from "@/lib/utils";
 
-export const metadata: Metadata = {
-  title: "Benchmarks",
-  description: "Reliable evaluation for civic AI. CivicBench Africa and published results.",
-};
+export const generateMetadata = () => pageMetadata("benchmarks");
 
-const BenchmarksPage = () => {
+const BenchmarksPage = async () => {
+  const copy = await getPageCopy("benchmarks");
   const adapted = registryModels.filter((m) => m.evaluation.baseBleu !== undefined);
   const radarModels: RadarModel[] = registryModels.flatMap((m) => {
     const scores = radarScores(m.slug, m.evaluation.chrf);
@@ -38,10 +36,10 @@ const BenchmarksPage = () => {
     <>
       <PageHero
         tile={ChartHistogramIcon}
-        eyebrow="Benchmarks"
-        title="Measure what improves."
-        lede="Open reproducible benchmarks for evaluating multilingual AI performance across languages, civic discourse tasks, and community contexts."
-        tags={["MULTILINGUAL", "OPEN EVALUATION", "CIVIC AI"]}
+        eyebrow={copy.hero.eyebrow}
+        title={copy.hero.title}
+        lede={copy.hero.lede}
+        tags={copy.hero.tags}
       />
 
       <Section id="results" className="isolate pt-6 sm:pt-8">
@@ -62,8 +60,8 @@ const BenchmarksPage = () => {
           <FramedCard panelsClassName="flex flex-col gap-20 bg-[#0b0a07] px-6 py-12 sm:px-12 sm:py-14">
             <div className="flex flex-col gap-10">
               <SectionHeader
-                title="Compare Model Performance."
-                lede="Explore and compare model performance across languages, tasks, and evaluation metrics, with transparent results and references to public sources."
+                title={copy.results.title}
+                lede={copy.results.lede}
               />
               <ComparePanel
                 sets={[
@@ -87,16 +85,13 @@ const BenchmarksPage = () => {
             <div id="compare" className="flex scroll-mt-24 flex-col gap-10">
               <div className="flex flex-col gap-4">
                 <div className="flex flex-wrap items-center gap-4">
-                  <h3 className="text-h2">Compare Models</h3>
+                  <h3 className="text-h2">{copy.compare.title}</h3>
                   <span className="rounded-full border border-signal/60 px-3 py-0.5 font-mono text-[11px] text-signal uppercase">
-                    Sample data
+                    {copy.compare.badge}
                   </span>
                 </div>
                 <p className="max-w-2xl text-sm text-faint">
-                  Compare selected models across evaluation tasks and metrics.
-                  Translation results reflect measured chrF++ scores, while
-                  other tasks use illustrative values pending publication of
-                  CivicBench Africa results.
+                  {copy.compare.lede}
                 </p>
               </div>
               <RadarChart
@@ -111,9 +106,9 @@ const BenchmarksPage = () => {
       <Section id="civicbench">
         <Container className="flex flex-col gap-14">
           <SectionHeader
-            eyebrow="CivicBench Africa"
-            title="Nine dimensions of civic understanding"
-            lede="Civic bench Africa establishes a framework for evaluating how AI models interprete, process, and respond to civic discourse across languages and community contexts."
+            eyebrow={copy.civicBench.eyebrow}
+            title={copy.civicBench.title}
+            lede={copy.civicBench.lede}
             layout="split"
           />
           <ol className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -136,11 +131,11 @@ const BenchmarksPage = () => {
                       href={c.results}
                       className="inline-flex items-center gap-2 font-mono text-xs text-foreground hover:text-signal"
                     >
-                      Results <Arrow />
+                      {copy.civicBench.resultsLink} <Arrow />
                     </Link>
                   ) : (
                     <span className="font-mono text-xs text-faint">
-                      In development
+                      {copy.civicBench.inDevelopment}
                     </span>
                   )}
                 </div>
@@ -153,9 +148,9 @@ const BenchmarksPage = () => {
       <Section id="adaptation" className="border-t border-line">
         <Container className="flex flex-col gap-16">
           <SectionHeader
-            eyebrow="Adaptation"
-            title="One foundation. Different language capabilities."
-            lede="Compare Gemma 3 1B before and after language-specific adaptation for multilingual civic AI."
+            eyebrow={copy.adaptation.eyebrow}
+            title={copy.adaptation.title}
+            lede={copy.adaptation.lede}
           />
           <div className="grid gap-5 md:grid-cols-2">
             {adapted.map((m, i) => (
@@ -189,9 +184,9 @@ const BenchmarksPage = () => {
       <Section id="efficiency">
         <Container className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.7fr)] lg:items-center lg:gap-20">
           <SectionHeader
-            eyebrow="Efficiency"
-            title="Smaller models. Measurable gains."
-            lede="A 615M-parameter model outperforms Gemma 3 27B on English-to-Swahili translation, demonstrating that model size alone does not determine performance."
+            eyebrow={copy.efficiency.eyebrow}
+            title={copy.efficiency.title}
+            lede={copy.efficiency.lede}
           />
           <Panel className="p-6 sm:p-10">
             <EfficiencyChart entries={swahiliFlores.entries} />
@@ -201,20 +196,14 @@ const BenchmarksPage = () => {
 
       <Section id="methodology">
         <Container className="flex flex-col gap-14">
-          <SectionHeader eyebrow="Methodology" title="How we measure." />
+          <SectionHeader eyebrow={copy.methodology.eyebrow} title={copy.methodology.title} />
           <div className="grid gap-5 md:grid-cols-3">
-            <MethodNote title="Evaluation Metrics">
-              BLEU measures n-gram overlap with reference translations, while chrF++ captures
-              character- and word-level similarity, providing additional sensitivity to
-              morphological variation.
+            <MethodNote title={copy.methodology.metricsTitle}>{copy.methodology.metrics}</MethodNote>
+            <MethodNote title={copy.methodology.standardisedTitle}>
+              {copy.methodology.standardised}
             </MethodNote>
-            <MethodNote title="Standardised Evaluation">
-              Models are compared using shared evaluation sets. Swahili models are evaluated on
-              FLORES-200, while Luganda models use a held-out test set.
-            </MethodNote>
-            <MethodNote title="Reproducible Results">
-              Evaluation methods, datasets, and model configurations are documented to support
-              transparent, consistent, and reproducible comparisons.
+            <MethodNote title={copy.methodology.reproducibleTitle}>
+              {copy.methodology.reproducible}
             </MethodNote>
           </div>
         </Container>
@@ -223,12 +212,10 @@ const BenchmarksPage = () => {
       <Section id="try" className="border-t border-line">
         <Container className="flex flex-col gap-14">
           <div className="flex flex-col gap-4">
-            <Eyebrow>Playground</Eyebrow>
+            <Eyebrow>{copy.playground.eyebrow}</Eyebrow>
             <div className="flex flex-col gap-4 md:flex-row md:items-end md:gap-12">
-              <h2 className="text-h2">Explore the models in action.</h2>
-              <p className="max-w-60 text-sm text-foreground/85">
-                Test how models translate civic discourse between English, Luganda, and Swahili.
-              </p>
+              <h2 className="text-h2">{copy.playground.title}</h2>
+              <p className="max-w-60 text-sm text-foreground/85">{copy.playground.lede}</p>
             </div>
           </div>
           <Translator />

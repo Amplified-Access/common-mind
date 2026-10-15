@@ -1,5 +1,3 @@
-import type { Metadata } from "next";
-
 import { Container } from "@/components/common/container";
 import { languages } from "@/components/languages/data";
 import { ecosystemFor } from "@/components/languages/ecosystem";
@@ -9,14 +7,12 @@ import { registryModels } from "@/components/models/registry";
 import { Backdrop } from "@/components/system/backdrop";
 import { Eyebrow, Section, SectionHeader } from "@/components/system/primitives";
 import { getContent } from "@/lib/content";
+import { getPageCopy, pageMetadata } from "@/lib/copy";
 
-export const metadata: Metadata = {
-  title: "Languages",
-  description: "Every language carries its own civic vocabulary.",
-};
+export const generateMetadata = () => pageMetadata("languages");
 
 const LanguagesPage = async () => {
-  const content = await getContent();
+  const [content, copy] = await Promise.all([getContent(), getPageCopy("languages")]);
   const { datasets } = content;
   const entries = languages.map((language) => {
     const { models } = ecosystemFor(language, content);
@@ -34,10 +30,10 @@ const LanguagesPage = async () => {
   });
 
   const stats = [
-    { value: languages.length, label: "Languages" },
-    { value: new Set(languages.flatMap((l) => l.regions)).size, label: "Countries" },
-    { value: datasets.length, label: "Datasets" },
-    { value: registryModels.length, label: "Open models" },
+    { value: languages.length, label: copy.stats.languages },
+    { value: new Set(languages.flatMap((l) => l.regions)).size, label: copy.stats.countries },
+    { value: datasets.length, label: copy.stats.datasets },
+    { value: registryModels.length, label: copy.stats.models },
   ];
 
   return (
@@ -45,13 +41,13 @@ const LanguagesPage = async () => {
       <section className="zoom-viewport relative isolate overflow-hidden border-b border-line pt-(--header-height)">
         <Backdrop wash grain stars shade sideGrids />
         <Container className="flex flex-col gap-10 pt-12 pb-14 sm:pt-13 sm:pb-16">
-          <Eyebrow className="self-center">Languages</Eyebrow>
+          <Eyebrow className="self-center">{copy.hero.eyebrow}</Eyebrow>
           {/* The copy and the globe sit as one centered pair. */}
           <div className="flex flex-col items-center gap-14 lg:flex-row lg:justify-center lg:gap-25 lg:pl-10">
             <div className="flex w-full flex-col gap-4 lg:w-75 lg:shrink-0">
-              <h1 className="max-w-62 text-h2">Explore civic AI by language.</h1>
+              <h1 className="max-w-62 text-h2">{copy.hero.title}</h1>
               <p className="max-w-75 text-[13px] leading-[1.2] text-pretty text-faint">
-                Each language is an ecosystem of its own, expore the open models, civic discourse datasets, benchmarks, terminology, and research supporting AI development across languages beyond the mainstream.
+                {copy.hero.lede}
               </p>
               <dl className="grid grid-cols-[11rem_auto] gap-y-6 pt-4">
                 {stats.map((stat) => (
@@ -73,8 +69,8 @@ const LanguagesPage = async () => {
       <Section id="index">
         <Container className="flex flex-col gap-12">
           <SectionHeader
-            title="Explore Supported Languages"
-            lede="Each language has a growing ecosystem of open models, civic discourse datasets, benchmarks, terminology resources, and research."
+            title={copy.index.title}
+            lede={copy.index.lede}
           />
           <LanguageGrid entries={entries} />
         </Container>
