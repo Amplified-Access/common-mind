@@ -1,4 +1,4 @@
-import { LaunchIcon } from "@sanity/icons";
+import { LaunchIcon } from "@sanity/icons/Launch";
 import { defineField, defineType } from "sanity";
 
 import { logoFields, tagList } from "./parts";

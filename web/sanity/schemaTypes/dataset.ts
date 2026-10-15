@@ -1,4 +1,4 @@
-import { DatabaseIcon } from "@sanity/icons";
+import { DatabaseIcon } from "@sanity/icons/Database";
 import { defineArrayMember, defineField, defineType } from "sanity";
 
 import { languages } from "../../components/languages/data";

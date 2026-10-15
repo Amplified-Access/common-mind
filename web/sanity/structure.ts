@@ -1,9 +1,7 @@
-import {
-  CogIcon,
-  CubeIcon,
-  DocumentsIcon,
-  DocumentTextIcon,
-} from "@sanity/icons";
+import { CogIcon } from "@sanity/icons/Cog";
+import { CubeIcon } from "@sanity/icons/Cube";
+import { DocumentTextIcon } from "@sanity/icons/DocumentText";
+import { DocumentsIcon } from "@sanity/icons/Documents";
 import type { StructureResolver } from "sanity/structure";
 
 import { registryModels } from "../components/models/registry";

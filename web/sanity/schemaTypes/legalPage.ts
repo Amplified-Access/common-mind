@@ -1,4 +1,5 @@
-import { DocumentsIcon, HighlightIcon } from "@sanity/icons";
+import { DocumentsIcon } from "@sanity/icons/Documents";
+import { HighlightIcon } from "@sanity/icons/Highlight";
 import { defineArrayMember, defineField, defineType } from "sanity";
 
 // Rich text for legal pages, limited to what the page design draws:
