@@ -61,11 +61,11 @@ const Header = () => {
     >
       <div
         className={cn(
-          "relative flex items-center justify-between gap-6 border transition-[height,margin,padding,background-color,border-color,border-radius,box-shadow,backdrop-filter]",
+          "relative flex items-center justify-between gap-6 border transition-[height,margin,padding,background-color,border-color,box-shadow,backdrop-filter]",
           MORPH,
           floating
-            ? "mx-(--inset) h-12 rounded-md border-line bg-background/70 px-3 shadow-[0_8px_30px_rgb(0_0_0/0.45)] backdrop-blur-xl"
-            : "mx-0 h-14 rounded-none border-transparent bg-background px-(--inset)",
+            ? "mx-(--inset) h-12 border-line bg-background/70 px-3 shadow-[0_8px_30px_rgb(0_0_0/0.45)] backdrop-blur-xl"
+            : "mx-0 h-14 border-transparent bg-background px-(--inset)",
         )}
       >
         <Link href="/" aria-label="CommonMind home" className="shrink-0">
