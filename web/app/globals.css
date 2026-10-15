@@ -245,6 +245,14 @@
   zoom: var(--viewport-scale);
 }
 
+/* Trims a line of text to its capitals and baseline, so the letters
+   themselves center in their box. Without it the font's extra space above
+   the capitals and below the baseline leaves short labels looking low.
+   Browsers without text-box keep the normal line box. */
+@utility text-trim {
+  text-box: trim-both cap alphabetic;
+}
+
 /* The brand's cut corners, from the CommonMind mark: the top-left and
    bottom-right corners cut at 45°. Size with --chamfer (default 8px).
    Where corner-shape is supported the border follows the cut, so outlined
