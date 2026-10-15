@@ -98,10 +98,5 @@ func (h *Handler) RegisterRoutes(rps float64, burst int, sentryDSN string, allow
 		api.DELETE("/me", h.DeleteMeHandler)
 	}
 
-	if h.storageService != nil {
-		api.POST("/storage/presign", h.PresignHandler)
-		api.DELETE("/storage/:key", h.DeleteObjectHandler)
-	}
-
 	return r
 }

@@ -54,7 +54,7 @@ func NewServer(app *bootstrap.App, hub *ws.Hub) (*http.Server, error) {
 		}
 	}
 
-	h := handlers.NewHandler(healthUC, app.Firebase, hub, app.Enqueuer, queueUI, app.EmailSender, app.StorageService, app.StreamProducer, userRepo, dataLab)
+	h := handlers.NewHandler(healthUC, app.Firebase, hub, app.Enqueuer, queueUI, app.EmailSender, app.StreamProducer, userRepo, dataLab)
 
 	// Register DB pool metrics collector.
 	// AlreadyRegisteredError is silenced — only the first registration wins

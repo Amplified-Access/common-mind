@@ -15,7 +15,6 @@ type Handler struct {
 	enqueuer       usecase.Enqueuer       // nil when REDIS_URL is not set
 	queueUI        http.Handler           // nil disables /admin/queues route
 	emailSender    usecase.EmailSender    // nil when MAILJET_API_KEY is not set
-	storageService usecase.StorageService // nil when R2_ACCOUNT_ID is not set
 	streamProducer usecase.StreamProducer // nil when REDIS_URL is not set
 	userRepo       usecase.UserRepository // nil when not wired
 	dataLab        usecase.DataLab
@@ -29,7 +28,6 @@ func NewHandler(
 	enqueuer usecase.Enqueuer,
 	queueUI http.Handler,
 	emailSender usecase.EmailSender,
-	storageService usecase.StorageService,
 	streamProducer usecase.StreamProducer,
 	userRepo usecase.UserRepository,
 	dataLab usecase.DataLab,
@@ -41,7 +39,6 @@ func NewHandler(
 		enqueuer:       enqueuer,
 		queueUI:        queueUI,
 		emailSender:    emailSender,
-		storageService: storageService,
 		streamProducer: streamProducer,
 		userRepo:       userRepo,
 		dataLab:        dataLab,
