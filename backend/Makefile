@@ -92,6 +92,12 @@ datalab-import:
 datalab-sample:
 	@go run ./cmd/datalab import dev/data-lab/sample-items.jsonl
 
+# Add verified Swahili translations of the sample items (development only), so
+# there's something to record: run after datalab-sample.
+datalab-sample-translations:
+	@docker compose exec -T psql_bp sh -c 'psql -q -v ON_ERROR_STOP=1 -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"' < dev/data-lab/sample-translations.sql
+	@echo "Added verified Swahili translations of the sample items."
+
 # Set a volunteer's level: make datalab-promote email=a@b.c language=sw level=reviewer
 datalab-promote:
 	@go run ./cmd/datalab promote $(email) $(language) $(level)
@@ -99,4 +105,4 @@ datalab-promote:
 .PHONY: all build run test clean watch lint docker-run docker-down itest swagger \
         migrate-up migrate-up-one migrate-down migrate-down-to migrate-reset \
         migrate-status migrate-version migrate-create \
-        datalab-import datalab-sample datalab-promote
+        datalab-import datalab-sample datalab-sample-translations datalab-promote

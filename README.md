@@ -63,7 +63,7 @@ cd web && pnpm dev                     # site on :3000
 2. A language accepts contributions once it has two reviewers. Create a second account, join the same language, then promote both:
    `cd backend && make datalab-promote email=you@example.com language=sw level=reviewer`
 3. Contribute with one account and review with the other. Counts on `/data-lab` update live.
-4. To record by voice, set the `R2_*` variables in `backend/.env` and add the bucket's CORS rule ([backend/docs/storage.md](backend/docs/storage.md)), then restart the API. The contribute screen gains a Write / Speak switch.
+4. To record by voice, set the `R2_*` variables in `backend/.env` and add the bucket's CORS rule ([backend/docs/storage.md](backend/docs/storage.md)), then restart the API. The contribute screen gains a Write / Speak switch. Speak reads verified translations aloud; `cd backend && make datalab-sample-translations` adds verified Swahili ones for the sample items.
 
 ## Common commands
 
@@ -74,6 +74,7 @@ cd web && pnpm dev                     # site on :3000
 | `make build` | Backend binary and production web build |
 | `cd backend && make migrate-create name=<slug>` | New SQL migration |
 | `cd backend && make datalab-sample` | Load sample Data Lab items into the local database |
+| `cd backend && make datalab-sample-translations` | Add verified Swahili translations of them, to record (development only) |
 | `cd backend && make datalab-promote email=… language=sw level=reviewer` | Promote a volunteer in a language |
 | `cd backend && make swagger` | Regenerate API docs after changing handler annotations |
 | `make deploy-prod` | Advance `production` to `main` (see [RUNBOOK.md](RUNBOOK.md)) |
