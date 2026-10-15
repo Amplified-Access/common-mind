@@ -1,4 +1,4 @@
-import { AiChipIcon } from "@hugeicons/core-free-icons";
+import { CubeIcon } from "@hugeicons/core-free-icons";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -222,7 +222,7 @@ const ModelPage = async ({ params }: PageProps) => {
   return (
     <>
       <PageHero
-        tile={AiChipIcon}
+        tile={CubeIcon}
         eyebrow={text.hero.eyebrow}
         title={model.name}
         lede={copy.tagline && `${copy.tagline}.`}

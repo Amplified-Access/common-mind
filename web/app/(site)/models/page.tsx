@@ -1,4 +1,4 @@
-import { NeuralNetworkIcon } from "@hugeicons/core-free-icons";
+import { Layers01Icon } from "@hugeicons/core-free-icons";
 import { Container } from "@/components/common/container";
 import { modelCatalog } from "@/components/models/catalog";
 import { RegistryGrid } from "@/components/models/registry-grid";
@@ -21,7 +21,7 @@ const ModelsPage = async () => {
   return (
     <>
       <PageHero
-        tile={NeuralNetworkIcon}
+        tile={Layers01Icon}
         eyebrow={copy.hero.eyebrow}
         title={<Emphasized text={copy.hero.title} />}
         lede={copy.hero.lede}

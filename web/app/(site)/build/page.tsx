@@ -1,4 +1,4 @@
-import { SourceCodeIcon } from "@hugeicons/core-free-icons";
+import { TerminalIcon } from "@hugeicons/core-free-icons";
 
 import { apiResponse, journey, paths, quickstart } from "@/components/build/snippets";
 import { Container } from "@/components/common/container";
@@ -22,7 +22,7 @@ const BuildPage = async () => {
   return (
     <>
       <PageHero
-        tile={SourceCodeIcon}
+        tile={TerminalIcon}
         eyebrow={copy.hero.eyebrow}
         title={copy.hero.title}
         lede={copy.hero.lede}

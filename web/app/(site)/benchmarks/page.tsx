@@ -1,4 +1,4 @@
-import { ChartHistogramIcon } from "@hugeicons/core-free-icons";
+import { Analytics01Icon } from "@hugeicons/core-free-icons";
 import Link from "next/link";
 
 import { radarScores } from "@/components/benchmarks/civicbench-preview";
@@ -35,7 +35,7 @@ const BenchmarksPage = async () => {
   return (
     <>
       <PageHero
-        tile={ChartHistogramIcon}
+        tile={Analytics01Icon}
         eyebrow={copy.hero.eyebrow}
         title={copy.hero.title}
         lede={copy.hero.lede}
