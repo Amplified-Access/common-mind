@@ -21,8 +21,8 @@ import {
 } from "../ui/sheet";
 
 // On the home page, past this scroll offset the header lifts off the page
-// into a floating pill; back above it, the header docks again. Every other
-// page keeps the pill throughout.
+// into a floating bar; back above it, the header docks again. Every other
+// page keeps it floating throughout.
 const PIN_THRESHOLD = 80;
 
 // Shared by the bar and its wrapper so both halves of the morph move together.
@@ -43,7 +43,9 @@ const Header = () => {
   if (isStandalone(pathname)) return null;
 
   // Docked: a full-width bar, 56px tall. Pinned: an 8px drop plus a 48px
-  // pill, still 56px, so the page below never shifts during the morph.
+  // bar, still 56px, so the page below never shifts during the morph. The
+  // pinned bar's contents are all 32px tall, framed by an even 8px (1px
+  // border plus 7px padding) on every side.
   return (
     <header
       className={cn(
@@ -52,7 +54,7 @@ const Header = () => {
         // Where the page's container content starts: the container's gutter,
         // plus its centering margin once the screen outgrows it. Docked, the
         // black strip runs edge to edge and pads in by this; floating, the
-        // pill draws in by it from both edges as it drops.
+        // bar draws in by it from both edges as it drops.
         "[--gutter:1rem] md:[--gutter:2rem] xl:[--gutter:3rem]",
         "[--inset:max(var(--gutter),calc((100%-90rem)/2+var(--gutter)))]",
         MORPH,
@@ -64,7 +66,7 @@ const Header = () => {
           "relative flex items-center justify-between gap-6 border transition-[height,margin,padding,background-color,border-color,box-shadow,backdrop-filter]",
           MORPH,
           floating
-            ? "mx-(--inset) h-12 border-line bg-background/70 px-3 shadow-[0_8px_30px_rgb(0_0_0/0.45)] backdrop-blur-xl"
+            ? "mx-(--inset) h-12 border-line bg-background/70 px-1.75 shadow-[0_8px_30px_rgb(0_0_0/0.45)] backdrop-blur-xl"
             : "mx-0 h-14 border-transparent bg-background px-(--inset)",
         )}
       >
@@ -75,7 +77,11 @@ const Header = () => {
             width={138}
             height={49}
             priority
-            className="h-9 w-auto"
+            className={cn(
+              "w-auto transition-[height]",
+              MORPH,
+              floating ? "h-8" : "h-9",
+            )}
           />
         </Link>
 
