@@ -35,8 +35,12 @@ type DataLabStore interface {
 	CountReviewers(ctx context.Context, language string) (int, error)
 	// NextItem returns an item the volunteer hasn't done in the modality that
 	// has no pending or verified contribution in the language and modality, or
-	// nil, nil when none is left.
+	// nil, nil when none is left. For audio, only items with a verified
+	// translation in the language, and the task's text is that translation.
 	NextItem(ctx context.Context, userID int64, language, modality string) (*domain.Task, error)
+	// VerifiedTranslation returns the ID of the item's verified written
+	// contribution in the language, the text a recording reads, or 0 if none.
+	VerifiedTranslation(ctx context.Context, itemID int64, language string) (int64, error)
 	// CreateContribution returns ErrNotFound for an unknown item and
 	// ErrAlreadyContributed for a repeat by the same volunteer in the modality.
 	CreateContribution(ctx context.Context, rec ContributionRecord) (*domain.Contribution, error)
@@ -71,8 +75,9 @@ type DataLab interface {
 	// NextTask returns ErrNoTasks when the language has nothing left for the
 	// volunteer in the modality ("text" when empty, or "audio").
 	NextTask(ctx context.Context, tok *FirebaseToken, language, modality string) (*domain.Task, error)
-	// StartRecording issues a URL to upload one recording to, directly from
-	// the browser, under the volunteer's own prefix.
+	// StartRecording issues a URL to upload one recording of an item's
+	// verified translation to, directly from the browser, under the
+	// volunteer's own prefix.
 	StartRecording(ctx context.Context, tok *FirebaseToken, in RecordingInput) (*RecordingUpload, error)
 	Contribute(ctx context.Context, tok *FirebaseToken, in ContributionInput) (*domain.Contribution, error)
 	// NextReview returns ErrNoReviews when nothing is waiting in the language.
@@ -102,26 +107,28 @@ type ReviewRecord struct {
 }
 
 // ContributionInput is a volunteer's submission for one item: text, or a
-// recording (already uploaded to AudioKey) with an optional transcript.
+// recording of its verified translation, already uploaded to AudioKey.
 type ContributionInput struct {
 	ItemID   int64
 	Language string
 	Modality string // "text" when empty
-	Text     string // the text, or a recording's transcript
+	Text     string // ignored for a recording: the translation it reads is its transcript
 	AudioKey string // for a recording: the key StartRecording issued
 	Pasted   bool
 }
 
 // ContributionRecord is a validated contribution, ready to persist.
 type ContributionRecord struct {
-	ItemID         int64
-	Language       string
-	ContributorID  int64
-	Modality       string
-	Text           string
-	AudioKey       string // "" unless a recording
-	Pasted         bool
-	ConsentVersion string
+	ItemID        int64
+	Language      string
+	ContributorID int64
+	Modality      string
+	Text          string
+	AudioKey      string // "" unless a recording
+	// ReadsContributionID is the verified translation a recording reads.
+	ReadsContributionID int64
+	Pasted              bool
+	ConsentVersion      string
 }
 
 // RecordingInput asks to upload a recording for an item.
@@ -321,6 +328,10 @@ func (d *dataLab) StartRecording(ctx context.Context, tok *FirebaseToken, in Rec
 	if err := d.canRecord(v); err != nil {
 		return nil, err
 	}
+	// Storage holds only recordings of verified translations.
+	if _, err := d.verifiedTranslation(ctx, in.ItemID, in.Language); err != nil {
+		return nil, err
+	}
 	// "audio/webm;codecs=opus" → "audio/webm": the browser uploads with the
 	// base type, which the presigned URL is bound to.
 	contentType, _, err := mime.ParseMediaType(in.ContentType)
@@ -338,6 +349,19 @@ func (d *dataLab) StartRecording(ctx context.Context, tok *FirebaseToken, in Rec
 		return nil, err
 	}
 	return &RecordingUpload{UploadURL: url, Key: key, ContentType: contentType}, nil
+}
+
+// verifiedTranslation returns the verified translation a recording of the
+// item reads, or an error the volunteer can act on when there is none.
+func (d *dataLab) verifiedTranslation(ctx context.Context, itemID int64, language string) (int64, error) {
+	id, err := d.store.VerifiedTranslation(ctx, itemID, language)
+	if err != nil {
+		return 0, err
+	}
+	if id == 0 {
+		return 0, invalid("only verified translations can be recorded")
+	}
+	return id, nil
 }
 
 // checkRecording confirms the recording is the volunteer's own, in the
@@ -381,20 +405,24 @@ func (d *dataLab) Contribute(ctx context.Context, tok *FirebaseToken, in Contrib
 		Pasted:         in.Pasted,
 		ConsentVersion: v.ConsentVersion,
 	}
-	if rec.Text == "" && modality == domain.ModalityText {
-		return nil, invalid("write something before submitting")
-	}
-	if utf8.RuneCountInString(rec.Text) > domain.MaxContributionLength {
-		return nil, invalid("keep it under 2,000 characters")
-	}
 	if modality == domain.ModalityAudio {
 		if err := d.canRecord(v); err != nil {
+			return nil, err
+		}
+		if rec.ReadsContributionID, err = d.verifiedTranslation(ctx, in.ItemID, in.Language); err != nil {
 			return nil, err
 		}
 		if err := d.checkRecording(ctx, in.AudioKey, in.Language, v.ID); err != nil {
 			return nil, err
 		}
-		rec.AudioKey = in.AudioKey
+		rec.AudioKey, rec.Text, rec.Pasted = in.AudioKey, "", false
+	} else {
+		if rec.Text == "" {
+			return nil, invalid("write something before submitting")
+		}
+		if utf8.RuneCountInString(rec.Text) > domain.MaxContributionLength {
+			return nil, invalid("keep it under 2,000 characters")
+		}
 	}
 	c, err := d.store.CreateContribution(ctx, rec)
 	if err != nil {
@@ -474,6 +502,9 @@ func (d *dataLab) Review(ctx context.Context, tok *FirebaseToken, in ReviewInput
 	}
 	if ref.Status != domain.StatusPending {
 		return ErrAlreadyReviewed
+	}
+	if rec.Decision == domain.DecisionCorrect && ref.Modality == domain.ModalityAudio {
+		return invalid("a recording can't be corrected; accept it or ask for it again")
 	}
 	if rec.Decision == domain.DecisionCorrect && rec.CorrectedText == strings.TrimSpace(ref.Text) {
 		return invalid("the correction is the same as the original; choose Accept instead")

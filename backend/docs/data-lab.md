@@ -15,6 +15,7 @@ sources:
   - internal/infrastructure/database/migrations/20261014061844_add_items_unique_text.sql
   - internal/infrastructure/database/migrations/20261014100628_add_review_corrections.sql
   - internal/infrastructure/database/migrations/20261015101841_add_voice_recordings.sql
+  - internal/infrastructure/database/migrations/20261015103845_voice_reads_verified_translations.sql
   - internal/usecase/storage.go
   - internal/usecase/datalab_import.go
   - internal/infrastructure/database/postgres/datalab_import_repository.go
@@ -53,26 +54,30 @@ A volunteer is a `users` row plus `language_members` (one row per language, with
 - **Items** (`items`) are what volunteers work on. `translate` items are segments in a source language; `write` items are civic prompts to answer. One item serves every target language. `category` is one of `domain.CivicCategories`, which match the site's civic categories.
 - **A task** is an item offered in one target language. `NextItem` picks at random among items that have no pending or verified contribution in that language and that the volunteer hasn't done. A rejected contribution reopens the item for everyone except its author.
 - **Contributions** start `pending`, written (`modality = 'text'`) or recorded (`'audio'`, see Voice recordings). `(item_id, language_code, contributor_id, modality)` is unique, so a volunteer submits an item once per language in each modality. Each row records the consent version in force and whether the text was pasted.
-- **Text and voice are tracked separately.** `NextItem` takes a modality: an item is open in a language and modality until it has a pending or verified contribution there, so an item already written can still be spoken, and the other way round.
+- **Voice follows text.** `NextItem` takes a modality, and an item is open in a language and modality until it has a pending or verified contribution there. A recording reads a verified translation aloud, so `audio` tasks only offer `translate` items with a verified written contribution in the language, and the task's `text` is that translation (the reviewer's correction when there is one), in the language.
 
 Contributing (`NextTask`, `Contribute`) requires, in order: onboarded, current consent, membership in the language, and the language **open**, meaning at least `domain.MinReviewersToOpen` (2) reviewers or leads. Text is trimmed and capped at `domain.MaxContributionLength` characters.
 
 ## Voice recordings
 
-Volunteers can say a task instead of writing it: speak the translation of a segment, or speak their answer to a prompt. A transcript is optional. Recordings live in object storage (Cloudflare R2, `docs/storage.md`); without storage configured, `VoiceAvailable()` is false, `GET /data-lab/features` says `voice: false`, and voice requests fail with `ErrVoiceUnavailable`.
+Once a translation is verified, volunteers can record it: the contribute screen shows the verified text in their language and they read it aloud. The verified translation is the recording's transcript, so there is no typed transcript. Only verified translations are recorded, which keeps the transcript exact and keeps storage to recordings worth keeping.
+
+Recordings live in object storage (Cloudflare R2, `docs/storage.md`); without storage configured, `VoiceAvailable()` is false, `GET /data-lab/features` says `voice: false`, and voice requests fail with `ErrVoiceUnavailable`.
 
 1. **Agree** once: `POST /data-lab/consent/voice` (`AcceptVoiceConsent`).
-2. **Get a task** with `modality=audio`.
-3. **Upload**: `POST /data-lab/recordings` (`StartRecording`) with the item, language and the browser's recording type. It returns a presigned `upload_url` (15 minutes), the `key`, and the `content_type` to upload with. The browser `PUT`s the file straight to R2; the API never handles the audio.
-4. **Submit** the contribution with `modality: "audio"`, the `audio_key`, and an optional transcript in `text`.
+2. **Get a task** with `modality=audio`: a verified translation not yet recorded in the language.
+3. **Upload**: `POST /data-lab/recordings` (`StartRecording`) with the item, language and the browser's recording type. It refuses an item without a verified translation, then returns a presigned `upload_url` (15 minutes), the `key`, and the `content_type` to upload with. The browser `PUT`s the file straight to R2; the API never handles the audio.
+4. **Submit** the contribution with `modality: "audio"` and the `audio_key`. Any `text` is ignored.
 
-On submit, `checkRecording` accepts the key only if:
+On submit, the recording is linked to the translation it reads (`contributions.reads_contribution_id`), and `checkRecording` accepts the key only if:
 
 - it sits under the volunteer's own prefix for the language, `data-lab/voice/<language>/<user id>/` (`domain.RecordingPrefix`); `StartRecording` names files with 16 random bytes in hex;
 - the object exists (`StorageService.Stat`), so the upload finished;
 - it is audio and at most `domain.MaxRecordingBytes` (10 MB).
 
 Accepted types are `domain.RecordingTypes`: WebM and Ogg (Chrome, Edge, Firefox), MP4 (Safari), MP3 and WAV. Codec parameters are dropped (`audio/webm;codecs=opus` uploads as `audio/webm`), because the presigned URL is bound to the type.
+
+Reviewers hear the recording against the text it reads (`ReviewItem.read_text`). They accept it or reject it, for example as `unclear` (too noisy, quiet or broken up) or `inaccurate` (doesn't match the text); a recording can't be corrected. A rejection reopens the translation for recording.
 
 The bucket is **public**: a recording's URL is `R2_PUBLIC_URL/<key>`, which reviewers play from (`ReviewItem.audio_url`). The voice consent tells volunteers their recordings are published with the dataset. Keys are random, so recordings can't be listed or guessed, but anyone with a URL can play it.
 
@@ -83,8 +88,8 @@ The bucket needs a CORS rule that allows `PUT` from the web app's origins with t
 A reviewer (level `reviewer` or `lead` in the language) takes the oldest pending contribution written by someone else (`NextPendingContribution`), then accepts or rejects it (`Review`):
 
 - **Accept** sets the contribution to `verified`. It is part of the live corpus from that moment.
-- **Correct** sets it to `verified` with the reviewer's `corrected_text` (for a recording: the corrected transcript, or one the reviewer adds to a recording that had none). The translator's text stays on `contributions.text` and the correction goes on `reviews.corrected_text`, so both versions and both authors are kept; a row's verified text is `COALESCE(reviews.corrected_text, contributions.text)`. A correction must change the text (otherwise it's an Accept) and needs no further review: reviewers are chosen by the team (see below).
-- **Reject** needs a reason from `domain.RejectReasons` (`inaccurate`, `incomplete`, `machine_translated`, `off_topic`, `other`) and sets it to `rejected`, which reopens the item for other volunteers.
+- **Correct** sets it to `verified` with the reviewer's `corrected_text`. Written contributions only: a recording is accepted or rejected. The translator's text stays on `contributions.text` and the correction goes on `reviews.corrected_text`, so both versions and both authors are kept; a row's verified text is `COALESCE(reviews.corrected_text, contributions.text)`. A correction must change the text (otherwise it's an Accept) and needs no further review: reviewers are chosen by the team (see below).
+- **Reject** needs a reason from `domain.RejectReasons` (`inaccurate`, `incomplete`, `machine_translated`, `off_topic`, `unclear`, `other`) and sets it to `rejected`, which reopens the item for other volunteers.
 - Nobody reviews their own work (`ErrOwnContribution`).
 - `SaveReview` changes status only `WHERE status = 'pending'`, inside the same transaction as the review insert, so two reviewers racing on one contribution get one review and one `ErrAlreadyReviewed`.
 

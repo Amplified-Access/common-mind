@@ -93,8 +93,9 @@ const (
 // MaxContributionLength bounds a single contribution, in characters.
 const MaxContributionLength = 2000
 
-// Modalities: how a contribution was given. Text and voice are tracked
-// separately, so an item can get one of each per language.
+// Modalities: how a contribution was given. A recording reads a verified
+// written translation aloud, so voice follows text: an item is recorded in a
+// language once its translation there is verified.
 const (
 	ModalityText  = "text"
 	ModalityAudio = "audio"
@@ -136,10 +137,10 @@ type Task struct {
 	ItemID         int64  `json:"item_id"`
 	Kind           string `json:"kind"`
 	Category       string `json:"category"`
-	Text           string `json:"text"`            // the segment to translate, or the prompt to answer
+	Text           string `json:"text"`            // the segment to translate or prompt to answer; for a recording, the verified translation to read
 	TextLanguage   string `json:"text_language"`   // language Text is written in
 	TargetLanguage string `json:"target_language"` // language the volunteer writes in
-	Modality       string `json:"modality"`        // text: write it; audio: say it
+	Modality       string `json:"modality"`        // text: write it; audio: read it aloud
 }
 
 // Contribution is a volunteer's translation or answer for one item.
@@ -148,7 +149,7 @@ type Contribution struct {
 	ItemID       int64     `json:"item_id"`
 	LanguageCode string    `json:"language_code"`
 	Modality     string    `json:"modality"`
-	Text         string    `json:"text"` // for a recording, its transcript ("" if none)
+	Text         string    `json:"text"` // "" for a recording: the text it reads is its transcript
 	AudioKey     string    `json:"-"`
 	Pasted       bool      `json:"pasted"`
 	Status       string    `json:"status"`
@@ -165,8 +166,9 @@ const (
 )
 
 // RejectReasons are the reasons a reviewer can give; a rejection needs one.
-// "machine_translated" feeds the MT guard (ADR 0010).
-var RejectReasons = []string{"inaccurate", "incomplete", "machine_translated", "off_topic", "other"}
+// "machine_translated" feeds the MT guard (ADR 0010); "unclear" is for a
+// recording too noisy, quiet or broken up to use.
+var RejectReasons = []string{"inaccurate", "incomplete", "machine_translated", "off_topic", "unclear", "other"}
 
 // ReviewItem is a pending contribution shown to a reviewer with its item.
 type ReviewItem struct {
@@ -177,7 +179,8 @@ type ReviewItem struct {
 	ItemLanguage   string    `json:"item_language"`
 	LanguageCode   string    `json:"language_code"`
 	Modality       string    `json:"modality"`
-	Text           string    `json:"text"` // for a recording, its transcript ("" if none)
+	Text           string    `json:"text"`                // "" for a recording
+	ReadText       string    `json:"read_text,omitempty"` // for a recording: the verified translation it reads
 	AudioKey       string    `json:"-"`
 	AudioURL       string    `json:"audio_url,omitempty"` // where the reviewer plays a recording
 	Pasted         bool      `json:"pasted"`

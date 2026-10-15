@@ -144,22 +144,40 @@ func (r *dataLabRepository) CountReviewers(ctx context.Context, language string)
 	return n, nil
 }
 
+// verifiedText is a written contribution's verified text: the reviewer's
+// correction when there is one. Use with `c` a contribution.
+const verifiedText = `COALESCE((SELECT rv.corrected_text FROM reviews rv WHERE rv.contribution_id = c.id), c.text)`
+
 // NextItem picks at random among open items so volunteers working the same
 // language at once rarely get the same one. An item is open in a language
 // and modality until it has a pending or verified contribution there; a
 // rejected one reopens it for everyone except the volunteer who was rejected.
-// Text and voice are separate: an item written already can still be spoken.
+//
+// Writing works from the source text. Recording reads a verified
+// translation aloud, so only items translated and verified in the language
+// are offered, and the task's text is that translation, in the language.
 func (r *dataLabRepository) NextItem(ctx context.Context, userID int64, language, modality string) (*domain.Task, error) {
-	const q = `
+	const open = `
+          NOT EXISTS (
+              SELECT 1 FROM contributions o
+              WHERE o.item_id = i.id AND o.language_code = $2 AND o.modality = $3
+                AND (o.status IN ('pending', 'verified') OR o.contributor_id = $1))`
+	q := `
         SELECT i.id, i.kind, i.category, i.text, i.language_code
         FROM items i
-        WHERE i.language_code <> $2
-          AND NOT EXISTS (
-              SELECT 1 FROM contributions c
-              WHERE c.item_id = i.id AND c.language_code = $2 AND c.modality = $3
-                AND (c.status IN ('pending', 'verified') OR c.contributor_id = $1))
+        WHERE i.language_code <> $2 AND` + open + `
         ORDER BY random()
         LIMIT 1`
+	if modality == domain.ModalityAudio {
+		q = `
+        SELECT i.id, i.kind, i.category, ` + verifiedText + `, c.language_code
+        FROM items i
+        JOIN contributions c ON c.item_id = i.id AND c.language_code = $2
+                            AND c.modality = 'text' AND c.status = 'verified'
+        WHERE i.kind = 'translate' AND` + open + `
+        ORDER BY random()
+        LIMIT 1`
+	}
 
 	t := &domain.Task{TargetLanguage: language, Modality: modality}
 	err := r.db.QueryRowContext(ctx, q, userID, language, modality).
@@ -173,14 +191,32 @@ func (r *dataLabRepository) NextItem(ctx context.Context, userID int64, language
 	return t, nil
 }
 
+func (r *dataLabRepository) VerifiedTranslation(ctx context.Context, itemID int64, language string) (int64, error) {
+	var id int64
+	err := r.db.QueryRowContext(ctx, `
+        SELECT c.id FROM contributions c JOIN items i ON i.id = c.item_id
+        WHERE c.item_id = $1 AND c.language_code = $2 AND i.kind = 'translate'
+          AND c.modality = 'text' AND c.status = 'verified'
+        LIMIT 1`, itemID, language).Scan(&id)
+	if errors.Is(err, sql.ErrNoRows) {
+		return 0, nil
+	}
+	if err != nil {
+		return 0, fmt.Errorf("datalab repository: verified translation: %w", err)
+	}
+	return id, nil
+}
+
 func (r *dataLabRepository) CreateContribution(ctx context.Context, rec usecase.ContributionRecord) (*domain.Contribution, error) {
 	const q = `
-        INSERT INTO contributions (item_id, language_code, contributor_id, modality, text, audio_key, pasted, consent_version)
-        VALUES ($1, $2, $3, $4, $5, NULLIF($6, ''), $7, $8)
+        INSERT INTO contributions (item_id, language_code, contributor_id, modality, text, audio_key,
+                                   reads_contribution_id, pasted, consent_version)
+        VALUES ($1, $2, $3, $4, $5, NULLIF($6, ''), NULLIF($7, 0), $8, $9)
         RETURNING id, item_id, language_code, modality, text, COALESCE(audio_key, ''), pasted, status, created_at`
 
 	c := &domain.Contribution{}
-	err := r.db.QueryRowContext(ctx, q, rec.ItemID, rec.Language, rec.ContributorID, rec.Modality, rec.Text, rec.AudioKey, rec.Pasted, rec.ConsentVersion).
+	err := r.db.QueryRowContext(ctx, q, rec.ItemID, rec.Language, rec.ContributorID, rec.Modality, rec.Text,
+		rec.AudioKey, rec.ReadsContributionID, rec.Pasted, rec.ConsentVersion).
 		Scan(&c.ID, &c.ItemID, &c.LanguageCode, &c.Modality, &c.Text, &c.AudioKey, &c.Pasted, &c.Status, &c.CreatedAt)
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) {
@@ -201,7 +237,11 @@ func (r *dataLabRepository) CreateContribution(ctx context.Context, rec usecase.
 func (r *dataLabRepository) NextPendingContribution(ctx context.Context, reviewerID int64, language string) (*domain.ReviewItem, error) {
 	const q = `
         SELECT c.id, i.kind, i.category, i.text, i.language_code,
-               c.language_code, c.modality, c.text, COALESCE(c.audio_key, ''), c.pasted, c.created_at
+               c.language_code, c.modality, c.text,
+               COALESCE((SELECT COALESCE(rv.corrected_text, rd.text)
+                         FROM contributions rd LEFT JOIN reviews rv ON rv.contribution_id = rd.id
+                         WHERE rd.id = c.reads_contribution_id), ''),
+               COALESCE(c.audio_key, ''), c.pasted, c.created_at
         FROM contributions c
         JOIN items i ON i.id = c.item_id
         WHERE c.language_code = $2 AND c.status = 'pending' AND c.contributor_id <> $1
@@ -211,7 +251,7 @@ func (r *dataLabRepository) NextPendingContribution(ctx context.Context, reviewe
 	it := &domain.ReviewItem{}
 	err := r.db.QueryRowContext(ctx, q, reviewerID, language).Scan(
 		&it.ContributionID, &it.Kind, &it.Category, &it.ItemText, &it.ItemLanguage,
-		&it.LanguageCode, &it.Modality, &it.Text, &it.AudioKey, &it.Pasted, &it.SubmittedAt)
+		&it.LanguageCode, &it.Modality, &it.Text, &it.ReadText, &it.AudioKey, &it.Pasted, &it.SubmittedAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}

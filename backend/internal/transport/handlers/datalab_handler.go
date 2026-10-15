@@ -164,7 +164,7 @@ type taskQuery struct {
 // NextTaskHandler godoc
 //
 //	@Summary		Get the next task in a language
-//	@Description	Returns an item to translate or a prompt to answer, to write (modality=text, the default) or to say (modality=audio). Text and voice are tracked separately. 404 no_tasks when the language has nothing left for this volunteer; 409 language_closed until it has two reviewers.
+//	@Description	modality=text (the default) returns an item to translate or a prompt to answer. modality=audio returns a verified translation in the language to read aloud: only translated, verified items are recorded. 404 no_tasks when the language has nothing left for this volunteer; 409 language_closed until it has two reviewers.
 //	@Tags			data-lab
 //	@Produce		json
 //	@Security		BearerAuth
@@ -202,7 +202,7 @@ type recordingRequest struct {
 // StartRecordingHandler godoc
 //
 //	@Summary		Get a URL to upload a recording to
-//	@Description	Returns a presigned URL (valid 15 minutes) the browser PUTs the recording to, with the returned content_type, then the key to submit with the contribution. Needs voice consent.
+//	@Description	Returns a presigned URL (valid 15 minutes) the browser PUTs the recording to, with the returned content_type, then the key to submit with the contribution. Needs voice consent, and a verified translation of the item in the language.
 //	@Tags			data-lab
 //	@Accept			json
 //	@Produce		json
@@ -239,7 +239,8 @@ type contributionRequest struct {
 	Language string `json:"language" binding:"required"`
 	// Modality is "text" (the default) or "audio".
 	Modality string `json:"modality"`
-	// Text is the written contribution, or a recording's optional transcript.
+	// Text is the written contribution; ignored for a recording, whose
+	// transcript is the verified translation it reads.
 	Text string `json:"text"`
 	// AudioKey is the key StartRecording returned, for a recording.
 	AudioKey string `json:"audio_key"`
@@ -249,7 +250,7 @@ type contributionRequest struct {
 // ContributeHandler godoc
 //
 //	@Summary		Submit a contribution
-//	@Description	Saves a translation or answer as pending review, written or recorded. A recording (modality=audio) carries the audio_key it was uploaded to and an optional transcript in text. `pasted` is set by the editor when text was pasted in.
+//	@Description	Saves a translation or answer as pending review, written or recorded. A recording (modality=audio) reads the item's verified translation aloud and carries the audio_key it was uploaded to. `pasted` is set by the editor when text was pasted in.
 //	@Tags			data-lab
 //	@Accept			json
 //	@Produce		json
@@ -287,7 +288,7 @@ func (h *Handler) ContributeHandler(c *gin.Context) {
 // NextReviewHandler godoc
 //
 //	@Summary		Get the next contribution to review
-//	@Description	Returns the oldest pending contribution in the language by someone else. A recording comes with audio_url to play it and its transcript (possibly empty) in text. 404 no_reviews when the queue is empty.
+//	@Description	Returns the oldest pending contribution in the language by someone else. A recording comes with audio_url to play it and read_text, the verified translation it reads. 404 no_reviews when the queue is empty.
 //	@Tags			data-lab
 //	@Produce		json
 //	@Security		BearerAuth
@@ -324,7 +325,7 @@ type reviewRequest struct {
 // ReviewHandler godoc
 //
 //	@Summary		Review a contribution
-//	@Description	Accept verifies the contribution. Correct verifies it with the reviewer's corrected_text (for a recording, the corrected or added transcript), keeping the original on the contribution. Reject needs a reason (inaccurate, incomplete, machine_translated, off_topic, other) and reopens the item for others.
+//	@Description	Accept verifies the contribution. Correct verifies written text with the reviewer's corrected_text, keeping the original on the contribution; recordings can't be corrected. Reject needs a reason (inaccurate, incomplete, machine_translated, off_topic, unclear, other) and reopens the item for others.
 //	@Tags			data-lab
 //	@Accept			json
 //	@Security		BearerAuth

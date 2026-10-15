@@ -19,6 +19,7 @@ type fakeStore struct {
 	ref         *domain.ContributionRef
 	reviewed    *ReviewRecord
 	voiceFor    int64 // the volunteer whose voice consent was saved
+	translation int64 // the verified translation of every item, 0 for none
 }
 
 // fakeBroadcaster records published messages.
@@ -43,6 +44,10 @@ func (f *fakeStore) CountReviewers(context.Context, string) (int, error) {
 
 func (f *fakeStore) NextItem(_ context.Context, _ int64, language, modality string) (*domain.Task, error) {
 	return &domain.Task{ItemID: 1, TargetLanguage: language, Modality: modality}, nil
+}
+
+func (f *fakeStore) VerifiedTranslation(context.Context, int64, string) (int64, error) {
+	return f.translation, nil
 }
 
 func (f *fakeStore) SaveVoiceConsent(_ context.Context, userID int64, _ string) error {
@@ -211,6 +216,16 @@ func TestReview_EnforcesReviewerRulesAndReasons(t *testing.T) {
 		{name: "reject with reason", volunteer: swahiliReviewer(), ref: pending(), in: ReviewInput{ContributionID: 3, Decision: "reject", Reason: "machine_translated"}, wantStatus: domain.StatusRejected},
 		{name: "reject without reason", volunteer: swahiliReviewer(), ref: pending(), in: ReviewInput{ContributionID: 3, Decision: "reject"}, wantErr: ErrInvalidInput},
 		{name: "unknown reason", volunteer: swahiliReviewer(), ref: pending(), in: ReviewInput{ContributionID: 3, Decision: "reject", Reason: "bad vibes"}, wantErr: ErrInvalidInput},
+		{name: "reject a recording as unclear", volunteer: swahiliReviewer(), ref: func() *domain.ContributionRef {
+			r := pending()
+			r.Modality, r.Text = domain.ModalityAudio, ""
+			return r
+		}(), in: ReviewInput{ContributionID: 3, Decision: "reject", Reason: "unclear"}, wantStatus: domain.StatusRejected},
+		{name: "correct a recording", volunteer: swahiliReviewer(), ref: func() *domain.ContributionRef {
+			r := pending()
+			r.Modality, r.Text = domain.ModalityAudio, ""
+			return r
+		}(), in: ReviewInput{ContributionID: 3, Decision: "correct", CorrectedText: "Kisima."}, wantErr: ErrInvalidInput},
 		{name: "unknown decision", volunteer: swahiliReviewer(), ref: pending(), in: ReviewInput{ContributionID: 3, Decision: "maybe"}, wantErr: ErrInvalidInput},
 		{name: "contributor level", volunteer: swahiliContributor(), ref: pending(), in: ReviewInput{ContributionID: 3, Decision: "accept"}, wantErr: ErrNotReviewer},
 		{name: "own contribution", volunteer: swahiliReviewer(), ref: func() *domain.ContributionRef { r := pending(); r.ContributorID = 7; return r }(), in: ReviewInput{ContributionID: 3, Decision: "accept"}, wantErr: ErrOwnContribution},

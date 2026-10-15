@@ -104,69 +104,81 @@ func seedItems(t *testing.T, texts ...string) []int64 {
 	return ids
 }
 
-func contribute(t *testing.T, item, contributor int64, status string) {
+func contribute(t *testing.T, item, contributor int64, status string) int64 {
 	t.Helper()
-	if _, err := testDB.Exec(`INSERT INTO contributions (item_id, language_code, contributor_id, text, consent_version, status) VALUES ($1, 'sw', $2, 'x', $3, $4)`, item, contributor, domain.CurrentConsentVersion, status); err != nil {
+	var id int64
+	if err := testDB.QueryRow(`INSERT INTO contributions (item_id, language_code, contributor_id, text, consent_version, status) VALUES ($1, 'sw', $2, 'x', $3, $4) RETURNING id`, item, contributor, domain.CurrentConsentVersion, status).Scan(&id); err != nil {
 		t.Fatal(err)
 	}
+	return id
 }
 
-// record adds a recording in sw; voice is tracked apart from text.
-func record(t *testing.T, item, contributor int64, status string) {
+// record adds a recording in sw reading the written contribution `reads`.
+func record(t *testing.T, item, contributor, reads int64, status string) {
 	t.Helper()
 	key := fmt.Sprintf("data-lab/voice/sw/%d/%d.webm", contributor, item)
-	if _, err := testDB.Exec(`INSERT INTO contributions (item_id, language_code, contributor_id, text, modality, audio_key, consent_version, status) VALUES ($1, 'sw', $2, '', 'audio', $3, $4, $5)`, item, contributor, key, domain.CurrentConsentVersion, status); err != nil {
+	if _, err := testDB.Exec(`INSERT INTO contributions (item_id, language_code, contributor_id, text, modality, audio_key, reads_contribution_id, consent_version, status) VALUES ($1, 'sw', $2, '', 'audio', $3, $4, $5, $6)`, item, contributor, key, reads, domain.CurrentConsentVersion, status); err != nil {
 		t.Fatal(err)
 	}
 }
 
-func TestDataLab_Voice_TrackedApartFromText(t *testing.T) {
+func TestDataLab_Voice_ReadsVerifiedTranslations(t *testing.T) {
 	truncate(t, "users", "sources")
 	ctx := context.Background()
 	repo := NewDataLabRepository(testDB)
 	me := seedVolunteer(t, "uid-me", "sw")
 	other := seedVolunteer(t, "uid-other", "sw")
-	ids := seedItems(t, "written already", "spoken already")
-	contribute(t, ids[0], other, domain.StatusVerified)
-	record(t, ids[1], other, domain.StatusVerified)
+	ids := seedItems(t, "verified", "in review", "recorded already", "untranslated")
+	verified := contribute(t, ids[0], other, domain.StatusVerified)
+	// A reviewer's correction is the verified text, so it's what gets read.
+	if _, err := testDB.Exec(`INSERT INTO reviews (contribution_id, reviewer_id, decision, corrected_text) VALUES ($1, $2, 'correct', 'Imesahihishwa.')`, verified, me); err != nil {
+		t.Fatal(err)
+	}
+	contribute(t, ids[1], other, domain.StatusPending)
+	recorded := contribute(t, ids[2], other, domain.StatusVerified)
+	record(t, ids[2], other, recorded, domain.StatusPending)
 
-	// Each modality offers the items it hasn't covered.
-	if task, err := repo.NextItem(ctx, me, "sw", domain.ModalityText); err != nil || task == nil || task.ItemID != ids[1] {
-		t.Errorf("next text task = %+v, %v, want item %d", task, err, ids[1])
+	// Only a verified translation not yet recorded is offered, in its own words.
+	task, err := repo.NextItem(ctx, me, "sw", domain.ModalityAudio)
+	if err != nil || task == nil {
+		t.Fatalf("NextItem(audio) = %+v, %v", task, err)
 	}
-	if task, err := repo.NextItem(ctx, me, "sw", domain.ModalityAudio); err != nil || task == nil || task.ItemID != ids[0] {
-		t.Errorf("next voice task = %+v, %v, want item %d", task, err, ids[0])
+	if task.ItemID != ids[0] || task.Text != "Imesahihishwa." || task.TextLanguage != "sw" {
+		t.Errorf("voice task = %+v, want item %d's corrected translation, in sw", task, ids[0])
 	}
 
-	// One volunteer can give an item both ways, but each only once.
-	text := usecase.ContributionRecord{ItemID: ids[0], Language: "sw", ContributorID: me, Modality: domain.ModalityText, Text: "Imeandikwa.", ConsentVersion: domain.CurrentConsentVersion}
-	if _, err := repo.CreateContribution(ctx, text); err != nil {
-		t.Fatalf("text contribution: %v", err)
+	if got, err := repo.VerifiedTranslation(ctx, ids[0], "sw"); err != nil || got != verified {
+		t.Errorf("VerifiedTranslation(verified) = %d, %v, want %d", got, err, verified)
 	}
-	voice := usecase.ContributionRecord{ItemID: ids[0], Language: "sw", ContributorID: me, Modality: domain.ModalityAudio, AudioKey: "data-lab/voice/sw/1/a.webm", ConsentVersion: domain.CurrentConsentVersion}
+	if got, err := repo.VerifiedTranslation(ctx, ids[1], "sw"); err != nil || got != 0 {
+		t.Errorf("VerifiedTranslation(in review) = %d, %v, want 0", got, err)
+	}
+
+	// A volunteer records a translation once.
+	voice := usecase.ContributionRecord{ItemID: ids[0], Language: "sw", ContributorID: me, Modality: domain.ModalityAudio, AudioKey: "data-lab/voice/sw/1/a.webm", ReadsContributionID: verified, ConsentVersion: domain.CurrentConsentVersion}
 	got, err := repo.CreateContribution(ctx, voice)
 	if err != nil {
 		t.Fatalf("voice contribution: %v", err)
 	}
 	if got.Modality != domain.ModalityAudio || got.Text != "" {
-		t.Errorf("voice contribution = %+v, want audio without a transcript", got)
+		t.Errorf("voice contribution = %+v, want audio", got)
 	}
 	voice.AudioKey = "data-lab/voice/sw/1/b.webm"
 	if _, err := repo.CreateContribution(ctx, voice); !errors.Is(err, usecase.ErrAlreadyContributed) {
 		t.Errorf("second recording error = %v, want ErrAlreadyContributed", err)
 	}
+	if task, err := repo.NextItem(ctx, other, "sw", domain.ModalityAudio); err != nil || task != nil {
+		t.Errorf("NextItem(audio) once both are recorded = %+v, %v, want nil, nil", task, err)
+	}
 
-	// Reviewers get the recording to play. The written one is older, so
-	// verify it first to bring the recording to the front of the queue.
-	if _, err := testDB.Exec(`UPDATE contributions SET status = 'verified' WHERE modality = 'text' AND contributor_id = $1`, me); err != nil {
-		t.Fatal(err)
-	}
+	// Reviewers hear the recording against the text it reads. Everything else
+	// pending is the reviewer's own, so the recording is next.
 	pending, err := repo.NextPendingContribution(ctx, other, "sw")
-	if err != nil || pending == nil {
-		t.Fatalf("NextPendingContribution = %+v, %v", pending, err)
+	if err != nil || pending == nil || pending.ContributionID != got.ID {
+		t.Fatalf("NextPendingContribution = %+v, %v, want the recording", pending, err)
 	}
-	if pending.Modality != domain.ModalityAudio || pending.AudioKey != "data-lab/voice/sw/1/a.webm" {
-		t.Errorf("pending = %+v, want the recording with its key", pending)
+	if pending.Modality != domain.ModalityAudio || pending.AudioKey != "data-lab/voice/sw/1/a.webm" || pending.ReadText != "Imesahihishwa." {
+		t.Errorf("pending = %+v, want the recording with its key and the text it reads", pending)
 	}
 	if ref, err := repo.GetContributionRef(ctx, pending.ContributionID); err != nil || ref.Modality != domain.ModalityAudio {
 		t.Errorf("GetContributionRef = %+v, %v, want an audio contribution", ref, err)
@@ -332,8 +344,12 @@ func TestDataLab_Progress_CountsSentencePairsPerLanguage(t *testing.T) {
 	}
 	contribute(t, prompt, a, domain.StatusVerified)
 	// Recordings count apart from the written pairs.
-	record(t, ids[0], a, domain.StatusVerified)
-	record(t, ids[1], a, domain.StatusPending)
+	var read int64
+	if err := testDB.QueryRow(`SELECT id FROM contributions WHERE item_id = $1`, ids[0]).Scan(&read); err != nil {
+		t.Fatal(err)
+	}
+	record(t, ids[0], a, read, domain.StatusVerified)
+	record(t, ids[1], b, read, domain.StatusPending)
 
 	all, err := NewDataLabRepository(testDB).Progress(ctx, "")
 	if err != nil {

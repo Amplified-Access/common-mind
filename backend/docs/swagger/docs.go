@@ -106,7 +106,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Saves a translation or answer as pending review, written or recorded. A recording (modality=audio) carries the audio_key it was uploaded to and an optional transcript in text. ` + "`" + `pasted` + "`" + ` is set by the editor when text was pasted in.",
+                "description": "Saves a translation or answer as pending review, written or recorded. A recording (modality=audio) reads the item's verified translation aloud and carries the audio_key it was uploaded to. ` + "`" + `pasted` + "`" + ` is set by the editor when text was pasted in.",
                 "consumes": [
                     "application/json"
                 ],
@@ -365,7 +365,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Returns a presigned URL (valid 15 minutes) the browser PUTs the recording to, with the returned content_type, then the key to submit with the contribution. Needs voice consent.",
+                "description": "Returns a presigned URL (valid 15 minutes) the browser PUTs the recording to, with the returned content_type, then the key to submit with the contribution. Needs voice consent, and a verified translation of the item in the language.",
                 "consumes": [
                     "application/json"
                 ],
@@ -431,7 +431,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Accept verifies the contribution. Correct verifies it with the reviewer's corrected_text (for a recording, the corrected or added transcript), keeping the original on the contribution. Reject needs a reason (inaccurate, incomplete, machine_translated, off_topic, other) and reopens the item for others.",
+                "description": "Accept verifies the contribution. Correct verifies written text with the reviewer's corrected_text, keeping the original on the contribution; recordings can't be corrected. Reject needs a reason (inaccurate, incomplete, machine_translated, off_topic, unclear, other) and reopens the item for others.",
                 "consumes": [
                     "application/json"
                 ],
@@ -491,7 +491,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Returns the oldest pending contribution in the language by someone else. A recording comes with audio_url to play it and its transcript (possibly empty) in text. 404 no_reviews when the queue is empty.",
+                "description": "Returns the oldest pending contribution in the language by someone else. A recording comes with audio_url to play it and read_text, the verified translation it reads. 404 no_reviews when the queue is empty.",
                 "produces": [
                     "application/json"
                 ],
@@ -543,7 +543,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Returns an item to translate or a prompt to answer, to write (modality=text, the default) or to say (modality=audio). Text and voice are tracked separately. 404 no_tasks when the language has nothing left for this volunteer; 409 language_closed until it has two reviewers.",
+                "description": "modality=text (the default) returns an item to translate or a prompt to answer. modality=audio returns a verified translation in the language to read aloud: only translated, verified items are recorded. 404 no_tasks when the language has nothing left for this volunteer; 409 language_closed until it has two reviewers.",
                 "produces": [
                     "application/json"
                 ],
@@ -870,7 +870,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "text": {
-                    "description": "for a recording, its transcript (\"\" if none)",
+                    "description": "\"\" for a recording: the text it reads is its transcript",
                     "type": "string"
                 }
             }
@@ -1037,11 +1037,15 @@ const docTemplate = `{
                 "pasted": {
                     "type": "boolean"
                 },
+                "read_text": {
+                    "description": "for a recording: the verified translation it reads",
+                    "type": "string"
+                },
                 "submitted_at": {
                     "type": "string"
                 },
                 "text": {
-                    "description": "for a recording, its transcript (\"\" if none)",
+                    "description": "\"\" for a recording",
                     "type": "string"
                 }
             }
@@ -1059,7 +1063,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "modality": {
-                    "description": "text: write it; audio: say it",
+                    "description": "text: write it; audio: read it aloud",
                     "type": "string"
                 },
                 "target_language": {
@@ -1067,7 +1071,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "text": {
-                    "description": "the segment to translate, or the prompt to answer",
+                    "description": "the segment to translate or prompt to answer; for a recording, the verified translation to read",
                     "type": "string"
                 },
                 "text_language": {
@@ -1155,7 +1159,7 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "text": {
-                    "description": "Text is the written contribution, or a recording's optional transcript.",
+                    "description": "Text is the written contribution; ignored for a recording, whose\ntranscript is the verified translation it reads.",
                     "type": "string"
                 }
             }

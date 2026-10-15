@@ -36,23 +36,28 @@ func voiceContributor() *domain.Volunteer {
 
 func TestStartRecording_NeedsVoiceAndAnAudioType(t *testing.T) {
 	tests := []struct {
-		name        string
-		storage     StorageService
-		volunteer   *domain.Volunteer
-		contentType string
-		wantErr     error
-		wantType    string
-		wantExt     string
+		name         string
+		storage      StorageService
+		volunteer    *domain.Volunteer
+		contentType  string
+		untranslated bool
+		wantErr      error
+		wantType     string
+		wantExt      string
 	}{
 		{name: "webm from Chrome", storage: &fakeStorage{}, volunteer: voiceContributor(), contentType: "audio/webm;codecs=opus", wantType: "audio/webm", wantExt: ".webm"},
 		{name: "mp4 from Safari", storage: &fakeStorage{}, volunteer: voiceContributor(), contentType: "Audio/MP4", wantType: "audio/mp4", wantExt: ".m4a"},
 		{name: "voice not set up", storage: nil, volunteer: voiceContributor(), contentType: "audio/webm", wantErr: ErrVoiceUnavailable},
 		{name: "no voice consent", storage: &fakeStorage{}, volunteer: swahiliContributor(), contentType: "audio/webm", wantErr: ErrVoiceConsentRequired},
 		{name: "not audio", storage: &fakeStorage{}, volunteer: voiceContributor(), contentType: "image/png", wantErr: ErrInvalidInput},
+		{name: "no verified translation", storage: &fakeStorage{}, volunteer: voiceContributor(), contentType: "audio/webm", untranslated: true, wantErr: ErrInvalidInput},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			store := &fakeStore{volunteer: tt.volunteer, reviewers: 2}
+			store := &fakeStore{volunteer: tt.volunteer, reviewers: 2, translation: 42}
+			if tt.untranslated {
+				store.translation = 0
+			}
 
 			upload, err := NewDataLab(store, nil, tt.storage).StartRecording(context.Background(), &FirebaseToken{UID: "uid-7"},
 				RecordingInput{ItemID: 1, Language: "sw", ContentType: tt.contentType})
@@ -86,16 +91,17 @@ func TestContribute_Recording_ChecksTheUpload(t *testing.T) {
 	valid := ContributionInput{ItemID: 1, Language: "sw", Modality: domain.ModalityAudio, AudioKey: key}
 
 	tests := []struct {
-		name           string
-		storage        StorageService
-		volunteer      *domain.Volunteer
-		mutate         func(in *ContributionInput)
-		wantErr        error
-		wantTranscript string
+		name         string
+		storage      StorageService
+		volunteer    *domain.Volunteer
+		untranslated bool
+		mutate       func(in *ContributionInput)
+		wantErr      error
 	}{
-		{name: "without a transcript", storage: uploaded(), volunteer: voiceContributor()},
-		{name: "with a transcript", storage: uploaded(), volunteer: voiceContributor(), mutate: func(in *ContributionInput) { in.Text = "  Kisima kimeharibika. " }, wantTranscript: "Kisima kimeharibika."},
-		{name: "transcript too long", storage: uploaded(), volunteer: voiceContributor(), mutate: func(in *ContributionInput) { in.Text = strings.Repeat("a", domain.MaxContributionLength+1) }, wantErr: ErrInvalidInput},
+		{name: "reading a verified translation", storage: uploaded(), volunteer: voiceContributor()},
+		// The verified translation is the transcript, so typed text is dropped.
+		{name: "typed text is ignored", storage: uploaded(), volunteer: voiceContributor(), mutate: func(in *ContributionInput) { in.Text = "something else" }},
+		{name: "no verified translation", storage: uploaded(), volunteer: voiceContributor(), untranslated: true, wantErr: ErrInvalidInput},
 		{name: "another volunteer's recording", storage: uploaded(), volunteer: voiceContributor(), mutate: func(in *ContributionInput) { in.AudioKey = "data-lab/voice/sw/8/someone.webm" }, wantErr: ErrInvalidInput},
 		{name: "a recording for another language", storage: uploaded(), volunteer: voiceContributor(), mutate: func(in *ContributionInput) { in.AudioKey = "data-lab/voice/luo/7/0c9f2a.webm" }, wantErr: ErrInvalidInput},
 		{name: "upload never finished", storage: uploaded(), volunteer: voiceContributor(), mutate: func(in *ContributionInput) { in.AudioKey = "data-lab/voice/sw/7/lost.webm" }, wantErr: ErrInvalidInput},
@@ -107,7 +113,10 @@ func TestContribute_Recording_ChecksTheUpload(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			store := &fakeStore{volunteer: tt.volunteer, reviewers: 2}
+			store := &fakeStore{volunteer: tt.volunteer, reviewers: 2, translation: 42}
+			if tt.untranslated {
+				store.translation = 0
+			}
 			in := valid
 			if tt.mutate != nil {
 				tt.mutate(&in)
@@ -125,8 +134,8 @@ func TestContribute_Recording_ChecksTheUpload(t *testing.T) {
 				return
 			}
 			rec := store.contributed
-			if rec.Modality != domain.ModalityAudio || rec.AudioKey != key || rec.Text != tt.wantTranscript {
-				t.Errorf("saved %+v, want the recording at %s with transcript %q", rec, key, tt.wantTranscript)
+			if rec.Modality != domain.ModalityAudio || rec.AudioKey != key || rec.ReadsContributionID != 42 || rec.Text != "" {
+				t.Errorf("saved %+v, want the recording at %s reading contribution 42", rec, key)
 			}
 		})
 	}
