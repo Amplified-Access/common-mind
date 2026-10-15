@@ -2,6 +2,7 @@ package r2_test
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -9,6 +10,7 @@ import (
 	"time"
 
 	"backend/internal/infrastructure/storage/r2"
+	"backend/internal/usecase"
 )
 
 // roundTripFunc allows a plain function to satisfy http.RoundTripper.
@@ -129,5 +131,53 @@ func TestPublicURL_SimpleKey(t *testing.T) {
 	want := "https://pub.example.com/photo.jpg"
 	if got != want {
 		t.Errorf("PublicURL: got %q, want %q", got, want)
+	}
+}
+
+func TestStat_ReportsSizeAndTypeOrNotFound(t *testing.T) {
+	tests := []struct {
+		name     string
+		status   int
+		wantErr  error
+		wantSize int64
+		wantType string
+	}{
+		{name: "uploaded", status: http.StatusOK, wantSize: 48213, wantType: "audio/webm"},
+		{name: "missing", status: http.StatusNotFound, wantErr: usecase.ErrObjectNotFound},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var method string
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				method = r.Method
+				if tt.status == http.StatusOK {
+					w.Header().Set("Content-Length", "48213")
+					w.Header().Set("Content-Type", "audio/webm")
+				}
+				w.WriteHeader(tt.status)
+			}))
+			defer srv.Close()
+			httpClient := &http.Client{Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+				req.URL.Host = strings.TrimPrefix(srv.URL, "http://")
+				req.URL.Scheme = "http"
+				return http.DefaultTransport.RoundTrip(req)
+			})}
+			svc, err := r2.NewWithHTTPClient("acct123", "AKID", "SECRET", "my-bucket", "https://pub.example.com", httpClient)
+			if err != nil {
+				t.Fatalf("NewWithHTTPClient: %v", err)
+			}
+
+			info, err := svc.Stat(context.Background(), "data-lab/voice/sw/1/a.webm")
+
+			if method != http.MethodHead {
+				t.Errorf("method = %s, want HEAD", method)
+			}
+			if !errors.Is(err, tt.wantErr) {
+				t.Fatalf("err = %v, want %v", err, tt.wantErr)
+			}
+			if tt.wantErr == nil && (info.Size != tt.wantSize || info.ContentType != tt.wantType) {
+				t.Errorf("info = %+v, want size %d type %s", info, tt.wantSize, tt.wantType)
+			}
+		})
 	}
 }

@@ -18,6 +18,8 @@ R2 is the optional object storage backend. The integration is enabled only when 
 ```go
 type StorageService interface {
     PresignUpload(ctx context.Context, key string, contentType string, ttl time.Duration) (string, error)
+    // Stat returns ErrObjectNotFound when nothing is stored at key.
+    Stat(ctx context.Context, key string) (ObjectInfo, error) // ObjectInfo{Size, ContentType}
     Delete(ctx context.Context, key string) error
     PublicURL(key string) string
 }
@@ -45,6 +47,7 @@ The S3 client is configured with `UsePathStyle: true` and region `"auto"`.
 
 ### Method behaviour
 - `PresignUpload` calls `s3.PresignClient.PresignPutObject` and returns the signed URL. TTL is caller-controlled.
+- `Stat` sends a `HeadObject` and returns the object's size and content type; a 404 becomes `usecase.ErrObjectNotFound`. Use it to confirm a browser upload landed (and how big it is) before recording it.
 - `Delete` calls `s3.Client.DeleteObject` directly (no presigning).
 - `PublicURL` returns `publicBaseURL + "/" + url.PathEscape(key)`.
 

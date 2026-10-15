@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	smithyhttp "github.com/aws/smithy-go/transport/http"
 
 	"backend/internal/usecase"
 )
@@ -75,6 +76,26 @@ func (s *storageService) PresignUpload(ctx context.Context, key string, contentT
 		return "", fmt.Errorf("r2: presign put: %w", err)
 	}
 	return req.URL, nil
+}
+
+// Stat reads the object's size and type with a HEAD request; a 404 means
+// nothing is stored at the key.
+func (s *storageService) Stat(ctx context.Context, key string) (usecase.ObjectInfo, error) {
+	out, err := s.client.HeadObject(ctx, &s3.HeadObjectInput{
+		Bucket: aws.String(s.bucket),
+		Key:    aws.String(key),
+	})
+	var respErr *smithyhttp.ResponseError
+	if errors.As(err, &respErr) && respErr.HTTPStatusCode() == http.StatusNotFound {
+		return usecase.ObjectInfo{}, usecase.ErrObjectNotFound
+	}
+	if err != nil {
+		return usecase.ObjectInfo{}, fmt.Errorf("r2: head object: %w", err)
+	}
+	return usecase.ObjectInfo{
+		Size:        aws.ToInt64(out.ContentLength),
+		ContentType: aws.ToString(out.ContentType),
+	}, nil
 }
 
 func (s *storageService) Delete(ctx context.Context, key string) error {
