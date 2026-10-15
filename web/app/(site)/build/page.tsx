@@ -1,7 +1,7 @@
-import { TerminalIcon } from "@hugeicons/core-free-icons";
 
 import { apiResponse, journey, paths, quickstart } from "@/components/build/snippets";
 import { Container } from "@/components/common/container";
+import { BuildIcon } from "@/components/icons/page-icons";
 import { Code } from "@/components/system/code";
 import { CodeTabs } from "@/components/system/code-tabs";
 import { InfoTable } from "@/components/system/info-table";
@@ -22,7 +22,7 @@ const BuildPage = async () => {
   return (
     <>
       <PageHero
-        tile={TerminalIcon}
+        tile={BuildIcon}
         eyebrow={copy.hero.eyebrow}
         title={copy.hero.title}
         lede={copy.hero.lede}

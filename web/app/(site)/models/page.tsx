@@ -1,5 +1,5 @@
-import { Layers01Icon } from "@hugeicons/core-free-icons";
 import { Container } from "@/components/common/container";
+import { ModelsIcon } from "@/components/icons/page-icons";
 import { modelCatalog } from "@/components/models/catalog";
 import { RegistryGrid } from "@/components/models/registry-grid";
 import { tasks } from "@/components/models/registry";
@@ -21,7 +21,7 @@ const ModelsPage = async () => {
   return (
     <>
       <PageHero
-        tile={Layers01Icon}
+        tile={ModelsIcon}
         eyebrow={copy.hero.eyebrow}
         title={<Emphasized text={copy.hero.title} />}
         lede={copy.hero.lede}

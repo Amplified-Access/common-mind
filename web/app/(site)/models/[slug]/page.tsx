@@ -1,8 +1,8 @@
-import { CubeIcon } from "@hugeicons/core-free-icons";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { Container } from "@/components/common/container";
+import { ModelIcon } from "@/components/icons/page-icons";
 import { servedLanguages, taskLabel } from "@/components/models/catalog";
 import { formatDate, getModel, registryModels } from "@/components/models/registry";
 import { usagePaths } from "@/components/models/usage";
@@ -222,7 +222,7 @@ const ModelPage = async ({ params }: PageProps) => {
   return (
     <>
       <PageHero
-        tile={CubeIcon}
+        tile={ModelIcon}
         eyebrow={text.hero.eyebrow}
         title={model.name}
         lede={copy.tagline && `${copy.tagline}.`}
