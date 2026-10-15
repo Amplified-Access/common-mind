@@ -37,6 +37,7 @@ export const site = {
     ollama: "https://ollama.com/amplifiedaccessorg",
     kaggle: "https://www.kaggle.com/amplifiedaccess/models",
     watchtower: "https://thewatchtower.tech",
+    tvzote: "https://www.tvzote.org",
     actionchallenge: "https://www.theactionchallenge.org",
   },
 } as const;
@@ -78,6 +79,14 @@ export const partners: Partner[] = [
     width: 219,
     height: 37,
     size: "h-7",
+  },
+  {
+    name: "Tuna Win Vita Zote",
+    href: site.links.tvzote,
+    logo: "/partners/tuna-win-vita-zote-white.png",
+    width: 436,
+    height: 160,
+    size: "h-10",
   },
 ];
 
