@@ -13,8 +13,8 @@ import { cn } from "@/lib/utils";
 // back, and the loop slides exactly one run over. A run repeats the logos
 // until it holds at least a dozen, so it's wider than the strip at any
 // width and never shows a gap. Hovering or focusing a logo pauses it;
-// reduced motion shows them still. Sizing and spacing follow WatchTower's
-// partner row: 40px tall (20px for small logos), at most 160px wide.
+// reduced motion shows them still. Every logo is the same height, spaced
+// as in WatchTower's partner row.
 const SECONDS_PER_LOGO = 4;
 
 const Footer = async () => {
@@ -45,10 +45,7 @@ const Footer = async () => {
                     image={partner.logo}
                     size={partner.logoSize}
                     alt={partner.name}
-                    className={cn(
-                      "max-w-40 object-contain opacity-90 transition-opacity group-hover:opacity-100",
-                      partner.logoSize === "sm" ? "h-5" : "h-10",
-                    )}
+                    className="h-8 opacity-90 transition-opacity group-hover:opacity-100"
                   />
                 );
                 return (
