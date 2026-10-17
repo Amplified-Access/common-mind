@@ -45,7 +45,7 @@ const Footer = async () => {
                     image={partner.logo}
                     size={partner.logoSize}
                     alt={partner.name}
-                    className="h-8 opacity-90 transition-opacity group-hover:opacity-100"
+                    className="h-8 opacity-60 transition-opacity group-hover:opacity-100"
                   />
                 );
                 return (
