@@ -33,7 +33,7 @@ function LanguagesVisual() {
         {/* One language at a time, typed out in the middle of the orb. */}
         <LanguageTypewriter
           names={TRANSLATION_LANGUAGES}
-          className="relative text-[1.75rem] leading-none tracking-[-0.01em] text-foreground"
+          className="relative text-lg leading-none text-foreground"
         />
       </div>
     </div>
