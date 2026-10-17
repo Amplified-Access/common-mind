@@ -86,9 +86,9 @@ const Footer = async () => {
             <Image
               src="/logo-white.svg"
               alt="CommonMind"
-              width={138}
-              height={49}
-              className="h-10 w-auto self-start"
+              width={285}
+              height={44}
+              className="h-7 w-auto self-start"
             />
             <p className="max-w-xs text-sm text-pretty text-subtle">
               {copy.initiative}{" "}

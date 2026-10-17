@@ -43,8 +43,7 @@ const Header = () => {
   if (isStandalone(pathname)) return null;
 
   // Docked: a full-width bar, 56px tall. Floating: an 8px drop plus a 62px
-  // bar, sized so the 36px logo sits 13px (1px border plus 12px) from the
-  // top and bottom edges, the same as from the sides.
+  // bar, with the 28px logo centred in it.
   return (
     <header
       className={cn(
@@ -72,10 +71,10 @@ const Header = () => {
           <Image
             src="/logo-white.svg"
             alt="CommonMind"
-            width={138}
-            height={49}
+            width={285}
+            height={44}
             priority
-            className="h-9 w-auto"
+            className="h-7 w-auto"
           />
         </Link>
 

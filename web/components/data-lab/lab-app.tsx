@@ -99,7 +99,7 @@ function LabBar({
     <header className="zoom-viewport border-b border-line">
       <Container className="flex h-14 items-center justify-between gap-4">
         <Link href="/data-lab" className="flex items-center gap-3" aria-label="Data Lab">
-          <Image src="/logo-white.svg" alt="CommonMind" width={138} height={49} priority className="h-8 w-auto" />
+          <Image src="/logo-white.svg" alt="CommonMind" width={285} height={44} priority className="h-6 w-auto" />
           <span className="font-mono text-xs text-signal">Data Lab</span>
         </Link>
         {signedIn && (
