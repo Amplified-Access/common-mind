@@ -31,7 +31,7 @@ const Footer = async () => {
       <Container className="flex flex-col gap-10">
         <FooterCta copy={copy} />
         <div className="flex flex-col gap-6 rounded-card bg-[#1a1608] px-6 py-5 sm:flex-row sm:items-center sm:gap-12 sm:px-8">
-          <span className="shrink-0 text-[13px] text-foreground">{copy.powering}</span>
+          <span className="shrink-0 text-h2 text-foreground">{copy.powering}</span>
           <div className="min-w-0 flex-1 overflow-hidden mask-[linear-gradient(to_right,transparent,#000_8%,#000_92%,transparent)] motion-reduce:mask-none">
             <ul
               className="flex w-max animate-[cm-marquee_var(--marquee-duration)_linear_infinite] items-center hover:[animation-play-state:paused] has-focus-visible:[animation-play-state:paused] motion-reduce:w-auto motion-reduce:animate-none motion-reduce:flex-wrap motion-reduce:gap-y-5"
@@ -45,7 +45,7 @@ const Footer = async () => {
                     image={partner.logo}
                     size={partner.logoSize}
                     alt={partner.name}
-                    className="h-8 opacity-60 transition-opacity group-hover:opacity-100"
+                    className="h-6 opacity-60 transition-opacity group-hover:opacity-100"
                   />
                 );
                 return (
