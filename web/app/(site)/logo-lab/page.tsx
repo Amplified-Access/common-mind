@@ -13,8 +13,8 @@ const LogoLabPage = () => (
     <Image
       src="/logo-white.svg"
       alt="CommonMind"
-      width={285}
-      height={44}
+      width={225}
+      height={37}
       priority
       className="h-16 w-auto"
     />

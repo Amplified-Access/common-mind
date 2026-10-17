@@ -85,11 +85,11 @@ const Footer = async () => {
         <div className="grid gap-12 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,2fr)]">
           <div className="flex flex-col gap-6">
             <Image
-              src="/logo-white.svg"
+              src="/logo-stacked-white.svg"
               alt="CommonMind"
-              width={285}
-              height={44}
-              className="h-7 w-auto self-start"
+              width={199}
+              height={69}
+              className="h-10 w-auto self-start"
             />
             <p className="max-w-xs text-sm text-pretty text-subtle">
               {copy.initiative}{" "}
