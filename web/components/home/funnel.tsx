@@ -1,7 +1,6 @@
 "use client";
 
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
@@ -205,7 +204,6 @@ function OutcomeCard({
       )}
     >
       <span aria-hidden className="absolute -top-1 left-1/2 size-2 -translate-x-1/2 rounded-full bg-signal" />
-      <Image src="/icon-black.svg" alt="CommonMind" width={52} height={44} className="h-9 w-auto shrink-0" />
       <div className="relative h-16 flex-1 perspective-distant">
         <AnimatePresence initial={false} mode="wait">
           <motion.div
