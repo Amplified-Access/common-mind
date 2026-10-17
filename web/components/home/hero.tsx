@@ -46,7 +46,7 @@ function HomeHero({ copy }: { copy: PageCopy<"home">["hero"] }) {
         <div className="flex max-w-3xl flex-col items-center gap-6 text-center">
           <h1 className="text-display text-balance">
             <Emphasized text={copy.titleLine1} />{" "}
-            <span className="sm:block">
+            <span className="block">
               <Emphasized text={copy.titleLine2} />
             </span>
           </h1>

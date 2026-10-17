@@ -1,8 +1,8 @@
 // The home page's original wording. *Starred* words are highlighted.
 export const home = {
   hero: {
-    titleLine1: "Civic discourse is *multilingual*",
-    titleLine2: "*AI infrastructure* should be too",
+    titleLine1: "Civic discourse spans *languages*",
+    titleLine2: "Our *infrastructure* makes sense of it",
     lede: "CommonMind develops open models, datasets, benchmarks, research, and developer tools that make AI more accessible for civic and public interest applications in languages underserved by the mainstream.",
     primaryCta: "Explore Models",
     secondaryCta: "Try a Model",
