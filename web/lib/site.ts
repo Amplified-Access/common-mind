@@ -30,8 +30,17 @@ export const site = {
   name: "CommonMind",
   links: {
     huggingface: "https://huggingface.co/AmplifiedAccess",
+    kaggle: "https://www.kaggle.com/amplifiedaccess",
+    ollama: "https://ollama.com/amplifiedaccessorg",
   },
 } as const;
+
+// Where the models and data are published, in the header's menu.
+export const hubs = [
+  { label: "Hugging Face", href: site.links.huggingface },
+  { label: "Kaggle", href: site.links.kaggle },
+  { label: "Ollama", href: site.links.ollama },
+] as const;
 
 export function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
