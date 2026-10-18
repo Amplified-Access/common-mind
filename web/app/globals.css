@@ -200,12 +200,12 @@
    breakpoints instead of tracking vw (which zoom would scale a second
    time). Sora carries the headings at its regular weight. */
 @utility text-display {
-  font-size: 2rem;
+  font-size: 1.875rem;
   line-height: 1.15;
   letter-spacing: -0.02em;
   font-weight: 400;
   @media (width >= 48rem) {
-    font-size: 2.5rem;
+    font-size: 2.25rem;
   }
 }
 
