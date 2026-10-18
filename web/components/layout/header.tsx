@@ -80,7 +80,7 @@ const Header = () => {
           />
         </Link>
 
-        <nav className="hidden flex-1 items-center justify-center gap-7 xl:flex">
+        <nav className="hidden items-center gap-6 lg:flex xl:absolute xl:left-1/2 xl:-translate-x-1/2 xl:gap-7">
           {navItems.map((item) => {
             const active = isActive(pathname, item.href);
             return (
@@ -89,7 +89,7 @@ const Header = () => {
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "text-trim py-2 text-base whitespace-nowrap transition-colors",
+                  "text-trim py-2 text-sm transition-colors",
                   active ? "text-signal" : "text-foreground hover:text-signal",
                 )}
               >
@@ -99,18 +99,18 @@ const Header = () => {
           })}
         </nav>
 
-        <div className="hidden items-center gap-2 xl:flex">
+        <div className="hidden items-center gap-2 lg:flex">
           <a
             href={site.links.huggingface}
             target="_blank"
             rel="noreferrer"
-            className={buttonClasses("outline")}
+            className={buttonClasses("outline", "max-xl:px-3.5")}
           >
             Hugging Face
           </a>
           <Link
             href="/get-started"
-            className={buttonClasses("signal")}
+            className={buttonClasses("signal", "max-xl:px-3.5")}
           >
             Get Started
           </Link>
@@ -119,7 +119,7 @@ const Header = () => {
         <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
           <SheetTrigger
             aria-label="Open menu"
-            className="cursor-pointer text-foreground transition-colors hover:text-signal xl:hidden"
+            className="cursor-pointer text-foreground transition-colors hover:text-signal lg:hidden"
           >
             <HugeiconsIcon icon={Menu01Icon} className="size-6" />
           </SheetTrigger>
