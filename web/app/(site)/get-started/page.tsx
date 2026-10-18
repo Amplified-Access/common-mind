@@ -17,7 +17,6 @@ import { QuickstartRow, ResourceCard } from "@/components/get-started/resource-c
 import { registryModels } from "@/components/models/registry";
 import { LinkButton } from "@/components/system/primitives";
 import { Emphasized, getPageCopy, pageMetadata } from "@/lib/copy";
-import { site } from "@/lib/site";
 import heroHead from "@/public/get-started/hero-head.webp";
 
 export const generateMetadata = () => pageMetadata("getStarted");
@@ -108,10 +107,10 @@ const GetStartedPage = async () => {
               </h1>
               <p className="text-sm text-pretty text-foreground/85">{copy.hero.lede}</p>
               <div className="flex flex-wrap gap-2 pt-2">
-                <LinkButton href={site.links.huggingface} variant="outline">
-                  Hugging Face
+                <LinkButton href="/data-lab" variant="outline">
+                  {copy.hero.secondaryCta}
                 </LinkButton>
-                <LinkButton href="#overview">{copy.hero.primaryCta}</LinkButton>
+                <LinkButton href="/models">{copy.hero.primaryCta}</LinkButton>
               </div>
             </div>
             {/* Pinned to the content's right edge, then pushed past it by the

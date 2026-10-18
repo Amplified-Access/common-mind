@@ -30,7 +30,8 @@ export const getStarted = {
   hero: {
     title: "Start building with\n*CommonMind.*",
     lede: "Access language models, explore datasets, and build AI experiences that understand more voices.",
-    primaryCta: "Get Started",
+    primaryCta: "Explore Models",
+    secondaryCta: "Data Lab",
   },
   overview: {
     title: "Getting Started",
