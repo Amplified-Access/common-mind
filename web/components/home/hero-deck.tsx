@@ -1,39 +1,24 @@
 "use client";
 
 import { motion, useInView, useReducedMotion } from "motion/react";
-import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { BarChart } from "@/components/benchmarks/bar-chart";
-import type { BenchmarkEntry } from "@/components/benchmarks/data";
 import { workedExamples } from "@/components/civic/data";
 import { FRAME, FRAME_PANELS, HALO } from "@/components/system/framed-card";
-import { DirectionLabel, Segmented } from "@/components/system/segmented";
 import { cn } from "@/lib/utils";
 
 import { Funnel, type Outcome } from "./funnel";
 import { PIPELINE_STAGES, StageReveal } from "./pipeline-stage";
 
-export type ShowcaseSet = {
-  id: string;
-  from: string;
-  to: string;
-  model: { slug: string; name: string; tagline: string; platforms: string[]; overview: string };
-  entries: BenchmarkEntry[];
-  evalSet: string;
-};
-
 type DeckCard =
   | { kind: "stage"; id: string; label: React.ReactNode; stages: number[]; dwell: number }
-  | { kind: "funnel"; id: string; label: React.ReactNode; dwell: number }
-  | { kind: "model"; id: string; label: React.ReactNode; set: ShowcaseSet; dwell: number };
+  | { kind: "funnel"; id: string; label: React.ReactNode; dwell: number };
 
 // How long each card stays in front before the next comes up: each pipeline
 // stage on it long enough to read its output, the funnel long enough to flip
-// through every outcome, a model long enough to read it and scan its chart.
+// through every outcome.
 const STAGE_DWELL_MS = 2800;
 const FUNNEL_DWELL_MS = 6200;
-const MODEL_DWELL_MS = 6000;
 
 // The pipeline's stages as cards: transcript and translation share one,
 // the translation revealed under the transcript it comes from.
@@ -59,18 +44,10 @@ const RIGHT_PANEL = "bg-[#0b0a07]";
 
 // The hero's proof on a stack of cards: every layer of the platform
 // funnelling into CommonMind, then the civic speech pipeline a stage at a
-// time, then the models and how they measure up. The deck cycles on its own while it
-// is on screen and nobody is hovering or focused inside it; the row of
-// labels above it brings any card to the front.
-function HeroDeck({
-  sets,
-  outcomes,
-  className,
-}: {
-  sets: ShowcaseSet[];
-  outcomes: Outcome[];
-  className?: string;
-}) {
+// time. The deck cycles on its own while it is on screen and nobody is
+// hovering or focused inside it; the row of labels above it brings any card
+// to the front.
+function HeroDeck({ outcomes, className }: { outcomes: Outcome[]; className?: string }) {
   const cards = useMemo<DeckCard[]>(
     () => [
       { kind: "funnel", id: "commonmind", label: "CommonMind", dwell: FUNNEL_DWELL_MS },
@@ -81,15 +58,8 @@ function HeroDeck({
         stages,
         dwell: STAGE_DWELL_MS * stages.length,
       })),
-      ...sets.map((set) => ({
-        kind: "model" as const,
-        id: set.id,
-        label: <DirectionLabel from={set.from} to={set.to} />,
-        set,
-        dwell: MODEL_DWELL_MS,
-      })),
     ],
-    [sets],
+    [],
   );
 
   const [active, setActive] = useState(cards[0].id);
@@ -115,8 +85,6 @@ function HeroDeck({
     }, cards[activeIndex].dwell);
     return () => clearTimeout(timer);
   }, [playing, activeIndex, cards]);
-
-  const modelItems = sets.map((s) => ({ id: s.id, label: <DirectionLabel from={s.from} to={s.to} /> }));
 
   return (
     <div
@@ -202,9 +170,6 @@ function HeroDeck({
                     <Funnel outcomes={outcomes} playing={front} />
                   </div>
                 )}
-                {card.kind === "model" && (
-                  <ModelCard set={card.set} front={front} items={modelItems} onPick={setActive} />
-                )}
               </div>
             </motion.div>
           );
@@ -275,49 +240,6 @@ function StageCard({
             </div>
           ),
         )}
-      </div>
-    </>
-  );
-}
-
-// A model and how it measures up: the model on the left, its scores on the
-// right, with a toggle between the models' translation directions.
-function ModelCard({
-  set,
-  front,
-  items,
-  onPick,
-}: {
-  set: ShowcaseSet;
-  front: boolean;
-  items: { id: string; label: React.ReactNode }[];
-  onPick: (id: string) => void;
-}) {
-  return (
-    <>
-      <div className={cn(LEFT_PANEL, "flex flex-col gap-5 px-5 py-8 sm:px-6")}>
-        <Link href={`/models/${set.model.slug}`} className="text-[1.75rem] leading-tight tracking-[-0.01em] transition-colors hover:text-signal">
-          {set.model.name}
-        </Link>
-        <p className="max-w-60 text-xs">{set.model.tagline}</p>
-        <ul className="flex flex-wrap gap-2">
-          {set.model.platforms.map((p) => (
-            <li key={p} className="rounded-inset border border-line-strong px-1.5 py-0.5 text-[10px] text-foreground/85">
-              {p}
-            </li>
-          ))}
-        </ul>
-        <div className="flex flex-col gap-3 pt-2">
-          <span className="text-xs font-medium">Overview</span>
-          <p className="max-w-72 text-[11px] leading-relaxed text-faint">{set.model.overview}</p>
-        </div>
-      </div>
-
-      <div className={cn(RIGHT_PANEL, "flex min-w-0 flex-col gap-10 px-5 py-8 sm:px-10 sm:py-12 xl:pr-16 xl:pl-20")}>
-        <Segmented label="Translation direction" value={set.id} onChange={onPick} items={items} className="self-start" />
-        {/* Remounts on reaching the front, so the bars grow in again. */}
-        <BarChart key={front ? "front" : "back"} title="BLEU" entries={set.entries} metric="bleu" />
-        <p className="font-mono text-[11px] text-faint">{set.evalSet}</p>
       </div>
     </>
   );

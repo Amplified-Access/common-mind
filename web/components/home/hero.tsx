@@ -1,27 +1,13 @@
 import { lugandaHeldOut, swahiliFlores, type LanguageBenchmark } from "@/components/benchmarks/data";
 import { Container } from "@/components/common/container";
-import { getModel, registryModels } from "@/components/models/registry";
+import { registryModels } from "@/components/models/registry";
 import { Backdrop } from "@/components/system/backdrop";
 import { ArrowLink } from "@/components/system/primitives";
-import { copyFor, getContent, type Content } from "@/lib/content";
 import { Emphasized } from "@/lib/copy/emphasized";
 import type { PageCopy } from "@/lib/copy/pages";
 
 import type { Outcome } from "./funnel";
-import { HeroDeck, type ShowcaseSet } from "./hero-deck";
-
-function showcaseModel(content: Content, slug: string): ShowcaseSet["model"] {
-  const model = getModel(slug);
-  if (!model) throw new Error(`Unknown model slug: ${slug}`);
-  const { tagline, overview } = copyFor(content, slug);
-  return {
-    slug: model.slug,
-    name: model.name,
-    tagline,
-    platforms: model.platforms,
-    overview,
-  };
-}
+import { HeroDeck } from "./hero-deck";
 
 const byBleu = (set: LanguageBenchmark) => [...set.entries].sort((a, b) => b.bleu - a.bleu);
 
@@ -52,8 +38,7 @@ function outcomes(): Outcome[] {
   ];
 }
 
-async function HomeHero({ copy }: { copy: PageCopy<"home">["hero"] }) {
-  const content = await getContent();
+function HomeHero({ copy }: { copy: PageCopy<"home">["hero"] }) {
   return (
     <section className="zoom-viewport relative isolate overflow-hidden border-b border-line pt-(--header-height)">
       <Backdrop wash warmGrain sweep glow />
@@ -61,7 +46,7 @@ async function HomeHero({ copy }: { copy: PageCopy<"home">["hero"] }) {
         <div className="flex max-w-3xl flex-col items-center gap-6 text-center">
           <h1 className="text-display text-balance">
             <Emphasized text={copy.titleLine1} />{" "}
-            <span className="sm:block">
+            <span className="block">
               <Emphasized text={copy.titleLine2} />
             </span>
           </h1>
@@ -77,20 +62,7 @@ async function HomeHero({ copy }: { copy: PageCopy<"home">["hero"] }) {
         </div>
         {/* Runs past the section's bottom edge, which cuts the cards off so
             they read as sitting behind the next section. */}
-        <HeroDeck
-          outcomes={outcomes()}
-          className="-mb-5 sm:-mb-8"
-          sets={[
-            {
-              id: "sw",
-              from: "English",
-              to: "Swahili",
-              model: showcaseModel(content, "swahili-gemma-1b-it"),
-              entries: swahiliFlores.entries,
-              evalSet: swahiliFlores.evalSet,
-            },
-          ]}
-        />
+        <HeroDeck outcomes={outcomes()} className="-mb-5 sm:-mb-8" />
       </Container>
     </section>
   );

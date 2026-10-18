@@ -13,7 +13,8 @@ import { cn } from "@/lib/utils";
 // back, and the loop slides exactly one run over. A run repeats the logos
 // until it holds at least a dozen, so it's wider than the strip at any
 // width and never shows a gap. Hovering or focusing a logo pauses it;
-// reduced motion shows them still.
+// reduced motion shows them still. Every logo is the same height, spaced
+// as in WatchTower's partner row.
 const SECONDS_PER_LOGO = 4;
 
 const Footer = async () => {
@@ -30,7 +31,7 @@ const Footer = async () => {
       <Container className="flex flex-col gap-10">
         <FooterCta copy={copy} />
         <div className="flex flex-col gap-6 rounded-card bg-[#1a1608] px-6 py-5 sm:flex-row sm:items-center sm:gap-12 sm:px-8">
-          <span className="shrink-0 text-[13px] text-foreground">{copy.powering}</span>
+          <span className="shrink-0 text-h2 text-foreground">{copy.powering}</span>
           <div className="min-w-0 flex-1 overflow-hidden mask-[linear-gradient(to_right,transparent,#000_8%,#000_92%,transparent)] motion-reduce:mask-none">
             <ul
               className="flex w-max animate-[cm-marquee_var(--marquee-duration)_linear_infinite] items-center hover:[animation-play-state:paused] has-focus-visible:[animation-play-state:paused] motion-reduce:w-auto motion-reduce:animate-none motion-reduce:flex-wrap motion-reduce:gap-y-5"
@@ -44,7 +45,7 @@ const Footer = async () => {
                     image={partner.logo}
                     size={partner.logoSize}
                     alt={partner.name}
-                    className="opacity-90 transition-opacity group-hover:opacity-100"
+                    className="h-6 opacity-60 transition-opacity group-hover:opacity-100"
                   />
                 );
                 return (
@@ -52,7 +53,7 @@ const Footer = async () => {
                     key={`${partner.name}-${i}`}
                     aria-hidden={copy || undefined}
                     inert={copy}
-                    className={cn("shrink-0 pr-12", copy && "motion-reduce:hidden")}
+                    className={cn("shrink-0 pr-8 md:pr-24", copy && "motion-reduce:hidden")}
                   >
                     {partner.href ? (
                       <a
@@ -84,10 +85,10 @@ const Footer = async () => {
         <div className="grid gap-12 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,2fr)]">
           <div className="flex flex-col gap-6">
             <Image
-              src="/logo-white.svg"
+              src="/logo-stacked-white.svg"
               alt="CommonMind"
-              width={138}
-              height={49}
+              width={199}
+              height={69}
               className="h-10 w-auto self-start"
             />
             <p className="max-w-xs text-sm text-pretty text-subtle">

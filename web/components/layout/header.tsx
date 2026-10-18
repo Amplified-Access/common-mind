@@ -43,8 +43,7 @@ const Header = () => {
   if (isStandalone(pathname)) return null;
 
   // Docked: a full-width bar, 56px tall. Floating: an 8px drop plus a 62px
-  // bar, sized so the 36px logo sits 13px (1px border plus 12px) from the
-  // top and bottom edges, the same as from the sides.
+  // bar, with the 28px logo centred in it.
   return (
     <header
       className={cn(
@@ -64,7 +63,7 @@ const Header = () => {
           "relative flex items-center justify-between gap-6 border transition-[height,margin,padding,background-color,border-color,border-radius,box-shadow,backdrop-filter]",
           MORPH,
           floating
-            ? "mx-(--inset) mt-2 h-15.5 rounded-card border-line bg-background/70 px-3 shadow-[0_8px_30px_rgb(0_0_0/0.45)] backdrop-blur-xl"
+            ? "mx-(--inset) mt-2 h-15.5 rounded-card border-line bg-background/70 px-6 shadow-[0_8px_30px_rgb(0_0_0/0.45)] backdrop-blur-xl"
             : "mx-0 mt-0 h-14 rounded-none border-transparent bg-background px-(--inset)",
         )}
       >
@@ -72,14 +71,14 @@ const Header = () => {
           <Image
             src="/logo-white.svg"
             alt="CommonMind"
-            width={138}
-            height={49}
+            width={225}
+            height={37}
             priority
-            className="h-9 w-auto"
+            className="h-7 w-auto"
           />
         </Link>
 
-        <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-6 md:flex lg:gap-7">
+        <nav className="hidden items-center gap-6 lg:flex xl:absolute xl:left-1/2 xl:-translate-x-1/2 xl:gap-7">
           {navItems.map((item) => {
             const active = isActive(pathname, item.href);
             return (
@@ -88,7 +87,7 @@ const Header = () => {
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "text-trim py-2 text-xs transition-colors",
+                  "text-trim py-2 text-sm transition-colors",
                   active ? "text-signal" : "text-foreground hover:text-signal",
                 )}
               >
@@ -98,18 +97,18 @@ const Header = () => {
           })}
         </nav>
 
-        <div className="hidden items-center gap-2 md:flex">
+        <div className="hidden items-center gap-2 lg:flex">
           <a
             href={site.links.huggingface}
             target="_blank"
             rel="noreferrer"
-            className={buttonClasses("outline", "max-lg:px-3.5")}
+            className={buttonClasses("outline", "max-xl:px-3.5")}
           >
             Hugging Face
           </a>
           <Link
             href="/build"
-            className={buttonClasses("signal", "max-lg:px-3.5")}
+            className={buttonClasses("signal", "max-xl:px-3.5")}
           >
             Get Started
           </Link>
@@ -118,7 +117,7 @@ const Header = () => {
         <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
           <SheetTrigger
             aria-label="Open menu"
-            className="cursor-pointer text-foreground transition-colors hover:text-signal md:hidden"
+            className="cursor-pointer text-foreground transition-colors hover:text-signal lg:hidden"
           >
             <HugeiconsIcon icon={Menu01Icon} className="size-6" />
           </SheetTrigger>
