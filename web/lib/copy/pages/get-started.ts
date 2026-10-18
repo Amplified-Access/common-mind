@@ -1,24 +1,39 @@
 // The Get Started page's original wording: a map of the site's resources.
-// Where each card leads is set in app/(site)/get-started/page.tsx.
+// Where each link and card leads is set in app/(site)/get-started/page.tsx.
 export const getStarted = {
   meta: {
     title: "Get Started",
     description: "Models, datasets, benchmarks, and guides for building with CommonMind.",
   },
+  sidebar: {
+    start: {
+      title: "Get Started",
+      overview: "Overview",
+      quickstart: "Quickstart",
+      models: "Explore Models",
+      datasets: "Using Datasets",
+      dataLab: "Data Lab",
+    },
+    developers: {
+      title: "Developers",
+      api: "API & Integration",
+      python: "Python",
+      javascript: "JavaScript",
+    },
+    resources: {
+      title: "Resources",
+      languages: "Languages",
+      benchmarks: "Benchmarks",
+      contributing: "Contributing",
+    },
+  },
   hero: {
-    eyebrow: "Get Started",
     title: "Start building with\n*CommonMind.*",
     lede: "Access language models, explore datasets, and build AI experiences that understand more voices.",
-    primaryCta: "Read the Quickstart",
-  },
-  nav: {
-    overview: "Overview",
-    tasks: "What to build",
-    quickstarts: "Quickstarts",
+    primaryCta: "Get Started",
   },
   overview: {
-    eyebrow: "Overview",
-    title: "Getting started",
+    title: "Getting Started",
     lede: "Everything you need to explore and build with CommonMind.",
     models: {
       title: "Explore Models",
@@ -36,64 +51,62 @@ export const getStarted = {
       cta: "Read the Docs",
     },
     dataLab: {
-      title: "Turn language data into meaningful impact.",
-      text: "The CommonMind Data Lab is a collaborative space for building, improving, and evaluating the language datasets that power more inclusive AI.",
+      title: "Turn Language Data into Meaningful Impact.",
+      text: "Explore the CommonMind Data Lab, a collaborative space for building, improving, and evaluating language datasets that power more inclusive AI.",
       cta: "Explore Data Lab",
     },
   },
   tasks: {
-    eyebrow: "Applications",
     title: "What would you like to build?",
     lede: "Explore common language AI applications and find resources to get started.",
     cta: "Get Started",
     translation: {
       title: "Machine Translation",
-      text: "Translate between English and languages beyond the mainstream.",
+      text: "Explore models that translate between English and languages beyond the mainstream.",
+    },
+    understanding: {
+      title: "Text Understanding",
+      text: "Explore the terminology and context that help AI understand civic text.",
     },
     languages: {
       title: "Language Ecosystems",
       text: "Find the models, datasets, and benchmarks behind each language.",
     },
-    terminology: {
-      title: "Civic Terminology",
-      text: "Map how a community says it to what it means, language by language.",
-    },
     classification: {
       title: "Issue Classification",
-      text: "Route each civic report to the right place.",
+      text: "See applications that route each civic report to the right place.",
     },
     evaluation: {
       title: "Language Evaluation",
-      text: "Measure and compare model performance on open benchmarks.",
+      text: "Measure and compare model performance using available benchmarks.",
     },
     community: {
-      title: "Community Data",
-      text: "Contribute language resources and review the work of other volunteers.",
+      title: "Community Research",
+      text: "Contribute language resources and collaborate on inclusive AI research.",
     },
   },
   quickstarts: {
-    eyebrow: "Guides",
     title: "Developer quickstarts",
     lede: "Practical guides to help you move from exploration to implementation.",
     python: {
-      title: "Getting started with Python",
-      text: "Load a model with Transformers and PEFT and run translation locally.",
+      title: "Getting Started with Python",
+      text: "Learn how to work with supported language models using Python.",
     },
-    api: {
-      title: "Calling the translation API",
-      text: "Send text, a model, and a direction; get the translation back as JSON.",
+    javascript: {
+      title: "Getting Started with JavaScript",
+      text: "Explore JavaScript integration options for language AI applications.",
     },
     modelCards: {
-      title: "Understanding model documentation",
-      text: "Read a model's capabilities, requirements, and limitations from its model card.",
+      title: "Understanding Model Documentation",
+      text: "Learn how to interpret model capabilities, requirements, and limitations.",
     },
     datasets: {
-      title: "Working with datasets",
+      title: "Working with Datasets",
       text: "Understand dataset formats, licensing, and responsible usage.",
     },
     benchmarks: {
-      title: "Evaluating model performance",
-      text: "Read benchmark results and compare models with the methodology behind them.",
+      title: "Evaluating Model Performance",
+      text: "Learn how to read benchmark results and compare models.",
     },
   },
 };
