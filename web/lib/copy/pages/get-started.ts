@@ -34,8 +34,6 @@ export const getStarted = {
     secondaryCta: "Data Lab",
   },
   overview: {
-    title: "Getting Started",
-    lede: "Everything you need to explore and build with CommonMind.",
     models: {
       title: "Explore Models",
       text: "Find language models designed for different tasks, languages, and applications.",
@@ -58,8 +56,6 @@ export const getStarted = {
     },
   },
   tasks: {
-    title: "What would you like to build?",
-    lede: "Explore common language AI applications and find resources to get started.",
     cta: "Get Started",
     translation: {
       title: "Machine Translation",

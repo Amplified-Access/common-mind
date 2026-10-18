@@ -19,8 +19,6 @@ type ResourceCardProps = {
   text: string;
   cta: string;
   icon: IconSvgElement;
-  /** "lead": the overview's large cards. "task": the grid of things to build. */
-  size?: "lead" | "task";
   /** The one card filled yellow, as the mock draws Datasets. */
   highlight?: boolean;
 };
@@ -28,15 +26,14 @@ type ResourceCardProps = {
 // A card that links to one of the site's resources: the title with its icon
 // in the corner, a line on what it holds, and the action as a button at the
 // foot. The whole card is the link.
-function ResourceCard({ href, title, text, cta, icon, size = "lead", highlight }: ResourceCardProps) {
-  const lead = size === "lead";
+function ResourceCard({ href, title, text, cta, icon, highlight }: ResourceCardProps) {
   return (
     <Link
       href={href}
       className={cn(
         "group flex min-w-0 flex-1 p-px transition-colors",
         CUT,
-        lead ? "[--cut:1.75rem]" : "[--cut:1.25rem]",
+        "[--cut:1.75rem]",
         highlight ? "bg-signal" : "bg-white/35 hover:bg-signal",
       )}
     >
@@ -44,28 +41,21 @@ function ResourceCard({ href, title, text, cta, icon, size = "lead", highlight }
         className={cn(
           "flex min-w-0 flex-1 flex-col",
           CUT,
-          lead ? "gap-3 px-7 pt-8 pb-7 sm:px-8" : "gap-3 px-6 pt-7 pb-6",
+          "gap-3 px-7 pt-8 pb-7 sm:px-8",
           highlight ? "bg-signal text-background" : "bg-[#0e0e0e]",
         )}
       >
         <div className="flex items-start justify-between gap-4">
-          <h3
-            className={cn(
-              "min-w-0 text-balance tracking-[-0.01em]",
-              lead ? "text-[1.625rem] leading-[1.15]" : "text-[1.375rem] leading-[1.2]",
-            )}
-          >
-            {title}
-          </h3>
+          <h3 className="min-w-0 text-[1.625rem] leading-[1.15] tracking-[-0.01em] text-balance">{title}</h3>
           <HugeiconsIcon
             icon={icon}
             strokeWidth={2}
             aria-hidden
-            className={cn("shrink-0", lead ? "size-8" : "size-6", highlight ? "text-background" : "text-signal")}
+            className={cn("size-8 shrink-0", highlight ? "text-background" : "text-signal")}
           />
         </div>
         <p className={cn("max-w-sm text-sm text-pretty", highlight ? "text-background" : "text-faint")}>{text}</p>
-        <div className={cn("mt-auto", lead ? "pt-8" : "pt-5")}>
+        <div className="mt-auto pt-8">
           <span className={buttonClasses(highlight ? "ink" : "cream", "h-8 px-4 [--chamfer:6px]")}>{cta}</span>
         </div>
       </div>

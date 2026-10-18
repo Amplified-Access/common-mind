@@ -127,32 +127,25 @@ const GetStartedPage = async () => {
         </section>
 
         <div className="flex max-w-4xl flex-col gap-20 px-4 pt-10 pb-24 md:px-8 lg:px-16">
-          <section id="overview" className="flex scroll-mt-24 flex-col gap-8">
-            <Heading title={copy.overview.title} lede={copy.overview.lede} />
-            <ul className="grid gap-5 md:grid-cols-2">
-              {overview.map((card) => (
-                <li key={card.id} className="flex min-w-0">
-                  <ResourceCard
-                    href={card.href}
-                    icon={card.icon}
-                    highlight={"highlight" in card && card.highlight}
-                    {...copy.overview[card.id]}
-                  />
-                </li>
-              ))}
-            </ul>
-          </section>
-
-          <section id="tasks" className="flex scroll-mt-24 flex-col gap-8">
-            <Heading title={copy.tasks.title} lede={copy.tasks.lede} />
-            <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {tasks.map((card) => (
-                <li key={card.id} className="flex min-w-0">
-                  <ResourceCard size="task" href={card.href} icon={card.icon} cta={copy.tasks.cta} {...copy.tasks[card.id]} />
-                </li>
-              ))}
-            </ul>
-          </section>
+          {/* Every place to start, as one grid of cards: the site's main areas,
+              then the things to build. */}
+          <ul id="overview" className="grid scroll-mt-24 gap-5 md:grid-cols-2">
+            {overview.map((card) => (
+              <li key={card.id} className="flex min-w-0">
+                <ResourceCard
+                  href={card.href}
+                  icon={card.icon}
+                  highlight={"highlight" in card && card.highlight}
+                  {...copy.overview[card.id]}
+                />
+              </li>
+            ))}
+            {tasks.map((card) => (
+              <li key={card.id} className="flex min-w-0">
+                <ResourceCard href={card.href} icon={card.icon} cta={copy.tasks.cta} {...copy.tasks[card.id]} />
+              </li>
+            ))}
+          </ul>
 
           <section id="quickstarts" className="flex scroll-mt-24 flex-col gap-8">
             <Heading title={copy.quickstarts.title} lede={copy.quickstarts.lede} />
