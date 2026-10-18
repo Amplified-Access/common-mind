@@ -41,17 +41,17 @@ function ResourceCard({ href, title, text, cta, icon, highlight }: ResourceCardP
         className={cn(
           "flex min-w-0 flex-1 flex-col",
           CUT,
-          "gap-3 px-7 pt-8 pb-7 sm:px-8",
+          "gap-3 px-6 pt-7 pb-6 sm:px-7",
           highlight ? "bg-signal text-background" : "bg-[#0e0e0e]",
         )}
       >
         <div className="flex items-start justify-between gap-4">
-          <h3 className="min-w-0 text-[1.625rem] leading-[1.15] tracking-[-0.01em] text-balance">{title}</h3>
+          <h3 className="min-w-0 text-[1.375rem] leading-[1.2] tracking-[-0.01em] text-balance">{title}</h3>
           <HugeiconsIcon
             icon={icon}
             strokeWidth={2}
             aria-hidden
-            className={cn("size-8 shrink-0", highlight ? "text-background" : "text-signal")}
+            className={cn("size-7 shrink-0", highlight ? "text-background" : "text-signal")}
           />
         </div>
         <p className={cn("max-w-sm text-sm text-pretty", highlight ? "text-background" : "text-faint")}>{text}</p>

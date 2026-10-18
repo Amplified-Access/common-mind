@@ -100,7 +100,7 @@ const GetStartedPage = async () => {
             className="absolute inset-0 -z-10 bg-[radial-gradient(rgb(255_255_255/0.22)_1px,transparent_1.2px)] bg-size-[9px_9px] mask-[linear-gradient(to_bottom,#000,rgb(0_0_0/0.55))]"
           />
           {/* As wide as the sections below, so the face ends where they do. */}
-          <div className="relative flex min-h-68 max-w-4xl items-center px-4 py-12 md:px-8 lg:px-16">
+          <div className="relative flex min-h-68 max-w-5xl items-center px-4 py-12 md:px-8 lg:px-16">
             <div className="relative z-10 flex max-w-88 flex-col items-start gap-4">
               <h1 className="text-h2">
                 <Emphasized text={copy.hero.title} />
@@ -126,10 +126,10 @@ const GetStartedPage = async () => {
           </div>
         </section>
 
-        <div className="flex max-w-4xl flex-col gap-20 px-4 pt-10 pb-24 md:px-8 lg:px-16">
+        <div className="flex max-w-5xl flex-col gap-20 px-4 pt-10 pb-24 md:px-8 lg:px-16">
           {/* Every place to start, as one grid of cards: the site's main areas,
               then the things to build. */}
-          <ul id="overview" className="grid scroll-mt-24 gap-5 md:grid-cols-2">
+          <ul id="overview" className="grid scroll-mt-24 gap-5 md:grid-cols-2 xl:grid-cols-3">
             {overview.map((card) => (
               <li key={card.id} className="flex min-w-0">
                 <ResourceCard
