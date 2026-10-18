@@ -10,7 +10,7 @@ import { PAGES, pageDocumentId, pageTypeName, type PageKey } from "../lib/copy/p
 
 import { PAGE_TYPES } from "./pageCopy";
 
-// The Studio's sidebar. Fixed documents (each page's words, site settings,
+// The Studio's sidebar. Fixed documents (each page's words, the footer, site settings,
 // the legal pages, one copy document per registry model) open straight from
 // the sidebar and are never created or deleted by editors; their IDs are
 // what the site reads.
@@ -21,7 +21,7 @@ export const LEGAL_PAGES = [
 ];
 
 /** Document types that only exist as the fixed documents above. */
-export const FIXED_TYPES = new Set(["siteSettings", "legalPage", "model", ...PAGE_TYPES]);
+export const FIXED_TYPES = new Set(["siteSettings", "footer", "legalPage", "model", ...PAGE_TYPES]);
 
 export const modelDocumentId = (slug: string) => `model-${slug}`;
 
@@ -35,8 +35,8 @@ export const structure: StructureResolver = (S) =>
         .child(
           S.list()
             .title("Pages")
-            .items(
-              (Object.keys(PAGES) as PageKey[]).map((key) =>
+            .items([
+              ...(Object.keys(PAGES) as PageKey[]).map((key) =>
                 S.listItem()
                   .title(PAGES[key].title)
                   .id(pageDocumentId(key))
@@ -48,7 +48,12 @@ export const structure: StructureResolver = (S) =>
                       .title(PAGES[key].title),
                   ),
               ),
-            ),
+              S.listItem()
+                .title("Footer")
+                .id("footer")
+                .icon(DocumentIcon)
+                .child(S.document().schemaType("footer").documentId("footer").title("Footer")),
+            ]),
         ),
       S.listItem()
         .title("Research")

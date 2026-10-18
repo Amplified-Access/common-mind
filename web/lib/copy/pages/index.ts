@@ -8,7 +8,6 @@ import { civicCorpus } from "./civic-corpus";
 import { dataLab } from "./data-lab";
 import { datasetDetail } from "./dataset-detail";
 import { datasets } from "./datasets";
-import { footer } from "./footer";
 import { getStarted } from "./get-started";
 import { home } from "./home";
 import { languageDetail } from "./language-detail";
@@ -41,7 +40,6 @@ export const PAGES = {
   dataLab: { title: "Data Lab", copy: dataLab },
   licenses: { title: "Licenses", copy: licenses },
   callToAction: { title: "Call to action", copy: callToAction },
-  footer: { title: "Footer", copy: footer },
 } satisfies Record<string, { title: string; copy: CopyTree }>;
 
 export type PageKey = keyof typeof PAGES;

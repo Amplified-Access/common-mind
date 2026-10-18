@@ -109,13 +109,23 @@ export type SiteSettings = {
   organization: { name: string; href: string };
   /** Null when switched off. */
   announcement: Announcement | null;
+};
+
+export type Footer = {
+  /** The title beside the partner logos. */
+  powering: string;
+  /** The line under the logo, before the organization's name. */
+  initiative: string;
+  /** Follows © and the year. */
+  copyright: string;
   partners: Partner[];
-  footerColumns: { title: string; links: Link[] }[];
+  columns: { title: string; links: Link[] }[];
   legalLinks: Link[];
 };
 
 export type Content = {
   settings: SiteSettings;
+  footer: Footer;
   datasets: Dataset[];
   /** Oldest first. */
   publications: Publication[];

@@ -1,6 +1,6 @@
 ---
 topic: cms
-last_verified: 2026-10-15
+last_verified: 2026-10-18
 sources:
   - sanity.config.ts
   - sanity.cli.ts
@@ -28,7 +28,8 @@ The site's words and editorial content live in Sanity (project `8m5302r8`, datas
 | Research reports and model releases | The model registry: names, bases, scores, availability (`components/models/registry.ts`) |
 | Datasets and applications | Benchmark results, language data, civic terminology |
 | Each model's written copy: tagline, overview, capabilities, highlights, usage example | Code samples on the Build page (`components/build/snippets.ts`) |
-| Site settings: description, announcement bar, footer partners and links | Header navigation (`lib/site.ts`) |
+| Site settings: description, announcement bar, the organization | Header navigation (`lib/site.ts`) |
+| The footer: partner logos, link columns, legal links, its text lines and © line | |
 | Privacy Policy and Terms of Use (rich text) | The Data Lab app's own screens |
 
 ## Setup
@@ -80,6 +81,7 @@ A new page: create its copy module, add it to `PAGES`, then run `pnpm sanity:see
 | Applications | `application` | any; `order` sets the list order |
 | Legal pages | `legalPage` | `legal-privacy`, `legal-terms` (fixed) |
 | Site settings | `siteSettings` | `siteSettings` (fixed) |
+| Pages → Footer | `footer` | `footer` (fixed) |
 | Pages → *each page* | `<key>Page` | `page-<key>` (fixed) |
 
 Fixed documents open straight from the sidebar and can't be created, duplicated or deleted (`FIXED_TYPES` in `sanity/structure.ts`).

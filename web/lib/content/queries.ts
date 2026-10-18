@@ -18,9 +18,14 @@ export const CONTENT_QUERY = defineQuery(`{
         "link": select(defined(link.href) => link${link}, null)
       },
       null
-    ),
+    )
+  },
+  "footer": *[_id == "footer"][0]{
+    powering,
+    initiative,
+    copyright,
     "partners": coalesce(partners[]{ name, href, logoSize, "logo": logo.asset->${image} }, []),
-    "footerColumns": coalesce(footerColumns[]{ title, "links": coalesce(links[]${link}, []) }, []),
+    "columns": coalesce(columns[]{ title, "links": coalesce(links[]${link}, []) }, []),
     "legalLinks": coalesce(legalLinks[]${link}, [])
   },
   "datasets": *[_type == "dataset"] | order(order asc){

@@ -2,6 +2,7 @@ import { pageTypes } from "../pageCopy";
 
 import { application } from "./application";
 import { dataset } from "./dataset";
+import { footer } from "./footer";
 import { legalPage } from "./legalPage";
 import { model } from "./model";
 import { link } from "./parts";
@@ -16,6 +17,7 @@ export const schemaTypes = [
   dataset,
   application,
   siteSettings,
+  footer,
   legalPage,
   ...pageTypes,
   link,
