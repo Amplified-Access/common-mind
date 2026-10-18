@@ -8,16 +8,14 @@ import { Arrow } from "@/components/system/arrow";
 import { hubs } from "@/lib/site";
 
 // The header's door to where the models and data are published: a ghost
-// database button with a chevron, opening a short list of the hubs, each in
-// a new tab.
+// "Repositories" button with a database icon and a chevron, opening a short
+// list of the hubs, each in a new tab.
 function HubsMenu() {
   return (
     <Popover.Root>
-      <Popover.Trigger
-        aria-label="Models and data"
-        className="group flex h-8 cursor-pointer items-center gap-1 px-2 text-foreground transition-colors hover:text-signal data-popup-open:text-signal"
-      >
+      <Popover.Trigger className="group flex h-8 cursor-pointer items-center gap-1.5 px-2 text-sm whitespace-nowrap text-foreground transition-colors hover:text-signal data-popup-open:text-signal">
         <HugeiconsIcon icon={DatabaseIcon} strokeWidth={1.75} className="size-4.5" />
+        Repositories
         <HugeiconsIcon
           icon={ArrowDown01Icon}
           strokeWidth={2}
