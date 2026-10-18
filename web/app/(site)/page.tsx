@@ -48,70 +48,75 @@ export default async function Home() {
     };
   });
 
+  // The story section's items, which the hero's funnel shows as the
+  // platform's layers too.
+  const panels = [
+    {
+      id: "languages",
+      title: platform.languages.title,
+      subtitle: platform.languages.subtitle,
+      body: platform.languages.body,
+      href: "/languages",
+      cta: platform.languages.cta,
+      visual: <LanguagesVisual />,
+    },
+    {
+      id: "civic-discourse",
+      title: platform.civicDiscourse.title,
+      subtitle: platform.civicDiscourse.subtitle,
+      body: platform.civicDiscourse.body,
+      href: "/research/civic-corpus",
+      cta: platform.civicDiscourse.cta,
+      visual: <CivicSpeechVisual />,
+    },
+    {
+      id: "open-models",
+      title: platform.openModels.title,
+      subtitle: platform.openModels.subtitle,
+      body: platform.openModels.body,
+      proof: {
+        value: platform.openModels.proofValue,
+        label: platform.openModels.proofLabel,
+      },
+      href: "/models",
+      cta: platform.openModels.cta,
+      visual: <ModelsVisual />,
+    },
+    {
+      id: "benchmarks",
+      title: platform.benchmarks.title,
+      subtitle: platform.benchmarks.subtitle,
+      body: platform.benchmarks.body,
+      proof: {
+        value: platform.benchmarks.proofValue,
+        label: platform.benchmarks.proofLabel,
+      },
+      href: "/benchmarks",
+      cta: platform.benchmarks.cta,
+      visual: <EvaluationVisual />,
+    },
+    {
+      id: "applications",
+      title: platform.applications.title,
+      subtitle: platform.applications.subtitle,
+      body: platform.applications.body,
+      href: "/applications",
+      cta: platform.applications.cta,
+      visual: <ApplicationsVisual />,
+    },
+  ];
+  const stages = panels.map(({ id, title, subtitle, href }) => ({ id, label: title, summary: subtitle, href }));
+
   return (
     <>
-      <HomeHero copy={copy.hero} />
+      <HomeHero copy={copy.hero} stages={stages} />
       <Foundation copy={copy.foundation} />
 
       <section id="platform" className="zoom-viewport relative scroll-mt-16">
         <PlatformTour
           heading={platform.heading}
           intro={platform.intro}
-          panels={[
-            {
-              id: "languages",
-              title: platform.languages.title,
-              subtitle: platform.languages.subtitle,
-              body: platform.languages.body,
-              href: "/languages",
-              cta: platform.languages.cta,
-              visual: <LanguagesVisual />,
-            },
-            {
-              id: "civic-discourse",
-              title: platform.civicDiscourse.title,
-              subtitle: platform.civicDiscourse.subtitle,
-              body: platform.civicDiscourse.body,
-              href: "/research/civic-corpus",
-              cta: platform.civicDiscourse.cta,
-              visual: <CivicSpeechVisual />,
-            },
-            {
-              id: "open-models",
-              title: platform.openModels.title,
-              subtitle: platform.openModels.subtitle,
-              body: platform.openModels.body,
-              proof: {
-                value: platform.openModels.proofValue,
-                label: platform.openModels.proofLabel,
-              },
-              href: "/models",
-              cta: platform.openModels.cta,
-              visual: <ModelsVisual />,
-            },
-            {
-              id: "benchmarks",
-              title: platform.benchmarks.title,
-              subtitle: platform.benchmarks.subtitle,
-              body: platform.benchmarks.body,
-              proof: {
-                value: platform.benchmarks.proofValue,
-                label: platform.benchmarks.proofLabel,
-              },
-              href: "/benchmarks",
-              cta: platform.benchmarks.cta,
-              visual: <EvaluationVisual />,
-            },
-            {
-              id: "applications",
-              title: platform.applications.title,
-              subtitle: platform.applications.subtitle,
-              body: platform.applications.body,
-              href: "/applications",
-              cta: platform.applications.cta,
-              visual: <ApplicationsVisual />,
-            },
-          ]}
+          panels={panels}
         />
       </section>
 

@@ -6,7 +6,7 @@ import { ArrowLink } from "@/components/system/primitives";
 import { Emphasized } from "@/lib/copy/emphasized";
 import type { PageCopy } from "@/lib/copy/pages";
 
-import type { Outcome } from "./funnel";
+import type { Outcome, Stage } from "./funnel";
 import { HeroDeck } from "./hero-deck";
 
 const byBleu = (set: LanguageBenchmark) => [...set.entries].sort((a, b) => b.bleu - a.bleu);
@@ -38,7 +38,7 @@ function outcomes(): Outcome[] {
   ];
 }
 
-function HomeHero({ copy }: { copy: PageCopy<"home">["hero"] }) {
+function HomeHero({ copy, stages }: { copy: PageCopy<"home">["hero"]; stages: Stage[] }) {
   return (
     <section className="zoom-viewport relative isolate overflow-hidden border-b border-line pt-(--header-height)">
       <Backdrop wash warmGrain sweep glow />
@@ -62,7 +62,7 @@ function HomeHero({ copy }: { copy: PageCopy<"home">["hero"] }) {
         </div>
         {/* Runs past the section's bottom edge, which cuts the cards off so
             they read as sitting behind the next section. */}
-        <HeroDeck outcomes={outcomes()} className="-mb-5 sm:-mb-8" />
+        <HeroDeck stages={stages} outcomes={outcomes()} className="-mb-5 sm:-mb-8" />
       </Container>
     </section>
   );

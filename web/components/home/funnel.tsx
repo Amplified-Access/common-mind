@@ -12,21 +12,21 @@ export type Outcome = {
   href: string;
 };
 
-const PLATFORM_STAGES = [
-  { id: "languages", label: "Languages", summary: "Each language carries its own civic vocabulary.", href: "/languages" },
-  { id: "data", label: "Civic speech data", summary: "Corpora, speech, and terminology mappings.", href: "/research/civic-corpus" },
-  { id: "models", label: "Models", summary: "Small, open models adapted for civic language.", href: "/models" },
-  { id: "evaluation", label: "Evaluation", summary: "Reproducible measurement of civic understanding.", href: "/benchmarks" },
-  { id: "applications", label: "Civic applications", summary: "Community voice turned into structured evidence.", href: "/build" },
-];
+/** One layer of the platform: the same items as the story section below. */
+export type Stage = {
+  id: string;
+  label: string;
+  summary: string;
+  href: string;
+};
 
 const HOLD_MS = 2000;
 
-// Languages → Civic Speech Data → Models → Evaluation → Civic Applications,
-// every layer funnelling into one CommonMind card that flips through what
-// comes out of the whole system. The layers sit in five equal columns, so
-// the lines are drawn in proportion and land on them at any size or zoom.
-function Funnel({ outcomes, playing }: { outcomes: Outcome[]; playing: boolean }) {
+// The platform's layers, the story section's items in its order, every one
+// funnelling into one CommonMind card that flips through what comes out of
+// the whole system. The layers sit in equal columns, so the lines are drawn
+// in proportion and land on them at any size or zoom.
+function Funnel({ stages, outcomes, playing }: { stages: Stage[]; outcomes: Outcome[]; playing: boolean }) {
   const reduce = useReducedMotion();
   const [index, setIndex] = useState(0);
 
@@ -44,8 +44,8 @@ function Funnel({ outcomes, playing }: { outcomes: Outcome[]; playing: boolean }
     <>
       {/* Wide: the five layers side by side, lines converging on the card. */}
       <div className="hidden h-full flex-col justify-center px-10 py-8 lg:flex">
-        <ol className="grid grid-cols-5">
-          {PLATFORM_STAGES.map((stage, i) => (
+        <ol className="grid auto-cols-fr grid-flow-col">
+          {stages.map((stage, i) => (
             <li key={stage.id} className="relative px-1.5">
               <Link
                 href={stage.href}
@@ -61,8 +61,8 @@ function Funnel({ outcomes, playing }: { outcomes: Outcome[]; playing: boolean }
         </ol>
 
         <svg aria-hidden viewBox="0 0 100 100" preserveAspectRatio="none" fill="none" className="h-20 w-full">
-          {PLATFORM_STAGES.map((stage, i) => {
-            const x = (i + 0.5) * 20;
+          {stages.map((stage, i) => {
+            const x = ((i + 0.5) * 100) / stages.length;
             const d = `M ${x} 0 C ${x} 55, 50 45, 50 100`;
             return (
               <g key={stage.id}>
@@ -90,7 +90,7 @@ function Funnel({ outcomes, playing }: { outcomes: Outcome[]; playing: boolean }
       {/* Narrow: the deck's other cards stack tall here, so the layers
           stack too, spread over the card's height. */}
       <div className="flex h-full flex-col px-4 py-6 sm:px-10 sm:py-8 lg:hidden">
-        <StackedLayers reduce={reduce} />
+        <StackedLayers stages={stages} reduce={reduce} />
         {card()}
       </div>
 
@@ -107,7 +107,7 @@ function Funnel({ outcomes, playing }: { outcomes: Outcome[]; playing: boolean }
 // it, so they read as separate connections converging on one card rather
 // than as steps in a sequence. Paths are drawn from measured positions, since
 // the cards spread to fill whatever height the deck gives them.
-function StackedLayers({ reduce }: { reduce: boolean | null }) {
+function StackedLayers({ stages, reduce }: { stages: Stage[]; reduce: boolean | null }) {
   const wrap = useRef<HTMLDivElement>(null);
   const items = useRef<(HTMLLIElement | null)[]>([]);
   const [geo, setGeo] = useState<{ w: number; h: number; starts: { x: number; y: number }[] } | null>(null);
@@ -120,14 +120,14 @@ function StackedLayers({ reduce }: { reduce: boolean | null }) {
       const w = el.clientWidth;
       const h = el.clientHeight;
       const starts = items.current.map((li, i) => ({
-        x: (w * (i + 0.5)) / PLATFORM_STAGES.length,
+        x: (w * (i + 0.5)) / stages.length,
         y: li ? li.offsetTop + li.offsetHeight : 0,
       }));
       setGeo({ w, h, starts });
     });
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
+  }, [stages.length]);
 
   return (
     <div ref={wrap} className="relative flex flex-1 flex-col pb-12">
@@ -137,7 +137,7 @@ function StackedLayers({ reduce }: { reduce: boolean | null }) {
             const mid = (geo.h - y) / 2;
             const d = `M ${x} ${y} C ${x} ${y + mid}, ${geo.w / 2} ${geo.h - mid}, ${geo.w / 2} ${geo.h}`;
             return (
-              <g key={PLATFORM_STAGES[i].id}>
+              <g key={stages[i].id}>
                 <path d={d} stroke="rgb(255 255 255 / 0.15)" strokeWidth={1} />
                 {!reduce && (
                   <path
@@ -157,7 +157,7 @@ function StackedLayers({ reduce }: { reduce: boolean | null }) {
         </svg>
       )}
       <ol className="relative flex flex-1 flex-col justify-between gap-6">
-        {PLATFORM_STAGES.map((stage, i) => (
+        {stages.map((stage, i) => (
           <li
             key={stage.id}
             ref={(el) => {
