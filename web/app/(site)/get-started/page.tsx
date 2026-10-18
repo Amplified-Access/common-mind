@@ -100,7 +100,7 @@ const GetStartedPage = async () => {
             className="absolute inset-0 -z-10 bg-[radial-gradient(rgb(255_255_255/0.22)_1px,transparent_1.2px)] bg-size-[9px_9px] mask-[linear-gradient(to_bottom,#000,rgb(0_0_0/0.55))]"
           />
           {/* As wide as the sections below, so the face ends where they do. */}
-          <div className="relative flex min-h-68 max-w-5xl items-center px-4 py-12 md:px-8 lg:px-16">
+          <div className="relative flex min-h-68 items-center px-4 py-12 md:px-8 lg:pl-16 xl:pr-12">
             <div className="relative z-10 flex max-w-88 flex-col items-start gap-4">
               <h1 className="text-h2">
                 <Emphasized text={copy.hero.title} />
@@ -121,12 +121,12 @@ const GetStartedPage = async () => {
               alt=""
               priority
               sizes="(min-width: 1024px) 512px, 80vw"
-              className="pointer-events-none absolute top-1/2 right-4 w-[min(32rem,80%)] translate-x-[5.3%] -translate-y-1/2 rotate-[5.4deg] opacity-40 md:right-8 lg:right-16 max-md:opacity-25"
+              className="pointer-events-none absolute top-1/2 right-4 w-[min(32rem,80%)] translate-x-[5.3%] -translate-y-1/2 rotate-[5.4deg] opacity-40 md:right-8 xl:right-12 max-md:opacity-25"
             />
           </div>
         </section>
 
-        <div className="flex max-w-5xl flex-col gap-20 px-4 pt-10 pb-24 md:px-8 lg:px-16">
+        <div className="flex flex-col gap-20 px-4 pt-10 pb-24 md:px-8 lg:pl-16 xl:pr-12">
           {/* Every place to start, as one grid of cards: the site's main areas,
               then the things to build. */}
           <ul id="overview" className="grid scroll-mt-24 gap-5 md:grid-cols-2 xl:grid-cols-3">
