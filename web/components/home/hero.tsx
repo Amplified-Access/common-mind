@@ -42,7 +42,7 @@ function HomeHero({ copy }: { copy: PageCopy<"home">["hero"] }) {
   return (
     <section className="zoom-viewport relative isolate overflow-hidden border-b border-line pt-(--header-height)">
       <Backdrop wash warmGrain sweep glow />
-      <Container className="flex flex-col items-center gap-14 pt-20 sm:pt-24">
+      <Container className="flex flex-col items-center gap-16 pt-16 sm:gap-18 sm:pt-20">
         <div className="flex max-w-3xl flex-col items-center gap-6 text-center">
           <h1 className="text-display text-balance">
             <Emphasized text={copy.titleLine1} />{" "}
