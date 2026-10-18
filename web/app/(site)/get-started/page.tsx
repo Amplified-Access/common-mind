@@ -101,11 +101,11 @@ const GetStartedPage = async () => {
           />
           {/* As wide as the sections below, so the face ends where they do. */}
           <div className="relative flex min-h-68 max-w-4xl items-center px-4 py-12 md:px-8 lg:px-16">
-            <div className="relative z-10 flex max-w-88 flex-col items-start gap-4">
+            <div className="relative z-10 flex max-w-104 flex-col items-start gap-4">
               <h1 className="text-h2">
                 <Emphasized text={copy.hero.title} />
               </h1>
-              <p className="text-sm text-pretty text-foreground/85">{copy.hero.lede}</p>
+              <p className="text-base text-pretty text-foreground/85">{copy.hero.lede}</p>
               <div className="flex flex-wrap gap-2 pt-2">
                 <LinkButton href="/data-lab" variant="outline">
                   {copy.hero.secondaryCta}
@@ -174,7 +174,7 @@ function Heading({ title, lede }: { title: string; lede: string }) {
   return (
     <div className="flex flex-col gap-4">
       <h2 className="text-h2">{title}</h2>
-      <p className="max-w-sm text-sm text-pretty text-foreground/85">{lede}</p>
+      <p className="max-w-md text-base text-pretty text-foreground/85">{lede}</p>
     </div>
   );
 }
