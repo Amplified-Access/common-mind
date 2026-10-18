@@ -1,8 +1,8 @@
 // The footer on every page, original wording.
 export const footer = {
   cta: {
-    title: "Build with open civic AI infrastructure.",
-    lede: "Use open models, datasets, benchmarks, and developer tools to build AI applications that understands civic discourse across languages and communities.",
+    title: "Build with open civic AI infrastructure",
+    lede: "Use open models, datasets, benchmarks, and tools to build applications that understand civic discourse across languages.",
     primary: "Start Building",
     secondary: "Explore Models",
   },
