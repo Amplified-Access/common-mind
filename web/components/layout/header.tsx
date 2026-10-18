@@ -63,7 +63,9 @@ const Header = () => {
           "relative flex items-center justify-between gap-6 border transition-[height,margin,padding,background-color,border-color,border-radius,box-shadow,backdrop-filter]",
           MORPH,
           floating
-            ? "mx-(--inset) mt-2 h-15.5 rounded-card border-line bg-background/70 px-6 shadow-[0_8px_30px_rgb(0_0_0/0.45)] backdrop-blur-xl"
+            ? // The end pads in by what's left above and below the last item:
+              // 9px around the 42px buttons, 18px around the 24px menu icon.
+              "mx-(--inset) mt-2 h-15.5 rounded-card border-line bg-background/70 pr-4.5 pl-6 shadow-[0_8px_30px_rgb(0_0_0/0.45)] backdrop-blur-xl xl:pr-2.25"
             : "mx-0 mt-0 h-14 rounded-none border-transparent bg-background px-(--inset)",
         )}
       >
