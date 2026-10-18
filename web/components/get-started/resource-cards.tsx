@@ -64,7 +64,7 @@ function ResourceCard({ href, title, text, cta, icon, size = "lead", highlight }
             className={cn("shrink-0", lead ? "size-8" : "size-6", highlight ? "text-background" : "text-signal")}
           />
         </div>
-        <p className={cn("max-w-md text-base text-pretty", highlight ? "text-background" : "text-faint")}>{text}</p>
+        <p className={cn("max-w-sm text-sm text-pretty", highlight ? "text-background" : "text-faint")}>{text}</p>
         <div className={cn("mt-auto", lead ? "pt-8" : "pt-5")}>
           <span className={buttonClasses(highlight ? "ink" : "cream", "h-10.5 px-5.5 [--chamfer:8px]")}>{cta}</span>
         </div>
@@ -87,7 +87,7 @@ function QuickstartRow({ href, title, text }: { href: string; title: string; tex
       />
       <div className="flex min-w-0 flex-col gap-4">
         <h3 className="text-xl leading-tight tracking-[-0.01em] text-signal sm:text-[1.5rem]">{title}</h3>
-        <p className="font-mono text-base text-pretty text-subtle">{text}</p>
+        <p className="font-mono text-xs text-pretty text-subtle sm:text-[0.8125rem]">{text}</p>
       </div>
       <Arrow className="size-6 text-signal transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
     </Link>
