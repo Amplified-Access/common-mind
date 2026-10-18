@@ -7,7 +7,7 @@ import { workedExamples } from "@/components/civic/data";
 import { FRAME, FRAME_PANELS, HALO } from "@/components/system/framed-card";
 import { cn } from "@/lib/utils";
 
-import { Funnel, type Outcome } from "./funnel";
+import { Funnel, type Outcome, type Stage } from "./funnel";
 import { PIPELINE_STAGES, StageReveal } from "./pipeline-stage";
 
 type DeckCard =
@@ -47,7 +47,15 @@ const RIGHT_PANEL = "bg-[#0b0a07]";
 // time. The deck cycles on its own while it is on screen and nobody is
 // hovering or focused inside it; the row of labels above it brings any card
 // to the front.
-function HeroDeck({ outcomes, className }: { outcomes: Outcome[]; className?: string }) {
+function HeroDeck({
+  stages,
+  outcomes,
+  className,
+}: {
+  stages: Stage[];
+  outcomes: Outcome[];
+  className?: string;
+}) {
   const cards = useMemo<DeckCard[]>(
     () => [
       { kind: "funnel", id: "commonmind", label: "CommonMind", dwell: FUNNEL_DWELL_MS },
@@ -167,7 +175,7 @@ function HeroDeck({ outcomes, className }: { outcomes: Outcome[]; className?: st
                 )}
                 {card.kind === "funnel" && (
                   <div className={cn(RIGHT_PANEL, "lg:col-span-2")}>
-                    <Funnel outcomes={outcomes} playing={front} />
+                    <Funnel stages={stages} outcomes={outcomes} playing={front} />
                   </div>
                 )}
               </div>
