@@ -183,12 +183,13 @@ function ArrowLink({
 /* Buttons as links                                                    */
 /* ------------------------------------------------------------------ */
 
-type ButtonVariant = "signal" | "outline" | "ink" | "bright" | "cream";
+type ButtonVariant = "signal" | "outline" | "ghost" | "ink" | "bright" | "cream";
 
 const buttonVariants: Record<ButtonVariant, string> = {
   // Pills: header and toolbars.
   signal: "h-8 chamfer bg-signal px-5 text-background hover:bg-signal/85",
   outline: "h-8 chamfer border border-signal px-5 text-signal hover:bg-signal hover:text-background",
+  ghost: "h-8 chamfer px-3 text-foreground hover:bg-white/8 hover:text-signal",
   cream: "h-10 chamfer bg-foreground px-5 text-background hover:bg-foreground/85",
   // Blocks: for use on the yellow call to action.
   ink: "h-10 chamfer bg-background px-6 text-signal hover:bg-background/85",

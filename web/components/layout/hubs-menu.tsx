@@ -5,7 +5,9 @@ import { ArrowDown01Icon, DatabaseIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 
 import { Arrow } from "@/components/system/arrow";
+import { buttonClasses } from "@/components/system/primitives";
 import { hubs } from "@/lib/site";
+import { cn } from "@/lib/utils";
 
 // The header's door to where the models and data are published: a ghost
 // "Repositories" button with a database icon and a chevron, opening a short
@@ -13,8 +15,10 @@ import { hubs } from "@/lib/site";
 function HubsMenu() {
   return (
     <Popover.Root>
-      <Popover.Trigger className="group flex h-8 cursor-pointer items-center gap-1.5 px-2 text-sm whitespace-nowrap text-foreground transition-colors hover:text-signal data-popup-open:text-signal">
-        <HugeiconsIcon icon={DatabaseIcon} strokeWidth={1.75} className="size-4.5" />
+      <Popover.Trigger
+        className={cn(buttonClasses("ghost"), "group cursor-pointer data-popup-open:bg-white/8 data-popup-open:text-signal")}
+      >
+        <HugeiconsIcon icon={DatabaseIcon} strokeWidth={1.75} className="size-4" />
         Repositories
         <HugeiconsIcon
           icon={ArrowDown01Icon}
