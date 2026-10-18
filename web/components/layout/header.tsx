@@ -107,7 +107,7 @@ const Header = () => {
             Hugging Face
           </a>
           <Link
-            href="/build"
+            href="/get-started"
             className={buttonClasses("signal", "max-xl:px-3.5")}
           >
             Get Started
@@ -150,7 +150,7 @@ const Header = () => {
             </nav>
             <div className="mt-auto flex flex-col gap-3 p-6">
               <Link
-                href="/build"
+                href="/get-started"
                 onClick={() => setMobileNavOpen(false)}
                 className={buttonClasses("signal", "h-11")}
               >
