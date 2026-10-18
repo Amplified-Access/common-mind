@@ -100,8 +100,9 @@ const GetStartedPage = async () => {
             aria-hidden
             className="absolute inset-0 -z-10 bg-[radial-gradient(rgb(255_255_255/0.22)_1px,transparent_1.2px)] bg-size-[9px_9px] mask-[linear-gradient(to_bottom,#000,rgb(0_0_0/0.55))]"
           />
-          <div className="relative flex min-h-[17rem] items-center px-4 py-12 md:px-8 lg:px-16">
-            <div className="relative z-10 flex max-w-[22rem] flex-col items-start gap-4">
+          {/* As wide as the sections below, so the face ends where they do. */}
+          <div className="relative flex min-h-68 max-w-4xl items-center px-4 py-12 md:px-8 lg:px-16">
+            <div className="relative z-10 flex max-w-88 flex-col items-start gap-4">
               <h1 className="text-h2">
                 <Emphasized text={copy.hero.title} />
               </h1>
@@ -113,17 +114,20 @@ const GetStartedPage = async () => {
                 <LinkButton href="#overview">{copy.hero.primaryCta}</LinkButton>
               </div>
             </div>
+            {/* Pinned to the content's right edge, then pushed past it by the
+                image's empty margin (5.3% of its width), so the tip of the face
+                lines up with the cards below. */}
             <Image
               src={heroHead}
               alt=""
               priority
-              sizes="(min-width: 1024px) 560px, 80vw"
-              className="pointer-events-none absolute top-1/2 right-[8%] w-[min(36rem,80%)] -translate-y-1/2 rotate-[5.4deg] opacity-40 max-md:right-[-20%] max-md:opacity-25"
+              sizes="(min-width: 1024px) 512px, 80vw"
+              className="pointer-events-none absolute top-1/2 right-4 w-[min(32rem,80%)] translate-x-[5.3%] -translate-y-1/2 rotate-[5.4deg] opacity-40 md:right-8 lg:right-16 max-md:opacity-25"
             />
           </div>
         </section>
 
-        <div className="flex max-w-[56rem] flex-col gap-20 px-4 pt-10 pb-24 md:px-8 lg:px-16">
+        <div className="flex max-w-4xl flex-col gap-20 px-4 pt-10 pb-24 md:px-8 lg:px-16">
           <section id="overview" className="flex scroll-mt-24 flex-col gap-8">
             <Heading title={copy.overview.title} lede={copy.overview.lede} />
             <ul className="grid gap-5 md:grid-cols-2">
