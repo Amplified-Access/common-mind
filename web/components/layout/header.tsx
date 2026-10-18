@@ -154,7 +154,7 @@ const Header = () => {
               <Link
                 href="/get-started"
                 onClick={() => setMobileNavOpen(false)}
-                className={buttonClasses("signal", "h-14.5")}
+                className={buttonClasses("signal", "h-11")}
               >
                 Get Started
               </Link>
@@ -162,7 +162,7 @@ const Header = () => {
                 href={site.links.huggingface}
                 target="_blank"
                 rel="noreferrer"
-                className={buttonClasses("outline", "h-14.5")}
+                className={buttonClasses("outline", "h-11")}
               >
                 Hugging Face
               </a>
