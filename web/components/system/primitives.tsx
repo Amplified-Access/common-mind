@@ -60,8 +60,6 @@ type SectionHeaderProps = {
   layout?: "stack" | "split";
   align?: "start" | "center";
   size?: "h1" | "h2" | "h3";
-  /** Classes for the lede: a page that sets its copy larger, say. */
-  ledeClassName?: string;
   className?: string;
 };
 
@@ -73,7 +71,6 @@ function SectionHeader({
   layout = "stack",
   align = "start",
   size = "h2",
-  ledeClassName,
   className,
 }: SectionHeaderProps) {
   const heading = (
@@ -98,7 +95,7 @@ function SectionHeader({
         </div>
         {(lede || action) && (
           <div className="flex max-w-lg flex-col gap-6 md:pt-1">
-            {lede && <p className={cn("text-sm text-pretty text-foreground/80", ledeClassName)}>{lede}</p>}
+            {lede && <p className="text-sm text-pretty text-foreground/80">{lede}</p>}
             {action}
           </div>
         )}
@@ -117,7 +114,7 @@ function SectionHeader({
       {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
       {heading}
       {lede && (
-        <p className={cn("max-w-md text-sm text-pretty text-foreground/80", ledeClassName)}>{lede}</p>
+        <p className="max-w-md text-sm text-pretty text-foreground/80">{lede}</p>
       )}
       {action && <div className="pt-2">{action}</div>}
     </div>

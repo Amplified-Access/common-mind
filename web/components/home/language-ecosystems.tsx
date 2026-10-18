@@ -108,7 +108,7 @@ function LanguageEcosystems({ ecosystems }: { ecosystems: Ecosystem[] }) {
                   </div>
                 ))}
               </dl>
-              <p className="max-w-sm text-base text-pretty text-faint">{current.description}</p>
+              <p className="max-w-xs text-xs leading-relaxed text-faint">{current.description}</p>
               <ArrowLink href={`/languages/${current.code}`} className="mt-auto">
                 Explore {current.name}
               </ArrowLink>
