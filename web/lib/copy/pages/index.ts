@@ -3,6 +3,7 @@ import type { CopyTree } from "../overlay";
 import { applications } from "./applications";
 import { benchmarks } from "./benchmarks";
 import { build } from "./build";
+import { callToAction } from "./call-to-action";
 import { civicCorpus } from "./civic-corpus";
 import { dataLab } from "./data-lab";
 import { datasetDetail } from "./dataset-detail";
@@ -39,6 +40,7 @@ export const PAGES = {
   applications: { title: "Applications", copy: applications },
   dataLab: { title: "Data Lab", copy: dataLab },
   licenses: { title: "Licenses", copy: licenses },
+  callToAction: { title: "Call to action", copy: callToAction },
   footer: { title: "Footer", copy: footer },
 } satisfies Record<string, { title: string; copy: CopyTree }>;
 

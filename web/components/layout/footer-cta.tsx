@@ -9,10 +9,10 @@ import type { PageCopy } from "@/lib/copy/pages";
 // The model index already is the place "Explore Models" points to, so the
 // closing call to action would only point back at the page itself. The
 // Datasets page has its own wording.
-function FooterCta({ copy: footer }: { copy: PageCopy<"footer"> }) {
+function FooterCta({ copy: cta }: { copy: PageCopy<"callToAction"> }) {
   const pathname = usePathname();
   if (pathname === "/models") return null;
-  const copy = pathname === "/datasets" ? footer.datasetsCta : footer.cta;
+  const copy = pathname === "/datasets" ? cta.datasets : cta;
 
   return (
     <section className="relative isolate overflow-hidden rounded-card bg-signal text-background">
@@ -34,10 +34,10 @@ function FooterCta({ copy: footer }: { copy: PageCopy<"footer"> }) {
         </p>
         <div className="flex flex-wrap justify-center gap-3 pt-3">
           <LinkButton href="/build" variant="ink" arrow>
-            {footer.cta.primary}
+            {cta.primary}
           </LinkButton>
           <LinkButton href="/models" variant="bright" arrow>
-            {footer.cta.secondary}
+            {cta.secondary}
           </LinkButton>
         </div>
       </div>

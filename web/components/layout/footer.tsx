@@ -18,7 +18,11 @@ import { cn } from "@/lib/utils";
 const SECONDS_PER_LOGO = 4;
 
 const Footer = async () => {
-  const [{ settings }, copy] = await Promise.all([getContent(), getPageCopy("footer")]);
+  const [{ settings }, copy, cta] = await Promise.all([
+    getContent(),
+    getPageCopy("footer"),
+    getPageCopy("callToAction"),
+  ]);
   const { partners, footerColumns, legalLinks, organization } = settings;
   const PARTNER_RUN = partners.length
     ? Array.from({ length: Math.ceil(12 / partners.length) }, () => partners).flat()
@@ -29,7 +33,7 @@ const Footer = async () => {
     <footer className="zoom-viewport">
       {/* The last section's bottom padding sets the space above. */}
       <Container className="flex flex-col gap-10">
-        <FooterCta copy={copy} />
+        <FooterCta copy={cta} />
         <div className="flex flex-col gap-6 rounded-card bg-[#1a1608] px-6 py-5 sm:flex-row sm:items-center sm:gap-12 sm:px-8">
           <span className="shrink-0 text-h2 text-foreground">{copy.powering}</span>
           <div className="min-w-0 flex-1 overflow-hidden mask-[linear-gradient(to_right,transparent,#000_8%,#000_92%,transparent)] motion-reduce:mask-none">
