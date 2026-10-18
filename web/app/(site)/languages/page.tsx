@@ -3,7 +3,6 @@ import { languages } from "@/components/languages/data";
 import { ecosystemFor } from "@/components/languages/ecosystem";
 import { LanguageGlobe } from "@/components/languages/language-globe";
 import { LanguageGrid } from "@/components/languages/language-grid";
-import { registryModels } from "@/components/models/registry";
 import { Backdrop } from "@/components/system/backdrop";
 import { Eyebrow, Section, SectionHeader } from "@/components/system/primitives";
 import { getContent } from "@/lib/content";
@@ -29,12 +28,7 @@ const LanguagesPage = async () => {
     };
   });
 
-  const stats = [
-    { value: languages.length, label: copy.stats.languages },
-    { value: new Set(languages.flatMap((l) => l.regions)).size, label: copy.stats.countries },
-    { value: datasets.length, label: copy.stats.datasets },
-    { value: registryModels.length, label: copy.stats.models },
-  ];
+  const { stats } = copy;
 
   return (
     <>
@@ -50,7 +44,7 @@ const LanguagesPage = async () => {
                 {copy.hero.lede}
               </p>
               <dl className="grid grid-cols-[11rem_auto] gap-y-6 pt-4">
-                {stats.map((stat) => (
+                {[stats.languages, stats.countries, stats.datasets, stats.models].map((stat) => (
                   <div key={stat.label} className="flex flex-col-reverse gap-1">
                     <dt className="font-mono text-[13px]">{stat.label}</dt>
                     <dd className="font-mono text-[1.625rem] leading-tight text-signal">{stat.value}</dd>
