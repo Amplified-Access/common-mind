@@ -16,7 +16,7 @@ function HubsMenu() {
   return (
     <Popover.Root>
       <Popover.Trigger
-        className={cn(buttonClasses("ghost"), "group cursor-pointer data-popup-open:bg-white/8 data-popup-open:text-signal")}
+        className={cn(buttonClasses("ghost", "text-signal"), "group cursor-pointer data-popup-open:bg-white/8")}
       >
         Repositories
         <HugeiconsIcon
