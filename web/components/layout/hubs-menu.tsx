@@ -1,7 +1,7 @@
 "use client";
 
 import { Popover } from "@base-ui/react/popover";
-import { ArrowDown01Icon, Database01Icon } from "@hugeicons/core-free-icons";
+import { ArrowDown01Icon, DatabaseIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 
 import { Arrow } from "@/components/system/arrow";
@@ -17,7 +17,7 @@ function HubsMenu() {
         aria-label="Models and data"
         className="group flex h-8 cursor-pointer items-center gap-1 px-2 text-foreground transition-colors hover:text-signal data-popup-open:text-signal"
       >
-        <HugeiconsIcon icon={Database01Icon} strokeWidth={1.75} className="size-4.5" />
+        <HugeiconsIcon icon={DatabaseIcon} strokeWidth={1.75} className="size-4.5" />
         <HugeiconsIcon
           icon={ArrowDown01Icon}
           strokeWidth={2}
