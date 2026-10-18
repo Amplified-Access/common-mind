@@ -6,7 +6,7 @@ export const languages = {
   },
   hero: {
     eyebrow: "Languages",
-    title: "Explore civic AI by language.",
+    title: "Explore civic AI by language",
     lede: "Each language is an ecosystem of its own, expore the open models, civic discourse datasets, benchmarks, terminology, and research supporting AI development across languages beyond the mainstream.",
   },
   // The figures beside the globe, each a value over its label. Editors set

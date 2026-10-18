@@ -6,7 +6,7 @@ export const callToAction = {
   primary: "Start Building",
   secondary: "Explore Models",
   datasets: {
-    title: "Build with open language data.",
+    title: "Build with open language data",
     lede: "Bring open datasets, models, and evaluation resources into your multilingual AI applications.",
   },
 };

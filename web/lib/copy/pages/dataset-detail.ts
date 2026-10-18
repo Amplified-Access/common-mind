@@ -13,23 +13,23 @@ export const datasetDetail = {
   },
   overview: {
     eyebrow: "Overview",
-    title: "The data, in context.",
+    title: "The data, in context",
     usedBy: "CommonMind uses it to train and evaluate {models}.",
     tableTitle: "DATASET INFORMATION",
   },
   data: {
     eyebrow: "Data",
-    title: "Explore what's in the dataset.",
+    title: "Explore what's in the dataset",
     lede: "Understand the language, content, and structure represented within the corpus.",
     previewTitle: "DATA PREVIEW",
     previewNote: "Sample rows will appear here once the preview is published.",
-    representedTitle: "What's represented.",
+    representedTitle: "What's represented",
     representedLede: "Understand the languages, data types, and contexts covered by this dataset.",
     domains: "Domains",
   },
   methodology: {
     eyebrow: "Methodology",
-    title: "How the dataset was built.",
+    title: "How the dataset was built",
     lede: "Learn how the data was collected, processed, structured, reviewed, and prepared for civic language research.",
     collection: { title: "Collection", text: "How the source language data was gathered." },
     processing: {
@@ -44,7 +44,7 @@ export const datasetDetail = {
   },
   usage: {
     eyebrow: "Usage",
-    title: "Use {name}.",
+    title: "Use {name}",
     lede: "Access the dataset for research, model development, evaluation, and civic language experimentation.",
     documentationTab: "Documentation",
     documentationText: "The publisher's page documents the dataset's sources, structure and terms of use.",
@@ -54,13 +54,13 @@ export const datasetDetail = {
   },
   models: {
     eyebrow: "Connected Models",
-    title: "Models connected to this dataset.",
+    title: "Models connected to this dataset",
     lede: "Explore models and language tools built with {name}.",
     cardCta: "View Model",
   },
   limitations: {
     eyebrow: "Limitations",
-    title: "Understand the boundaries of the data.",
+    title: "Understand the boundaries of the data",
     lede: "Review known limitations, representation gaps, intended uses, and areas where additional language data or research may be needed.",
     known: { title: "Known Limitations", text: "Document known gaps and constraints within the dataset." },
     intended: {
@@ -78,7 +78,7 @@ export const datasetDetail = {
   },
   versions: {
     eyebrow: "Versions",
-    title: "Dataset history.",
+    title: "Dataset history",
     lede: "Track changes, additions, and improvements across releases.",
     inUse: "In use",
     releaseNotes: "View Release Notes",

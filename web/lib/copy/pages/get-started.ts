@@ -28,7 +28,7 @@ export const getStarted = {
     },
   },
   hero: {
-    title: "Start building with\n*CommonMind.*",
+    title: "Start building with\n*CommonMind*",
     lede: "Access language models, explore datasets, and build AI experiences that understand more voices.",
     primaryCta: "Models",
     secondaryCta: "Data Lab",
@@ -52,7 +52,7 @@ export const getStarted = {
       cta: "Read the Docs",
     },
     dataLab: {
-      title: "Turn Language Data into Meaningful Impact.",
+      title: "Turn Language Data into Meaningful Impact",
       text: "Explore the CommonMind Data Lab, a collaborative space for building, improving, and evaluating language datasets that power more inclusive AI.",
       cta: "Explore Data Lab",
     },

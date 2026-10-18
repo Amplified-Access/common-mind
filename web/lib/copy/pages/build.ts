@@ -7,7 +7,7 @@ export const build = {
   },
   hero: {
     eyebrow: "Build",
-    title: "Build with CommonMind.",
+    title: "Build with CommonMind",
     lede: "From experimentation to production. Open models, APIs, and deployment tools for building multilingual AI applications grounded in civic discourse.",
     tags: ["OPEN MODELS", "APIs", "DEPLOYMENT"],
     primaryCta: "Get Started",
@@ -15,12 +15,12 @@ export const build = {
   },
   quickstart: {
     eyebrow: "Quickstart",
-    title: "From code to inference in minutes.",
+    title: "From code to inference in minutes",
     lede: "Load an open model with Transformers and PEFT to run English-to-Swahili translation locally.",
   },
   journey: {
     eyebrow: "Developer Journey",
-    title: "Discover. Install. Run. Build. Deploy.",
+    title: "Discover. Install. Run. Build. Deploy",
     lede: "A clear path from exploring open models to integrating multilingual capabilities into real-world applications.",
     discover: {
       label: "Discover",
@@ -39,7 +39,7 @@ export const build = {
   },
   paths: {
     eyebrow: "Deployment",
-    title: "Built for your infrastructure.",
+    title: "Built for your infrastructure",
     lede: "Integrate CommonMind models into existing development environments, from local experimentation to production systems.",
     python: { label: "Python", text: "Model inference using Transformers and PEFT." },
     huggingface: { label: "Hugging Face", text: "Open weights, adapters, and model documentation." },
@@ -53,7 +53,7 @@ export const build = {
   },
   api: {
     eyebrow: "API",
-    title: "One interface. Multiple models.",
+    title: "One interface. Multiple models",
     lede: "Access multilingual translation through a consistent API, with simple requests for model selection, text input, and language direction.",
     modelSlug: "Identifier of the model to run",
     text: "Input text, up to 500 characters",
