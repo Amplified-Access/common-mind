@@ -3,11 +3,11 @@ import type { CopyTree } from "../overlay";
 import { applications } from "./applications";
 import { benchmarks } from "./benchmarks";
 import { build } from "./build";
+import { callToAction } from "./call-to-action";
 import { civicCorpus } from "./civic-corpus";
 import { dataLab } from "./data-lab";
 import { datasetDetail } from "./dataset-detail";
 import { datasets } from "./datasets";
-import { footer } from "./footer";
 import { getStarted } from "./get-started";
 import { home } from "./home";
 import { languageDetail } from "./language-detail";
@@ -39,7 +39,7 @@ export const PAGES = {
   applications: { title: "Applications", copy: applications },
   dataLab: { title: "Data Lab", copy: dataLab },
   licenses: { title: "Licenses", copy: licenses },
-  footer: { title: "Footer", copy: footer },
+  callToAction: { title: "Call to action", copy: callToAction },
 } satisfies Record<string, { title: string; copy: CopyTree }>;
 
 export type PageKey = keyof typeof PAGES;

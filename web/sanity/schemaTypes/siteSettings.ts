@@ -1,10 +1,9 @@
 import { CogIcon } from "@sanity/icons/Cog";
-import { defineArrayMember, defineField, defineType } from "sanity";
+import { defineField, defineType } from "sanity";
 
-import { logoFields } from "./parts";
-
-// Site-wide settings: how the site describes itself, the announcement bar,
-// the footer's partners and link columns. One document, id "siteSettings".
+// Site-wide settings: how the site describes itself and the announcement
+// bar. The footer has its own document (footer.ts). One document, id
+// "siteSettings".
 export const siteSettings = defineType({
   name: "siteSettings",
   title: "Site settings",
@@ -13,7 +12,6 @@ export const siteSettings = defineType({
   groups: [
     { name: "identity", title: "Identity", default: true },
     { name: "announcement", title: "Announcement" },
-    { name: "footer", title: "Footer" },
   ],
   fields: [
     defineField({
@@ -59,49 +57,6 @@ export const siteSettings = defineType({
         defineField({ name: "message", type: "string", validation: (rule) => rule.required() }),
         defineField({ name: "link", type: "link" }),
       ],
-    }),
-    defineField({
-      name: "partners",
-      type: "array",
-      group: "footer",
-      description: "The projects CommonMind powers or partners with, scrolling across the footer.",
-      of: [
-        defineArrayMember({
-          type: "object",
-          name: "partner",
-          fields: [
-            defineField({ name: "name", type: "string", validation: (rule) => rule.required() }),
-            defineField({ name: "href", title: "Website", type: "url" }),
-            ...logoFields,
-          ],
-          preview: { select: { title: "name", subtitle: "href", media: "logo" } },
-        }),
-      ],
-    }),
-    defineField({
-      name: "footerColumns",
-      title: "Footer columns",
-      type: "array",
-      group: "footer",
-      of: [
-        defineArrayMember({
-          type: "object",
-          name: "footerColumn",
-          fields: [
-            defineField({ name: "title", type: "string", validation: (rule) => rule.required() }),
-            defineField({ name: "links", type: "array", of: [defineArrayMember({ type: "link" })] }),
-          ],
-          preview: { select: { title: "title" } },
-        }),
-      ],
-    }),
-    defineField({
-      name: "legalLinks",
-      title: "Legal links",
-      type: "array",
-      group: "footer",
-      description: "The links along the bottom of the footer.",
-      of: [defineArrayMember({ type: "link" })],
     }),
   ],
   preview: { prepare: () => ({ title: "Site settings" }) },

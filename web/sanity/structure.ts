@@ -3,14 +3,16 @@ import { CubeIcon } from "@sanity/icons/Cube";
 import { DocumentIcon } from "@sanity/icons/Document";
 import { DocumentTextIcon } from "@sanity/icons/DocumentText";
 import { DocumentsIcon } from "@sanity/icons/Documents";
+import { TranslateIcon } from "@sanity/icons/Translate";
 import type { StructureResolver } from "sanity/structure";
 
+import { languages } from "../components/languages/data";
 import { registryModels } from "../components/models/registry";
 import { PAGES, pageDocumentId, pageTypeName, type PageKey } from "../lib/copy/pages";
 
 import { PAGE_TYPES } from "./pageCopy";
 
-// The Studio's sidebar. Fixed documents (each page's words, site settings,
+// The Studio's sidebar. Fixed documents (each page's words, the footer, site settings, one document per language,
 // the legal pages, one copy document per registry model) open straight from
 // the sidebar and are never created or deleted by editors; their IDs are
 // what the site reads.
@@ -21,9 +23,10 @@ export const LEGAL_PAGES = [
 ];
 
 /** Document types that only exist as the fixed documents above. */
-export const FIXED_TYPES = new Set(["siteSettings", "legalPage", "model", ...PAGE_TYPES]);
+export const FIXED_TYPES = new Set(["siteSettings", "footer", "legalPage", "model", "language", ...PAGE_TYPES]);
 
 export const modelDocumentId = (slug: string) => `model-${slug}`;
+export const languageDocumentId = (code: string) => `language-${code}`;
 
 export const structure: StructureResolver = (S) =>
   S.list()
@@ -35,8 +38,8 @@ export const structure: StructureResolver = (S) =>
         .child(
           S.list()
             .title("Pages")
-            .items(
-              (Object.keys(PAGES) as PageKey[]).map((key) =>
+            .items([
+              ...(Object.keys(PAGES) as PageKey[]).map((key) =>
                 S.listItem()
                   .title(PAGES[key].title)
                   .id(pageDocumentId(key))
@@ -48,7 +51,12 @@ export const structure: StructureResolver = (S) =>
                       .title(PAGES[key].title),
                   ),
               ),
-            ),
+              S.listItem()
+                .title("Footer")
+                .id("footer")
+                .icon(DocumentIcon)
+                .child(S.document().schemaType("footer").documentId("footer").title("Footer")),
+            ]),
         ),
       S.listItem()
         .title("Research")
@@ -78,6 +86,28 @@ export const structure: StructureResolver = (S) =>
                       .schemaType("model")
                       .documentId(modelDocumentId(slug))
                       .initialValueTemplate("model-for-slug", { slug })
+                      .title(name),
+                  ),
+              ),
+            ),
+        ),
+      S.listItem()
+        .title("Languages")
+        .icon(TranslateIcon)
+        .child(
+          S.list()
+            .title("Languages")
+            .items(
+              languages.map(({ code, name }) =>
+                S.listItem()
+                  .title(name)
+                  .id(languageDocumentId(code))
+                  .icon(TranslateIcon)
+                  .child(
+                    S.document()
+                      .schemaType("language")
+                      .documentId(languageDocumentId(code))
+                      .initialValueTemplate("language-for-code", { code })
                       .title(name),
                   ),
               ),

@@ -1,6 +1,6 @@
 ---
 topic: cms
-last_verified: 2026-10-15
+last_verified: 2026-10-18
 sources:
   - sanity.config.ts
   - sanity.cli.ts
@@ -26,9 +26,11 @@ The site's words and editorial content live in Sanity (project `8m5302r8`, datas
 |---|---|
 | Every page's words: headings, intros, buttons, search titles and descriptions (`lib/copy/pages` holds the originals) | Page structure, layout, and interface labels (filters, search boxes, chart controls) |
 | Research reports and model releases | The model registry: names, bases, scores, availability (`components/models/registry.ts`) |
-| Datasets and applications | Benchmark results, language data, civic terminology |
+| Datasets and applications | Benchmark results, civic terminology |
+| Each language's details: endonym, family, branch, script, countries, tagline | Each language's code, name, map location and matching tags (`components/languages/data.ts`) |
 | Each model's written copy: tagline, overview, capabilities, highlights, usage example | Code samples on the Build page (`components/build/snippets.ts`) |
-| Site settings: description, announcement bar, footer partners and links | Header navigation (`lib/site.ts`) |
+| Site settings: description, announcement bar, the organization | Header navigation (`lib/site.ts`) |
+| The footer: partner logos, link columns, legal links, its text lines and © line | |
 | Privacy Policy and Terms of Use (rich text) | The Data Lab app's own screens |
 
 ## Setup
@@ -80,11 +82,15 @@ A new page: create its copy module, add it to `PAGES`, then run `pnpm sanity:see
 | Applications | `application` | any; `order` sets the list order |
 | Legal pages | `legalPage` | `legal-privacy`, `legal-terms` (fixed) |
 | Site settings | `siteSettings` | `siteSettings` (fixed) |
+| Pages → Footer | `footer` | `footer` (fixed) |
+| Languages → *each language* | `language` | `language-<code>` (fixed) |
 | Pages → *each page* | `<key>Page` | `page-<key>` (fixed) |
 
 Fixed documents open straight from the sidebar and can't be created, duplicated or deleted (`FIXED_TYPES` in `sanity/structure.ts`).
 
 **A new model** starts in the registry in code (`components/models/registry.ts`), which owns its name, scores and availability. Once deployed, it appears under Models in the Studio, where its copy is written. Until then its page renders without copy.
+
+**A new language** starts in `components/languages/data.ts` (code, name, map location, tags). Its details are written under Languages in the Studio; until then its card and page show only its name.
 
 **Legal pages:** start each numbered section with a *Section heading*; the site numbers them. *To confirm* marks details still pending (yellow), *Bright* highlights text, *Monospace* is for contact details.
 

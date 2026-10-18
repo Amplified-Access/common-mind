@@ -11,7 +11,7 @@ import { cardColor, ColorCard } from "@/components/system/color-card";
 import { InfoTable } from "@/components/system/info-table";
 import { PageHero } from "@/components/system/page-hero";
 import { ArrowLink, LinkButton, Section, SectionHeader } from "@/components/system/primitives";
-import { getContent } from "@/lib/content";
+import { getContent, languageCopyFor } from "@/lib/content";
 import { getPageCopy } from "@/lib/copy";
 import { fill } from "@/lib/copy/fill";
 
@@ -27,7 +27,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { code } = await params;
   const language = getLanguage(code);
   if (!language) return {};
-  return { title: language.name, description: language.tagline };
+  const { tagline } = languageCopyFor(await getContent(), code);
+  return { title: language.name, description: tagline };
 }
 
 const CONTRIBUTIONS = ["corpus", "terminology", "models", "benchmarks"] as const;
@@ -39,6 +40,7 @@ const LanguagePage = async ({ params }: PageProps) => {
 
   const [content, copy] = await Promise.all([getContent(), getPageCopy("languageDetail")]);
   const name = { name: language.name };
+  const details = languageCopyFor(content, language.code);
   const { models, research } = ecosystemFor(language, content);
   const languageData = content.datasets.filter((d) => d.languages.includes(language.name));
   const built = models.length > 0;
@@ -48,8 +50,8 @@ const LanguagePage = async ({ params }: PageProps) => {
       <PageHero
         eyebrow={built ? copy.hero.eyebrowActive : copy.hero.eyebrowOpen}
         title={language.name}
-        lede={language.tagline}
-        tags={[language.family, language.branch, ...language.regions.slice(0, 2)]}
+        lede={details.tagline}
+        tags={[details.family, details.branch, ...details.regions.slice(0, 2)].filter(Boolean)}
       />
 
       <Section id="about">
@@ -64,10 +66,10 @@ const LanguagePage = async ({ params }: PageProps) => {
             title={copy.about.tableTitle}
             ruled
             rows={[
-              { label: "Endonym", value: language.endonym },
-              { label: "Family", value: `${language.family} · ${language.branch}` },
-              { label: "Script", value: language.script },
-              { label: "Regions", value: language.regions.join(", ") },
+              { label: "Endonym", value: details.endonym ?? undefined },
+              { label: "Family", value: `${details.family} · ${details.branch}` },
+              { label: "Script", value: details.script },
+              { label: "Regions", value: details.regions.join(", ") },
               { label: "Open models", value: built ? String(models.length).padStart(2, "0") : undefined },
               { label: "Datasets", value: languageData.length ? String(languageData.length).padStart(2, "0") : undefined },
             ]}

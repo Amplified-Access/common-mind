@@ -20,7 +20,7 @@ function Foundation({ copy }: { copy: PageCopy<"home">["foundation"] }) {
         <p className="max-w-4xl text-h2 text-pretty lg:max-w-[75%]">
           <Emphasized text={copy.statement} />
         </p>
-        <ArrowLink href="#platform" arrow="up-right" className="text-sm">
+        <ArrowLink href="/get-started" arrow="up-right" className="text-sm">
           {copy.cta}
         </ArrowLink>
       </Container>

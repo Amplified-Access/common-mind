@@ -35,6 +35,14 @@ export default defineConfig({
         parameters: [{ name: "slug", type: "string" }],
         value: (params: { slug: string }) => ({ slug: params.slug, usage: { language: "python" } }),
       },
+      // A language's details, opened from its entry under Languages.
+      {
+        id: "language-for-code",
+        title: "Language details",
+        schemaType: "language",
+        parameters: [{ name: "code", type: "string" }],
+        value: (params: { code: string }) => ({ code: params.code }),
+      },
     ],
   },
   document: {
@@ -47,6 +55,10 @@ export default defineConfig({
           )
         : actions,
     newDocumentOptions: (prev) =>
-      prev.filter((item) => item.templateId !== "model-for-slug" && !FIXED_TYPES.has(item.templateId)),
+      prev.filter(
+        (item) =>
+          !["model-for-slug", "language-for-code"].includes(item.templateId) &&
+          !FIXED_TYPES.has(item.templateId),
+      ),
   },
 });

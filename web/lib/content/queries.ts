@@ -18,9 +18,14 @@ export const CONTENT_QUERY = defineQuery(`{
         "link": select(defined(link.href) => link${link}, null)
       },
       null
-    ),
+    )
+  },
+  "footer": *[_id == "footer"][0]{
+    powering,
+    initiative,
+    copyright,
     "partners": coalesce(partners[]{ name, href, logoSize, "logo": logo.asset->${image} }, []),
-    "footerColumns": coalesce(footerColumns[]{ title, "links": coalesce(links[]${link}, []) }, []),
+    "columns": coalesce(columns[]{ title, "links": coalesce(links[]${link}, []) }, []),
     "legalLinks": coalesce(legalLinks[]${link}, [])
   },
   "datasets": *[_type == "dataset"] | order(order asc){
@@ -61,6 +66,15 @@ export const CONTENT_QUERY = defineQuery(`{
     logoSize,
     description,
     "tags": coalesce(tags, [])
+  },
+  "languages": *[_type == "language" && defined(code)]{
+    code,
+    endonym,
+    family,
+    branch,
+    script,
+    "regions": coalesce(regions, []),
+    tagline
   },
   "models": *[_type == "model" && defined(slug)]{
     slug,

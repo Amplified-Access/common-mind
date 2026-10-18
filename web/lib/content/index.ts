@@ -6,7 +6,7 @@ import { cache } from "react";
 import { sanityFetch } from "@/lib/sanity/client";
 
 import { CONTENT_QUERY, LEGAL_PAGE_QUERY } from "./queries";
-import type { Content, ModelCopy } from "./types";
+import type { Content, Footer, LanguageCopy, ModelCopy } from "./types";
 
 export type * from "./types";
 
@@ -16,14 +16,26 @@ export type * from "./types";
  * fetch (which Next caches for a minute; lib/sanity/client.ts).
  */
 export const getContent = cache(async (): Promise<Content> => {
-  const content = await sanityFetch<Content | null>(CONTENT_QUERY);
+  const content = await sanityFetch<(Omit<Content, "footer"> & { footer: Footer | null }) | null>(
+    CONTENT_QUERY,
+  );
   if (!content?.settings) {
     throw new Error(
       'Sanity has no "siteSettings" document. Run `pnpm sanity:seed` (docs/cms.md).',
     );
   }
-  return content;
+  return { ...content, footer: content.footer ?? NO_FOOTER };
 });
+
+/** Until the "footer" document is published, the footer shows only the logo. */
+const NO_FOOTER: Footer = {
+  powering: "",
+  initiative: "",
+  copyright: "",
+  partners: [],
+  columns: [],
+  legalLinks: [],
+};
 
 const NO_COPY: Omit<ModelCopy, "slug"> = {
   tagline: "",
@@ -37,6 +49,20 @@ const NO_COPY: Omit<ModelCopy, "slug"> = {
 /** A registry model's written copy; empty until an editor writes it. */
 export function copyFor(content: Content, slug: string): ModelCopy {
   return content.models.find((m) => m.slug === slug) ?? { slug, ...NO_COPY };
+}
+
+const NO_LANGUAGE_COPY: Omit<LanguageCopy, "code"> = {
+  endonym: null,
+  family: "",
+  branch: "",
+  script: "",
+  regions: [],
+  tagline: "",
+};
+
+/** A language's details; empty until an editor writes them. */
+export function languageCopyFor(content: Content, code: string): LanguageCopy {
+  return content.languages.find((l) => l.code === code) ?? { code, ...NO_LANGUAGE_COPY };
 }
 
 export type LegalPage = {
