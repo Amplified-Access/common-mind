@@ -2,7 +2,7 @@ import { lugandaHeldOut, swahiliFlores, type LanguageBenchmark } from "@/compone
 import { Container } from "@/components/common/container";
 import { registryModels } from "@/components/models/registry";
 import { Backdrop } from "@/components/system/backdrop";
-import { ArrowLink } from "@/components/system/primitives";
+import { LinkButton } from "@/components/system/primitives";
 import { Emphasized } from "@/lib/copy/emphasized";
 import type { PageCopy } from "@/lib/copy/pages";
 
@@ -53,11 +53,11 @@ function HomeHero({ copy }: { copy: PageCopy<"home">["hero"] }) {
           <p className="max-w-xl text-base text-pretty text-foreground/90">
             {copy.lede}
           </p>
-          <div className="flex flex-wrap justify-center gap-x-10 gap-y-3 pt-4">
-            <ArrowLink href="/models" tone="foreground">
-              {copy.primaryCta}
-            </ArrowLink>
-            <ArrowLink href="/models#try">{copy.secondaryCta}</ArrowLink>
+          <div className="flex flex-wrap justify-center gap-3 pt-4">
+            <LinkButton href="/models">{copy.primaryCta}</LinkButton>
+            <LinkButton href="/models#try" variant="outline">
+              {copy.secondaryCta}
+            </LinkButton>
           </div>
         </div>
         {/* Runs past the section's bottom edge, which cuts the cards off so
