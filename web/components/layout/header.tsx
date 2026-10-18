@@ -9,9 +9,10 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 import { buttonClasses } from "@/components/system/primitives";
-import { isActive, isStandalone, navItems, site } from "@/lib/site";
+import { hubs, isActive, isStandalone, navItems } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
+import { HubsMenu } from "./hubs-menu";
 import {
   Sheet,
   SheetContent,
@@ -80,7 +81,7 @@ const Header = () => {
           />
         </Link>
 
-        <nav className="hidden items-center gap-6 lg:flex xl:absolute xl:left-1/2 xl:-translate-x-1/2 xl:gap-7">
+        <nav className="hidden items-center gap-5 lg:flex xl:absolute xl:left-1/2 xl:-translate-x-1/2 xl:gap-7">
           {navItems.map((item) => {
             const active = isActive(pathname, item.href);
             return (
@@ -89,7 +90,7 @@ const Header = () => {
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "text-trim py-2 text-sm transition-colors",
+                  "text-trim py-2 text-sm whitespace-nowrap transition-colors",
                   active ? "text-signal" : "text-foreground hover:text-signal",
                 )}
               >
@@ -100,14 +101,7 @@ const Header = () => {
         </nav>
 
         <div className="hidden items-center gap-2 lg:flex">
-          <a
-            href={site.links.huggingface}
-            target="_blank"
-            rel="noreferrer"
-            className={buttonClasses("outline", "max-xl:px-3.5")}
-          >
-            Hugging Face
-          </a>
+          <HubsMenu />
           <Link
             href="/get-started"
             className={buttonClasses("signal", "max-xl:px-3.5")}
@@ -158,14 +152,19 @@ const Header = () => {
               >
                 Get Started
               </Link>
-              <a
-                href={site.links.huggingface}
-                target="_blank"
-                rel="noreferrer"
-                className={buttonClasses("outline", "h-11")}
-              >
-                Hugging Face
-              </a>
+              <div className="grid grid-cols-3 gap-2">
+                {hubs.map((hub) => (
+                  <a
+                    key={hub.href}
+                    href={hub.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={buttonClasses("outline", "h-11 px-2")}
+                  >
+                    {hub.label}
+                  </a>
+                ))}
+              </div>
             </div>
           </SheetContent>
         </Sheet>

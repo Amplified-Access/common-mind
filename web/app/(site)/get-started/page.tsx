@@ -100,7 +100,7 @@ const GetStartedPage = async () => {
             className="absolute inset-0 -z-10 bg-[radial-gradient(rgb(255_255_255/0.22)_1px,transparent_1.2px)] bg-size-[9px_9px] mask-[linear-gradient(to_bottom,#000,rgb(0_0_0/0.55))]"
           />
           {/* As wide as the sections below, so the face ends where they do. */}
-          <div className="relative flex min-h-68 max-w-4xl items-center px-4 py-12 md:px-8 lg:px-16">
+          <div className="relative flex min-h-68 items-center px-4 py-12 md:px-8 lg:pl-16 xl:pr-12">
             <div className="relative z-10 flex max-w-88 flex-col items-start gap-4">
               <h1 className="text-h2">
                 <Emphasized text={copy.hero.title} />
@@ -121,38 +121,31 @@ const GetStartedPage = async () => {
               alt=""
               priority
               sizes="(min-width: 1024px) 512px, 80vw"
-              className="pointer-events-none absolute top-1/2 right-4 w-[min(32rem,80%)] translate-x-[5.3%] -translate-y-1/2 rotate-[5.4deg] opacity-40 md:right-8 lg:right-16 max-md:opacity-25"
+              className="pointer-events-none absolute top-1/2 right-4 w-[min(32rem,80%)] translate-x-[5.3%] -translate-y-1/2 rotate-[5.4deg] opacity-40 md:right-8 xl:right-12 max-md:opacity-25"
             />
           </div>
         </section>
 
-        <div className="flex max-w-4xl flex-col gap-20 px-4 pt-10 pb-24 md:px-8 lg:px-16">
-          <section id="overview" className="flex scroll-mt-24 flex-col gap-8">
-            <Heading title={copy.overview.title} lede={copy.overview.lede} />
-            <ul className="grid gap-5 md:grid-cols-2">
-              {overview.map((card) => (
-                <li key={card.id} className="flex min-w-0">
-                  <ResourceCard
-                    href={card.href}
-                    icon={card.icon}
-                    highlight={"highlight" in card && card.highlight}
-                    {...copy.overview[card.id]}
-                  />
-                </li>
-              ))}
-            </ul>
-          </section>
-
-          <section id="tasks" className="flex scroll-mt-24 flex-col gap-8">
-            <Heading title={copy.tasks.title} lede={copy.tasks.lede} />
-            <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {tasks.map((card) => (
-                <li key={card.id} className="flex min-w-0">
-                  <ResourceCard size="task" href={card.href} icon={card.icon} cta={copy.tasks.cta} {...copy.tasks[card.id]} />
-                </li>
-              ))}
-            </ul>
-          </section>
+        <div className="flex flex-col gap-20 px-4 pt-10 pb-24 md:px-8 lg:pl-16 xl:pr-12">
+          {/* Every place to start, as one grid of cards: the site's main areas,
+              then the things to build. */}
+          <ul id="overview" className="grid scroll-mt-24 gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {overview.map((card) => (
+              <li key={card.id} className="flex min-w-0">
+                <ResourceCard
+                  href={card.href}
+                  icon={card.icon}
+                  highlight={"highlight" in card && card.highlight}
+                  {...copy.overview[card.id]}
+                />
+              </li>
+            ))}
+            {tasks.map((card) => (
+              <li key={card.id} className="flex min-w-0">
+                <ResourceCard href={card.href} icon={card.icon} cta={copy.tasks.cta} {...copy.tasks[card.id]} />
+              </li>
+            ))}
+          </ul>
 
           <section id="quickstarts" className="flex scroll-mt-24 flex-col gap-8">
             <Heading title={copy.quickstarts.title} lede={copy.quickstarts.lede} />

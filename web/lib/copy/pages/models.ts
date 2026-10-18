@@ -7,12 +7,12 @@ export const models = {
   },
   hero: {
     eyebrow: "Model registry",
-    title: "Open models\nfor multilingual civic AI.",
+    title: "Open models\nfor multilingual civic AI",
     lede: "Explore, evaluate, and build with open models for transcription, translation, civic terminology mapping, and issue classification in languages beyond the mainstream.",
   },
   playground: {
     eyebrow: "Playground",
-    title: "See the model in action.",
+    title: "See the model in action",
     lede: "Choose a model, provide an input, and explore how it processes and interprets civic discourse across supported languages.",
   },
 };

@@ -19,14 +19,14 @@ export const modelDetail = {
   },
   benchmarks: {
     eyebrow: "Performance",
-    title: "Performance, measured openly.",
+    title: "Performance, measured openly",
     methodologyLink: "View full benchmark methodology",
     compareLink: "Compare with other models",
     panelTitle: "Performance",
     scale: "Scores out of 100 · {set}",
   },
   training: {
-    title: "How the model was built.",
+    title: "How the model was built",
     datasetLink: "View Dataset",
     notesLink: "Read Training Notes",
     researchLink: "View Research",
@@ -36,7 +36,7 @@ export const modelDetail = {
     lede: "Integrate the model into your applications using the deployment option that best suits your needs.",
   },
   versions: {
-    title: "Model history.",
+    title: "Model history",
     current: "Current",
     initialRelease: "Initial Public Release",
     view: "View",

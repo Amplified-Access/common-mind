@@ -6,7 +6,7 @@ export const applications = {
   },
   hero: {
     eyebrow: "Applications",
-    title: "From civic discourse to real world impact.",
+    title: "From civic discourse to real world impact",
     lede: "CommonMind enables developers and organisations to build multilingual AI applications that turn civic discourse into meaningful insights, expand access to public information and services, strengthen community participation, and support more informed public decisions.",
   },
 };

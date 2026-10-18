@@ -28,14 +28,12 @@ export const getStarted = {
     },
   },
   hero: {
-    title: "Start building with\n*CommonMind.*",
+    title: "Start building with\n*CommonMind*",
     lede: "Access language models, explore datasets, and build AI experiences that understand more voices.",
     primaryCta: "Models",
     secondaryCta: "Data Lab",
   },
   overview: {
-    title: "Getting Started",
-    lede: "Everything you need to explore and build with CommonMind.",
     models: {
       title: "Explore Models",
       text: "Find language models designed for different tasks, languages, and applications.",
@@ -52,14 +50,12 @@ export const getStarted = {
       cta: "Read the Docs",
     },
     dataLab: {
-      title: "Turn Language Data into Meaningful Impact.",
+      title: "Turn Language Data into Meaningful Impact",
       text: "Explore the CommonMind Data Lab, a collaborative space for building, improving, and evaluating language datasets that power more inclusive AI.",
       cta: "Explore Data Lab",
     },
   },
   tasks: {
-    title: "What would you like to build?",
-    lede: "Explore common language AI applications and find resources to get started.",
     cta: "Get Started",
     translation: {
       title: "Machine Translation",

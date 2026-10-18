@@ -27,7 +27,7 @@ export const languageDetail = {
   },
   contribute: {
     eyebrow: "Contribute",
-    title: "Help build {name}.",
+    title: "Help build {name}",
     lede: "Every ecosystem starts with the people who speak the language.",
     cta: "Get involved",
     corpus: { title: "Civic corpus", text: "Consented speech and text about public life." },

@@ -14,24 +14,24 @@ export const home = {
     cta: "See What We're Building",
   },
   platform: {
-    heading: "The infrastructure layer for civic AI.",
+    heading: "The infrastructure layer for civic AI",
     intro:
       "Language data, open models, research, and benchmarks are deeply connected. CommonMind brings them together in one open ecosystem so researchers and developers can build AI that understands civic discourse in languages beyond the mainstream.",
     languages: {
       title: "Languages",
-      subtitle: "Start with the language.",
+      subtitle: "Start with the language",
       body: "Languages shape how communities describe public issues, access services, engage with institutions, and express local priorities. Undersranding these differences is the foundation of inclusive civic AI.",
       cta: "Explore Languages",
     },
     civicDiscourse: {
       title: "Civic Discourse",
-      subtitle: "Understand how communities communicate.",
+      subtitle: "Understand how communities communicate",
       body: "Real civic discourse captures the language, expressions, and context communities use to discuss public issues, services, governance, and local priorities. Common mind transforms this into structured resources for deveoping and evaluating AI systems.",
       cta: "Explore the Civic Corpus",
     },
     openModels: {
       title: "Open models",
-      subtitle: "Small, open, adapted.",
+      subtitle: "Small, open, adapted",
       body: "Small, open models adapted for multilingual civic applications. Designed for efficient deployment with accessible model weights and documented evaluations.",
       proofValue: "≤1.37B",
       proofLabel: "parameters. Built to run on modest hardware.",
@@ -39,7 +39,7 @@ export const home = {
     },
     benchmarks: {
       title: "Benchmarks",
-      subtitle: "Measure what improves.",
+      subtitle: "Measure what improves",
       body: "Open benchmarks and reproducible evaluations measure model performance across languages and tasks, making progress transparent, comparable and verifiable.",
       proofValue: "38.74",
       proofLabel: "BLEU on English→Swahili, above Gemini 2.0 Flash.",
@@ -47,7 +47,7 @@ export const home = {
     },
     applications: {
       title: "Civic Applications",
-      subtitle: "From civic discourse to real world impact.",
+      subtitle: "From civic discourse to real world impact",
       body: "CommonMind enables developers and organisations to build multilingual AI applications that turn civic discourse into meaningful insights, expand access to public information and services, strengthen community participation, and support more informed public decisions.",
       cta: "Explore Applications",
     },
@@ -59,7 +59,7 @@ export const home = {
   },
   languages: {
     eyebrow: "Language Ecosystems",
-    title: "Start with the language.",
+    title: "Start with the language",
     lede: "Every language carries its own expressions, context, and civic vocabulary. Explore the open models, datasets, benchmarks, and research that support civic AI development across languages.",
     cardDescription:
       "Explore the models, civic speech resources, benchmarks, and research being developed to help AI understand {name} in civic contexts.",
