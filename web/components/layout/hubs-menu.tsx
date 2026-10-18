@@ -1,24 +1,28 @@
 "use client";
 
 import { Popover } from "@base-ui/react/popover";
-import { Database01Icon } from "@hugeicons/core-free-icons";
+import { ArrowDown01Icon, Database01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 
 import { Arrow } from "@/components/system/arrow";
-import { buttonClasses } from "@/components/system/primitives";
 import { hubs } from "@/lib/site";
-import { cn } from "@/lib/utils";
 
-// The header's door to where the models and data are published: a database
-// button that opens a short list of the hubs, each opening in a new tab.
+// The header's door to where the models and data are published: a ghost
+// database button with a chevron, opening a short list of the hubs, each in
+// a new tab.
 function HubsMenu() {
   return (
     <Popover.Root>
       <Popover.Trigger
         aria-label="Models and data"
-        className={cn(buttonClasses("outline", "w-8 cursor-pointer px-0"), "data-popup-open:bg-signal data-popup-open:text-background")}
+        className="group flex h-8 cursor-pointer items-center gap-1 px-2 text-foreground transition-colors hover:text-signal data-popup-open:text-signal"
       >
-        <HugeiconsIcon icon={Database01Icon} strokeWidth={1.75} className="size-4" />
+        <HugeiconsIcon icon={Database01Icon} strokeWidth={1.75} className="size-4.5" />
+        <HugeiconsIcon
+          icon={ArrowDown01Icon}
+          strokeWidth={2}
+          className="size-3.5 transition-transform duration-200 group-data-popup-open:rotate-180"
+        />
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Positioner side="bottom" align="end" sideOffset={10} className="z-50">
