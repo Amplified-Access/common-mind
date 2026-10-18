@@ -6,7 +6,7 @@ import { cache } from "react";
 import { sanityFetch } from "@/lib/sanity/client";
 
 import { CONTENT_QUERY, LEGAL_PAGE_QUERY } from "./queries";
-import type { Content, Footer, ModelCopy } from "./types";
+import type { Content, Footer, LanguageCopy, ModelCopy } from "./types";
 
 export type * from "./types";
 
@@ -49,6 +49,20 @@ const NO_COPY: Omit<ModelCopy, "slug"> = {
 /** A registry model's written copy; empty until an editor writes it. */
 export function copyFor(content: Content, slug: string): ModelCopy {
   return content.models.find((m) => m.slug === slug) ?? { slug, ...NO_COPY };
+}
+
+const NO_LANGUAGE_COPY: Omit<LanguageCopy, "code"> = {
+  endonym: null,
+  family: "",
+  branch: "",
+  script: "",
+  regions: [],
+  tagline: "",
+};
+
+/** A language's details; empty until an editor writes them. */
+export function languageCopyFor(content: Content, code: string): LanguageCopy {
+  return content.languages.find((l) => l.code === code) ?? { code, ...NO_LANGUAGE_COPY };
 }
 
 export type LegalPage = {

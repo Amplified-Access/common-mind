@@ -67,6 +67,15 @@ export const CONTENT_QUERY = defineQuery(`{
     description,
     "tags": coalesce(tags, [])
   },
+  "languages": *[_type == "language" && defined(code)]{
+    code,
+    endonym,
+    family,
+    branch,
+    script,
+    "regions": coalesce(regions, []),
+    tagline
+  },
   "models": *[_type == "model" && defined(slug)]{
     slug,
     tagline,

@@ -5,7 +5,7 @@ import { LanguageGlobe } from "@/components/languages/language-globe";
 import { LanguageGrid } from "@/components/languages/language-grid";
 import { Backdrop } from "@/components/system/backdrop";
 import { Eyebrow, Section, SectionHeader } from "@/components/system/primitives";
-import { getContent } from "@/lib/content";
+import { getContent, languageCopyFor } from "@/lib/content";
 import { getPageCopy, pageMetadata } from "@/lib/copy";
 
 export const generateMetadata = () => pageMetadata("languages");
@@ -15,14 +15,15 @@ const LanguagesPage = async () => {
   const { datasets } = content;
   const entries = languages.map((language) => {
     const { models } = ecosystemFor(language, content);
+    const details = languageCopyFor(content, language.code);
     return {
       code: language.code,
       name: language.name,
-      endonym: language.endonym,
-      family: language.family,
-      branch: language.branch,
-      regions: language.regions,
-      tagline: language.tagline,
+      endonym: details.endonym ?? undefined,
+      family: details.family,
+      branch: details.branch,
+      regions: details.regions,
+      tagline: details.tagline,
       models: models.length,
       datasets: datasets.filter((d) => d.languages.includes(language.name)).length,
     };

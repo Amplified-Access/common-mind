@@ -88,6 +88,18 @@ export type ModelCopy = {
   usage: { language: string; code: string };
 };
 
+/** A language's details, written in the Studio. */
+export type LanguageCopy = {
+  code: string;
+  /** Null where it isn't commonly written. */
+  endonym: string | null;
+  family: string;
+  branch: string;
+  script: string;
+  regions: string[];
+  tagline: string;
+};
+
 export type Partner = {
   name: string;
   /** Null where there is no site to link to. */
@@ -132,5 +144,6 @@ export type Content = {
   /** Newest first. */
   releases: Release[];
   applications: Application[];
+  languages: LanguageCopy[];
   models: ModelCopy[];
 };
