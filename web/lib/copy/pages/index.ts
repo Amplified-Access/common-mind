@@ -8,6 +8,7 @@ import { dataLab } from "./data-lab";
 import { datasetDetail } from "./dataset-detail";
 import { datasets } from "./datasets";
 import { footer } from "./footer";
+import { getStarted } from "./get-started";
 import { home } from "./home";
 import { languageDetail } from "./language-detail";
 import { languages } from "./languages";
@@ -29,6 +30,7 @@ export const PAGES = {
   languageDetail: { title: "A language's page", copy: languageDetail },
   benchmarks: { title: "Benchmarks", copy: benchmarks },
   build: { title: "Build", copy: build },
+  getStarted: { title: "Get Started", copy: getStarted },
   research: { title: "Research", copy: research },
   researchReport: { title: "A research report's page", copy: researchReport },
   civicCorpus: { title: "Civic Corpus", copy: civicCorpus },
