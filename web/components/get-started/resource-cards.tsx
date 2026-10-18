@@ -66,7 +66,7 @@ function ResourceCard({ href, title, text, cta, icon, size = "lead", highlight }
         </div>
         <p className={cn("max-w-sm text-sm text-pretty", highlight ? "text-background" : "text-faint")}>{text}</p>
         <div className={cn("mt-auto", lead ? "pt-8" : "pt-5")}>
-          <span className={buttonClasses(highlight ? "ink" : "cream", "h-8 px-4 [--chamfer:6px]")}>{cta}</span>
+          <span className={buttonClasses(highlight ? "ink" : "cream", "h-10.5 px-5.5 [--chamfer:8px]")}>{cta}</span>
         </div>
       </div>
     </Link>

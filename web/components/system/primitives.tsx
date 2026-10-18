@@ -190,17 +190,19 @@ type ButtonVariant = "signal" | "outline" | "ink" | "bright" | "cream";
 
 const buttonVariants: Record<ButtonVariant, string> = {
   // Pills: header and toolbars.
-  signal: "h-8 chamfer bg-signal px-5 text-background hover:bg-signal/85",
-  outline: "h-8 chamfer border border-signal px-5 text-signal hover:bg-signal hover:text-background",
-  cream: "h-10 chamfer bg-foreground px-5 text-background hover:bg-foreground/85",
+  signal: "h-10.5 chamfer bg-signal px-6.5 text-background hover:bg-signal/85",
+  outline: "h-10.5 chamfer border border-signal px-6.5 text-signal hover:bg-signal hover:text-background",
+  cream: "h-13.5 chamfer bg-foreground px-6.5 text-background hover:bg-foreground/85",
   // Blocks: for use on the yellow call to action.
-  ink: "h-10 chamfer bg-background px-6 text-signal hover:bg-background/85",
-  bright: "h-10 chamfer bg-signal px-6 text-background shadow-sm hover:bg-signal/85",
+  ink: "h-13.5 chamfer bg-background px-8 text-signal hover:bg-background/85",
+  bright: "h-13.5 chamfer bg-signal px-8 text-background shadow-sm hover:bg-signal/85",
 };
 
 function buttonClasses(variant: ButtonVariant = "signal", className?: string) {
   return cn(
-    "inline-flex items-center justify-center gap-2 font-mono text-xs whitespace-nowrap transition-colors",
+    // Sized for 16px labels: heights, padding, gap and the corner cut are
+    // the 12px originals scaled by 4/3.
+    "inline-flex items-center justify-center gap-2.5 font-mono text-base whitespace-nowrap transition-colors [--chamfer:10.5px]",
     buttonVariants[variant],
     className,
   );
