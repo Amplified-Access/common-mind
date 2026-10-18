@@ -50,7 +50,7 @@ function HomeHero({ copy }: { copy: PageCopy<"home">["hero"] }) {
               <Emphasized text={copy.titleLine2} />
             </span>
           </h1>
-          <p className="max-w-xl text-sm text-pretty text-foreground/90">
+          <p className="max-w-xl text-base text-pretty text-foreground/90">
             {copy.lede}
           </p>
           <div className="flex flex-wrap justify-center gap-x-10 gap-y-3 pt-4">

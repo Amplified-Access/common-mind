@@ -115,7 +115,7 @@ function PlatformTour({
       >
         <Container className="relative z-10 flex flex-col gap-5">
           <h2 className="text-h2">{heading}</h2>
-          <p className="max-w-md text-sm text-pretty text-foreground/85">{intro}</p>
+          <p className="max-w-md text-base text-pretty text-foreground/85">{intro}</p>
         </Container>
         <Container
           ref={viewportRef}
@@ -144,7 +144,7 @@ function PlatformTour({
                     {String(i + 1).padStart(2, "0")} {panel.title}
                   </h3>
                   <p className="font-mono text-base text-signal">{panel.subtitle}</p>
-                  <p className="max-w-sm text-sm text-pretty text-foreground/85">{panel.body}</p>
+                  <p className="max-w-md text-base text-pretty text-foreground/85">{panel.body}</p>
                   {panel.proof && (
                     <p className="flex flex-col gap-1 pt-2">
                       <span className="font-mono text-2xl text-signal">{panel.proof.value}</span>

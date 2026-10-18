@@ -123,6 +123,7 @@ export default async function Home() {
             eyebrow={copy.languages.eyebrow}
             title={copy.languages.title}
             lede={copy.languages.lede}
+            ledeClassName="text-base"
           />
           <LanguageEcosystems ecosystems={ecosystems} />
         </Container>
@@ -136,7 +137,7 @@ export default async function Home() {
               <h2 className="text-h2 text-balance">{copy.civicBench.title}</h2>
             </div>
             <div className="flex max-w-md flex-col gap-6 lg:pt-8">
-              <p className="text-sm text-pretty text-foreground/85">
+              <p className="text-base text-pretty text-foreground/85">
                 {copy.civicBench.body}
               </p>
               <ArrowLink href="/benchmarks">{copy.civicBench.cta}</ArrowLink>
@@ -172,6 +173,7 @@ export default async function Home() {
             eyebrow={copy.research.eyebrow}
             title={copy.research.title}
             lede={copy.research.lede}
+            ledeClassName="text-base"
             layout="split"
           />
           <div className="scrollbar-none -mx-4 overflow-x-auto px-4 md:mx-0 md:px-0 lg:mask-[linear-gradient(to_right,transparent,#000_6%,#000_94%,transparent)]">
