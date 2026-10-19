@@ -50,6 +50,53 @@ func TestImportItems_ReportsEveryBadLineAndWritesNothing(t *testing.T) {
 	}
 }
 
+func TestImportItems_ChecksLicenceAndEvidence(t *testing.T) {
+	minus := -1
+	zero := 0
+	tests := []struct {
+		name    string
+		edit    func(r *ImportRow)
+		problem string // "" when the row is valid
+	}{
+		{"allowlisted licence", func(r *ImportRow) { r.Source.Licence = "CC-BY-3.0-IGO" }, ""},
+		{"share-alike refused", func(r *ImportRow) { r.Source.Licence = "CC-BY-SA-4.0" }, `licence "CC-BY-SA-4.0" is not on the allowlist (ADR 0013)`},
+		{"public domain with evidence", func(r *ImportRow) {
+			r.Source.Licence, r.Source.LicenceURL = domain.LicencePublicDomain, "https://example.gov/rights"
+		}, ""},
+		{"public domain without evidence", func(r *ImportRow) { r.Source.Licence = domain.LicencePublicDomain }, "licence_url"},
+		{"statute without evidence", func(r *ImportRow) { r.Source.Licence = domain.LicencePublicDomainStatute }, "licence_url"},
+		{"retrieval date", func(r *ImportRow) { r.Source.RetrievedAt = "2026-10-01" }, ""},
+		{"retrieval date not a date", func(r *ImportRow) { r.Source.RetrievedAt = "2026-13-01" }, "retrieved_at"},
+		{"retrieval date in another format", func(r *ImportRow) { r.Source.RetrievedAt = "01/10/2026" }, "retrieved_at"},
+		{"first position", func(r *ImportRow) { r.Position = &zero }, ""},
+		{"negative position", func(r *ImportRow) { r.Position = &minus }, "position"},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			row := ImportRow{Line: 7, Source: ImportSource{Key: "k", Title: "t", Licence: "CC-BY-4.0"},
+				Kind: domain.KindTranslate, Language: "en", Category: "public-services", Text: "The clinic opens at eight."}
+			tc.edit(&row)
+			store := &fakeImportStore{}
+
+			_, err := NewImporter(store, &fakeStore{languages: launchLanguages()}).
+				ImportItems(context.Background(), ImportBatch{}, []ImportRow{row})
+
+			if tc.problem == "" {
+				if err != nil || store.imported == nil {
+					t.Fatalf("error = %v, want the row imported", err)
+				}
+				return
+			}
+			if !errors.Is(err, ErrInvalidInput) || !strings.Contains(err.Error(), "line 7: ") || !strings.Contains(err.Error(), tc.problem) {
+				t.Fatalf("error = %v, want line 7 flagged with %q", err, tc.problem)
+			}
+			if store.imported != nil {
+				t.Error("rows written despite errors")
+			}
+		})
+	}
+}
+
 func TestSplitFor_IsStableAndRoughlyTenPercentTest(t *testing.T) {
 	if domain.SplitFor("council-notices-2026") != domain.SplitFor("council-notices-2026") {
 		t.Fatal("SplitFor is not deterministic")

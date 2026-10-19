@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+	"time"
 
 	"backend/internal/domain"
 )
@@ -108,6 +109,10 @@ func (im *importer) ImportItems(ctx context.Context, batch ImportBatch, rows []I
 		if r.Source.Key == "" || r.Source.Title == "" || r.Source.Licence == "" {
 			p = append(p, "source needs key, title, and licence")
 		}
+		p = append(p, sourceEvidenceProblems(r.Source)...)
+		if r.Position != nil && *r.Position < 0 {
+			p = append(p, fmt.Sprintf("position %d is negative", *r.Position))
+		}
 		if r.Kind != domain.KindTranslate && r.Kind != domain.KindWrite {
 			p = append(p, fmt.Sprintf("kind %q is not translate or write", r.Kind))
 		}
@@ -128,6 +133,25 @@ func (im *importer) ImportItems(ctx context.Context, batch ImportBatch, rows []I
 		return ImportResult{}, invalid(strings.Join(problems, "\n"))
 	}
 	return im.store.ImportItems(ctx, batch, rows)
+}
+
+// sourceEvidenceProblems checks a source against the licence policy in
+// ADR 0013: an allowlisted licence, evidence for public-domain claims, and a
+// readable retrieval date.
+func sourceEvidenceProblems(src ImportSource) []string {
+	var p []string
+	if src.Licence != "" && !slices.Contains(domain.AllowedLicences, src.Licence) {
+		p = append(p, fmt.Sprintf("licence %q is not on the allowlist (ADR 0013)", src.Licence))
+	}
+	if (src.Licence == domain.LicencePublicDomain || src.Licence == domain.LicencePublicDomainStatute) && src.LicenceURL == "" {
+		p = append(p, fmt.Sprintf("licence %q needs a licence_url linking its evidence", src.Licence))
+	}
+	if src.RetrievedAt != "" {
+		if _, err := time.Parse(time.DateOnly, src.RetrievedAt); err != nil {
+			p = append(p, fmt.Sprintf("retrieved_at %q is not a YYYY-MM-DD date", src.RetrievedAt))
+		}
+	}
+	return p
 }
 
 func (im *importer) SetMemberLevel(ctx context.Context, email, language, level string) error {

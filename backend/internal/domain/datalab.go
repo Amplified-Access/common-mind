@@ -234,3 +234,26 @@ func SplitFor(key string) string {
 	}
 	return SplitTrain
 }
+
+// Public-domain licence identifiers. Neither has a licence document, so a
+// source under either must link its evidence: the rights page or the statute
+// section (ADR 0013).
+const (
+	LicencePublicDomain        = "public-domain"
+	LicencePublicDomainStatute = "public-domain-statute"
+)
+
+// AllowedLicences are the only source licences the importer accepts: they
+// allow redistribution and commercial reuse under the corpus's CC-BY-4.0
+// release. Share-alike, non-commercial, no-derivatives, and unlicensed
+// sources are refused (ADR 0013, docs/adr/0013-source-acquisition-and-licences.md).
+var AllowedLicences = []string{
+	"CC0-1.0",
+	"CC-BY-2.0",
+	"CC-BY-2.5",
+	"CC-BY-3.0",
+	"CC-BY-3.0-IGO",
+	"CC-BY-4.0",
+	LicencePublicDomain,
+	LicencePublicDomainStatute,
+}
