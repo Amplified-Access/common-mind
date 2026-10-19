@@ -89,6 +89,10 @@ def drop_reason(sentence: str) -> str:
         return "contact details"
     if sentence.count('"') % 2:
         return "part of a longer quote"
+    if re.search(r"\bVOA|Voice of America", sentence):
+        return "about VOA itself"
+    if sentence.rstrip("\"')").endswith("?"):
+        return "a question"
     if _first_word(sentence) in _PRONOUN_LED:
         return "needs the sentence before it"
     alnum = [c for c in sentence if c.isalnum()]
@@ -113,20 +117,32 @@ def flags(sentence: str) -> list[str]:
 
 # Word stems per category. A stem with a space is a phrase and counts twice.
 _KEYWORDS = {
-    "elections": ["election", "elected", "electoral", "vote", "voter", "voting", "ballot", "polling", "candidate", "campaign", "referendum"],
-    "public-services": ["hospital", "clinic", "health cent", "school", "teacher", "nurse", "doctor", "medicine",
-                        "patient", "vaccin", "water supply", "electricity", "public service"],
+    "elections": ["election", "elected", "electoral", "vote", "voter", "voting", "ballot", "polling", "candidate",
+                  "campaign", "referendum", "opposition", "presidential", "polls", "re-elect", "political part"],
+    "public-services": ["hospital", "clinic", "health", "school", "teacher", "nurse", "doctor", "medic",
+                        "patient", "vaccin", "water supply", "electricity", "public service", "malaria", "cholera",
+                        "ebola", "hiv", "disease", "student", "pupil", "universit", "education", "clean water",
+                        "food aid", "transport"],
     "local-government": ["county government", "local government", "district", "council", "governor", "mayor",
-                         "municipal", "sub-county", "ward"],
-    "accountability": ["corrupt", "audit", "bribe", "ombudsman", "misuse", "accountab", "transparen", "embezzl", "fraud"],
-    "priorities": ["budget", "priorit", "spending", "allocat"],
-    "rights": ["right", "freedom", "protest", "arrest", "discriminat", "equal", "justice"],
-    "public-meetings": ["public meeting", "baraza", "hearing", "town hall", "forum", "public participation", "consult"],
-    "promises": ["promise", "pledge", "commitment", "committed to", "manifesto", "vow"],
-    "development": ["build", "construct", "road", "bridge", "project", "infrastructure", "develop", "irrigation"],
+                         "municipal", "sub-county", "ward", "minister", "ministry", "parliament", "lawmaker",
+                         "authorities", "officials"],
+    "accountability": ["corrupt", "audit", "bribe", "ombudsman", "misuse", "accountab", "transparen", "embezzl",
+                       "fraud", "scandal", "investigat", "inquiry", "probe", "watchdog", "stolen", "theft"],
+    "priorities": ["budget", "priorit", "spending", "allocat", "tax"],
+    "rights": ["right", "freedom", "protest", "arrest", "discriminat", "equal", "justice", "police", "court",
+               "judge", "journalist", "detain", "jail", "prison", "activist", "torture", "abuse", "censor",
+               "women and girls", "press freedom"],
+    "public-meetings": ["public meeting", "baraza", "hearing", "town hall", "forum", "public participation",
+                        "consult", "summit", "dialogue", "talks"],
+    "promises": ["promise", "pledge", "commitment", "committed to", "manifesto", "vow", "peace deal", "agreement"],
+    "development": ["build", "construct", "road", "bridge", "project", "infrastructure", "develop", "irrigation",
+                    "econom", "invest", "farm", "agricultur", "crop", "jobs", "business", "trade", "railway",
+                    "energy", "solar", "technolog", "loan"],
     "community-problems": ["drought", "flood", "shortage", "hunger", "famine", "crime", "insecurity", "garbage",
-                           "waste", "unemploy", "pollution", "displaced", "refugee"],
-    "feedback": ["complain", "feedback", "petition", "hotline", "suggestion", "report problems"],
+                           "waste", "unemploy", "pollution", "displaced", "refugee", "attack", "violence",
+                           "militant", "al-shabab", "fighting", "conflict", "poverty", "prices", "inflation",
+                           "locust", "landslide", "disaster", "evict", "kidnap", "climate"],
+    "feedback": ["complain", "feedback", "petition", "hotline", "suggestion", "report problems", "survey"],
 }
 _PATTERNS = {cat: [(re.compile(r"\b" + re.escape(k)), 2 if " " in k else 1) for k in ks] for cat, ks in _KEYWORDS.items()}
 
