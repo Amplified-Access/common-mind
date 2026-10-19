@@ -40,9 +40,9 @@ Share-alike (`-SA`), non-commercial (`-NC`), no-derivatives (`-ND`), "all rights
 - Wire-service copy carried by an open publisher (AP, AFP, Reuters), which the publisher's licence does not cover.
 - Sentences containing personal data about private individuals.
 
-**Acquisition is offline, and a person approves every segment.** Sources are fetched, extracted and segmented outside the API. The output is a candidate list that a person reviews: they confirm each segment reads as plain civic language and confirm its category. Only approved segments become an import file, which `cmd/datalab` validates against the allowlist and records as an import batch.
+**Acquisition is offline, and segments are approved by rule.** Sources are fetched, extracted and segmented outside the API into a candidate list. *Amended 2026-10-19:* reviewing every candidate by hand proved impractical (the first VOA run produced 1,162), so segments are approved automatically when they need no judgement. The rules: a civic category was suggested, no flag was raised (quoted speech, a possible personal name, a context-dependent opening), and no pronoun points outside the sentence. A person may still approve more rows by hand. Approved segments become an import file, which `cmd/datalab` validates against the allowlist and records as an import batch. A batch found to contain bad segments is retired by its batch id.
 
-**Models on the source side.** Tools may suggest how to segment text or which category a segment belongs to, and a person confirms every suggestion. No model writes, rewrites or translates a source segment. Corpus rows remain human-only (ADR 0010).
+**Models on the source side.** Tools may suggest how to segment text or which category a segment belongs to. No model writes, rewrites or translates a source segment. Corpus rows remain human-only (ADR 0010).
 
 **Items can be retired.** An item withdrawn after import (a licence problem, personal data, a bad segment) is marked `retired`. It is never deleted, because contributions refer to it, and it is no longer offered to volunteers.
 
@@ -57,4 +57,4 @@ Share-alike (`-SA`), non-commercial (`-NC`), no-derivatives (`-ND`), "all rights
 ### Negative / trade-offs
 - CC-BY-4.0 requires attribution from corpus users, which CC0 would not.
 - Open civic text for elections, public meetings and political commitments is thin. Those categories depend on team-written CC0 segments and on permission from rights holders.
-- Reviewing every candidate segment is slow. It is kept on purpose until the filters have earned trust.
+- Rule-based approval keeps only a fraction of candidates (137 of 1,162 in the first VOA run), and its keyword categories are rough. Volunteers' reviews and later spot checks catch what the rules miss.

@@ -1,6 +1,6 @@
 # CommonMind ingest
 
-Turns openly licensed documents into Data Lab import files: the English source segments volunteers translate. It runs offline on a laptop, and a person approves every segment before it reaches the database ([ADR 0013](../docs/adr/0013-source-acquisition-and-licences.md)). The import format and the importer's checks are in [backend/docs/data-lab.md](../backend/docs/data-lab.md).
+Turns openly licensed documents into Data Lab import files: the English source segments volunteers translate. It runs offline on a laptop, and only approved segments reach the database ([ADR 0013](../docs/adr/0013-source-acquisition-and-licences.md)). The import format and the importer's checks are in [backend/docs/data-lab.md](../backend/docs/data-lab.md).
 
 The first source is **VOA Learning English**: plain-language news, public domain when VOA produced it.
 
@@ -13,7 +13,7 @@ uv sync
 uv run ingest voa-discover    # story URLs about the launch countries -> data/voa/urls.txt
 uv run ingest voa-fetch       # download and judge each story         -> data/voa/articles.jsonl
 uv run ingest review          # candidate sentences                    -> data/voa/review.csv
-# approve rows in data/voa/review.csv
+uv run ingest approve         # approve the rows that need no judgement
 uv run ingest build           # approved rows                          -> data/voa/items.jsonl
 
 cd ../backend
@@ -64,7 +64,7 @@ Each remaining sentence is a row in `data/voa/review.csv`:
 | `flags` | `quote`: contains quoted speech. `names`: may name a person. `context`: starts with a word like "This" or "But". |
 | `source_key`, `position`, `title`, `url`, `published` | Where the sentence comes from. `position` is its place among the story's sentences. |
 
-Approve a sentence when it:
+`approve` marks `y` on every row that needs no judgement: it has a category guess, no flags, and no pronoun (he, she, it, this, …) pointing outside the sentence. The first VOA run approved 137 of 1,162 rows this way. You can approve more rows by hand. Approve a sentence when it:
 - reads as plain civic language;
 - makes sense on its own;
 - names no private individual. Public officials are fine (ADR 0013).

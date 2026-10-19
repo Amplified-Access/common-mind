@@ -6,6 +6,7 @@ An article is a dict with key, title, url, published, paragraphs, and
 source: the import file's source object for that document."""
 
 import csv
+import re
 from collections import Counter
 from pathlib import Path
 from typing import Iterable, NamedTuple
@@ -51,6 +52,21 @@ def candidates(articles: Iterable[dict], dropped: Counter | None = None) -> list
                     ))
                 position += 1
     return out
+
+
+_NEEDS_CONTEXT = re.compile(r"\b(he|she|him|her|his|hers|they|them|their|theirs|it|its|this|these|those)\b", re.I)
+
+
+def auto_approve(rows: list[Candidate]) -> list[Candidate]:
+    """Approves the rows that need no judgement: a category was suggested,
+    nothing was flagged, and no pronoun points outside the sentence. Every
+    other row is left as it was (ADR 0013)."""
+    return [
+        row._replace(approve="y")
+        if row.category and not row.flags and not _NEEDS_CONTEXT.search(row.text)
+        else row
+        for row in rows
+    ]
 
 
 def write_review(rows: Iterable[Candidate], path: Path) -> None:

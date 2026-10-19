@@ -1,6 +1,6 @@
 import pytest
 
-from ingest.review import Candidate, build_rows, candidates, read_review, write_review
+from ingest.review import Candidate, auto_approve, build_rows, candidates, read_review, write_review
 
 ARTICLE = {
     "key": "voa-le-100",
@@ -31,6 +31,21 @@ def test_candidates_flag_quotes_and_names():
     art = dict(ARTICLE, paragraphs=['Mary Wanjiku said, "We need the county to fix the road to the market before the rains."'])
     (c,) = candidates([art])
     assert set(c.flags.split()) == {"quote", "names"}
+
+
+@pytest.mark.parametrize(
+    "category, flags, text, approved",
+    [
+        ("public-services", "", "The clinic in the town will open every day from eight in the morning.", True),
+        ("", "", "The clinic in the town will open every day from eight in the morning.", False),
+        ("public-services", "names", "Mary Wanjiku opened the clinic in the town last year.", False),
+        ("public-services", "", "Officials said the clinic would serve him and other residents of the town.", False),
+        ("development", "", "Residents say this road has been closed since the rains began in March.", False),
+    ],
+)
+def test_auto_approve_takes_only_categorised_unflagged_self_contained_rows(category, flags, text, approved):
+    row = Candidate("", category, text, flags, "voa-le-100", 0, "", "", "")
+    assert auto_approve([row])[0].approve == ("y" if approved else "")
 
 
 def test_build_rows_keeps_only_approved_rows_with_a_civic_category(tmp_path):

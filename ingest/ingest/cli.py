@@ -3,7 +3,7 @@
     uv run ingest voa-discover     # story URLs from the sitemaps
     uv run ingest voa-fetch        # download, parse and judge each story
     uv run ingest review           # candidate sentences -> review sheet
-    (approve rows in data/voa/review.csv)
+    uv run ingest approve          # approve the rows that need no judgement
     uv run ingest build            # approved rows -> import file
 """
 
@@ -15,7 +15,7 @@ from collections import Counter
 from pathlib import Path
 
 from ingest import http, voa
-from ingest.review import build_rows, candidates, read_review, write_review
+from ingest.review import auto_approve, build_rows, candidates, read_review, write_review
 from ingest.text import civic_score
 
 DATA = Path("data/voa")
@@ -74,6 +74,15 @@ def review(args: argparse.Namespace) -> None:
     print("Approve a row by putting y in its approve column, and fix its category if the guess is wrong.")
 
 
+def approve(args: argparse.Namespace) -> None:
+    rows = read_review(args.review)
+    before = sum(1 for r in rows if r.approve.strip())
+    rows = auto_approve(rows)
+    write_review(rows, args.review)
+    after = sum(1 for r in rows if r.approve.strip())
+    print(f"approved {after - before} more rows ({after} of {len(rows)} now approved) in {args.review}")
+
+
 def build(args: argparse.Namespace) -> None:
     articles = {a["key"]: a for a in map(json.loads, args.articles.open(encoding="utf-8"))}
     try:
@@ -106,6 +115,10 @@ def main() -> None:
     p.add_argument("--articles", type=Path, default=DATA / "articles.jsonl")
     p.add_argument("--out", type=Path, default=DATA / "review.csv")
     p.set_defaults(run=review)
+
+    p = sub.add_parser("approve", help="approve the rows that need no judgement (ADR 0013 rules)")
+    p.add_argument("--review", type=Path, default=DATA / "review.csv")
+    p.set_defaults(run=approve)
 
     p = sub.add_parser("build", help="turn approved review rows into a Data Lab import file")
     p.add_argument("--review", type=Path, default=DATA / "review.csv")
