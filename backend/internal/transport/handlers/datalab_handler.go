@@ -164,7 +164,7 @@ type taskQuery struct {
 // NextTaskHandler godoc
 //
 //	@Summary		Get the next task in a language
-//	@Description	modality=text (the default) returns an item to translate or a prompt to answer. modality=audio returns a verified translation in the language to read aloud: only translated, verified items are recorded. 404 no_tasks when the language has nothing left for this volunteer; 409 language_closed until it has two reviewers.
+//	@Description	modality=text (the default) returns an item to translate or a prompt to answer. modality=audio returns a verified translation in the language to read aloud: only translated, verified items are recorded. 404 no_tasks when the language has nothing left for this volunteer.
 //	@Tags			data-lab
 //	@Produce		json
 //	@Security		BearerAuth
@@ -173,7 +173,6 @@ type taskQuery struct {
 //	@Success		200			{object}	TaskAlias
 //	@Failure		403			{object}	map[string]string
 //	@Failure		404			{object}	map[string]string	"no_tasks"
-//	@Failure		409			{object}	map[string]string	"language_closed"
 //	@Failure		503			{object}	map[string]string	"voice_unavailable"
 //	@Router			/api/v1/data-lab/tasks/next [get]
 func (h *Handler) NextTaskHandler(c *gin.Context) {
@@ -259,7 +258,7 @@ type contributionRequest struct {
 //	@Success		201		{object}	ContributionAlias
 //	@Failure		400		{object}	map[string]string
 //	@Failure		403		{object}	map[string]string
-//	@Failure		409		{object}	map[string]string	"already_contributed or language_closed"
+//	@Failure		409		{object}	map[string]string	"already_contributed"
 //	@Router			/api/v1/data-lab/contributions [post]
 func (h *Handler) ContributeHandler(c *gin.Context) {
 	tok, ok := currentToken(c)

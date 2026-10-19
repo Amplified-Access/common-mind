@@ -14,7 +14,6 @@ type fakeStore struct {
 	languages   []domain.Language
 	saved       *OnboardingRecord
 	volunteer   *domain.Volunteer
-	reviewers   int
 	contributed *ContributionRecord
 	ref         *domain.ContributionRef
 	reviewed    *ReviewRecord
@@ -36,10 +35,6 @@ func (f *fakeStore) ListLanguages(context.Context) ([]domain.Language, error) {
 
 func (f *fakeStore) GetVolunteer(context.Context, string) (*domain.Volunteer, error) {
 	return f.volunteer, nil
-}
-
-func (f *fakeStore) CountReviewers(context.Context, string) (int, error) {
-	return f.reviewers, nil
 }
 
 func (f *fakeStore) NextItem(_ context.Context, _ int64, language, modality string) (*domain.Task, error) {
@@ -126,7 +121,7 @@ func (f *fakeStore) GetContributionRef(context.Context, int64) (*domain.Contribu
 }
 
 func (f *fakeStore) Progress(_ context.Context, language string) ([]domain.LanguageProgress, error) {
-	return []domain.LanguageProgress{{Code: language, Pending: 1, Reviewers: f.reviewers}}, nil
+	return []domain.LanguageProgress{{Code: language, Pending: 1}}, nil
 }
 
 func (f *fakeStore) SaveReview(_ context.Context, rec ReviewRecord) error {
@@ -142,28 +137,26 @@ func swahiliContributor() *domain.Volunteer {
 	}
 }
 
-func TestContribute_RequiresOpenLanguageMembershipAndText(t *testing.T) {
+func TestContribute_RequiresMembershipAndTextButNoReviewers(t *testing.T) {
 	tok := &FirebaseToken{UID: "uid-7"}
 	valid := ContributionInput{ItemID: 1, Language: "sw", Text: "  Barabara imeharibika.  "}
 
 	tests := []struct {
 		name      string
 		volunteer *domain.Volunteer
-		reviewers int
 		mutate    func(in *ContributionInput)
 		wantErr   error
 	}{
-		{name: "valid", volunteer: swahiliContributor(), reviewers: 2},
-		{name: "not onboarded", volunteer: nil, reviewers: 2, wantErr: ErrNotOnboarded},
-		{name: "consent outdated", volunteer: func() *domain.Volunteer { v := swahiliContributor(); v.ConsentVersion = "old"; return v }(), reviewers: 2, wantErr: ErrConsentOutdated},
-		{name: "not a member of the language", volunteer: swahiliContributor(), reviewers: 2, mutate: func(in *ContributionInput) { in.Language = "luo" }, wantErr: ErrNotMember},
-		{name: "language has too few reviewers", volunteer: swahiliContributor(), reviewers: 1, wantErr: ErrLanguageClosed},
-		{name: "blank text", volunteer: swahiliContributor(), reviewers: 2, mutate: func(in *ContributionInput) { in.Text = " \n " }, wantErr: ErrInvalidInput},
-		{name: "text too long", volunteer: swahiliContributor(), reviewers: 2, mutate: func(in *ContributionInput) { in.Text = strings.Repeat("a", domain.MaxContributionLength+1) }, wantErr: ErrInvalidInput},
+		{name: "valid in a language with no reviewers yet", volunteer: swahiliContributor()},
+		{name: "not onboarded", volunteer: nil, wantErr: ErrNotOnboarded},
+		{name: "consent outdated", volunteer: func() *domain.Volunteer { v := swahiliContributor(); v.ConsentVersion = "old"; return v }(), wantErr: ErrConsentOutdated},
+		{name: "not a member of the language", volunteer: swahiliContributor(), mutate: func(in *ContributionInput) { in.Language = "luo" }, wantErr: ErrNotMember},
+		{name: "blank text", volunteer: swahiliContributor(), mutate: func(in *ContributionInput) { in.Text = " \n " }, wantErr: ErrInvalidInput},
+		{name: "text too long", volunteer: swahiliContributor(), mutate: func(in *ContributionInput) { in.Text = strings.Repeat("a", domain.MaxContributionLength+1) }, wantErr: ErrInvalidInput},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			store := &fakeStore{volunteer: tt.volunteer, reviewers: tt.reviewers}
+			store := &fakeStore{volunteer: tt.volunteer}
 			in := valid
 			if tt.mutate != nil {
 				tt.mutate(&in)
@@ -258,7 +251,7 @@ func TestReview_EnforcesReviewerRulesAndReasons(t *testing.T) {
 }
 
 func TestContribute_PublishesLanguageProgress(t *testing.T) {
-	store := &fakeStore{volunteer: swahiliContributor(), reviewers: 2}
+	store := &fakeStore{volunteer: swahiliContributor()}
 	bc := &fakeBroadcaster{}
 
 	_, err := NewDataLab(store, bc, nil).Contribute(context.Background(), &FirebaseToken{UID: "uid-7"},

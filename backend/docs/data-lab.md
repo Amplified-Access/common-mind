@@ -1,6 +1,6 @@
 ---
 topic: data-lab
-last_verified: 2026-10-19
+last_verified: 2026-10-20
 sources:
   - internal/domain/datalab.go
   - internal/usecase/datalab.go
@@ -59,7 +59,7 @@ A volunteer is a `users` row plus `language_members` (one row per language, with
 - **Contributions** start `pending`, written (`modality = 'text'`) or recorded (`'audio'`, see Voice recordings). `(item_id, language_code, contributor_id, modality)` is unique, so a volunteer submits an item once per language in each modality. Each row records the consent version in force and whether the text was pasted.
 - **Voice follows text.** `NextItem` takes a modality, and an item is open in a language and modality until it has a pending or verified contribution there. A recording reads a verified translation aloud, so `audio` tasks only offer `translate` items with a verified written contribution in the language, and the task's `text` is that translation (the reviewer's correction when there is one), in the language.
 
-Contributing (`NextTask`, `Contribute`) requires, in order: onboarded, current consent, membership in the language, and the language **open**, meaning at least `domain.MinReviewersToOpen` (2) reviewers or leads. Text is trimmed and capped at `domain.MaxContributionLength` characters.
+Contributing (`NextTask`, `Contribute`) requires, in order: onboarded, current consent, and membership in the language. A language needs no reviewers to accept work: contributions wait as `pending` until a reviewer other than their author takes them, since the review queue never serves a volunteer their own work and `Review` refuses it (`ErrOwnContribution`). Text is trimmed and capped at `domain.MaxContributionLength` characters.
 
 ## Sources and licences
 
@@ -139,7 +139,7 @@ One review per contribution for now (`reviews.contribution_id` is unique). Dispu
 
 ## Live progress
 
-`Progress` returns, per enabled target language, the written output in sentence pairs with English (written contributions to `translate` items): `available` (translate items, the whole every language works from), `translated` (pending review or verified), and `verified`. Recordings count separately: `recorded` (pending or verified, any item kind) and `recorded_verified`. It also returns `pending`, the review queue across all kinds and both modalities, and `open` (reviewers ≥ `MinReviewersToOpen`). Reviewer and member counts stay internal: `Reviewers` is `json:"-"`. It's public at `GET /api/v1/data-lab/progress`.
+`Progress` returns, per enabled target language, the written output in sentence pairs with English (written contributions to `translate` items): `available` (translate items, the whole every language works from), `translated` (pending review or verified), and `verified`. Recordings count separately: `recorded` (pending or verified, any item kind) and `recorded_verified`. It also returns `pending`, the review queue across all kinds and both modalities. It's public at `GET /api/v1/data-lab/progress`.
 
 Answers to `write` prompts are original text, not pairs, so they count in `pending` while in review and in neither `translated` nor `verified`.
 
@@ -204,7 +204,6 @@ Use cases return the sentinel errors in `usecase/datalab_errors.go`. `handlers.d
 | `ErrNotOnboarded` | 403 | `onboarding_required` |
 | `ErrConsentOutdated` | 403 | `consent_required` |
 | `ErrNotMember` | 403 | `not_member` |
-| `ErrLanguageClosed` | 409 | `language_closed` |
 | `ErrNoTasks` | 404 | `no_tasks` |
 | `ErrNotFound` | 404 | `not_found` |
 | `ErrAlreadyContributed` | 409 | `already_contributed` |
