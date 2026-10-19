@@ -20,7 +20,9 @@ _QUOTES = str.maketrans({"“": '"', "”": '"', "‘": "'", "’": "'", " ": "
 
 def normalise(text: str) -> str:
     text = unicodedata.normalize("NFC", text).translate(_QUOTES)
-    return re.sub(r"\s+", " ", text).strip()
+    text = re.sub(r"\s+", " ", text)
+    # Joining inline tags leaves a space before punctuation: "expensive , which".
+    return re.sub(r" ([,;:!?](?:\s|$)|\.(?:\s|$))", r"\1", text).strip()
 
 
 # Words that end in a full stop without ending the sentence.
@@ -85,6 +87,8 @@ def drop_reason(sentence: str) -> str:
         return "too long"
     if _CONTACT.search(sentence):
         return "contact details"
+    if sentence.count('"') % 2:
+        return "part of a longer quote"
     if _first_word(sentence) in _PRONOUN_LED:
         return "needs the sentence before it"
     alnum = [c for c in sentence if c.isalnum()]

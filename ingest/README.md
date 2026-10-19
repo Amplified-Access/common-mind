@@ -35,6 +35,7 @@ VOA's terms put in the public domain only what is "produced exclusively by the V
 |---|---|
 | "Jane Doe reported this story for VOA News. Jill Robbins adapted it for Learning English." | accepted |
 | "VOA's Salem Solomon reported this story…", "…wrote this story for VOANews.com…" | accepted |
+| "Lenny Ruvaga reported this story from Nairobi. Christopher Jones-Cruise adapted it for Learning English." (a VOA correspondent, no other organisation named) | accepted |
 | Names the Associated Press, AP, Reuters, AFP or Agence France-Presse anywhere | rejected |
 | Reported for, or adapted from, any other organisation | rejected |
 | No credit line (common on pages from before 2015) | rejected |
@@ -48,6 +49,7 @@ An accepted story must also mention a launch country in its title or text.
 `review` keeps stories with at least three civic keyword stems. It splits each story into sentences and leaves out sentences that are:
 - under 5 or over 40 words;
 - led by a pronoun ("He said…"), since they need the sentence before them;
+- part of a longer quotation (an unbalanced quote mark);
 - holding contact details;
 - mostly numbers;
 - already seen in another story.

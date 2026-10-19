@@ -119,7 +119,8 @@ def parse_article(html: str) -> Article:
 _WIRE = re.compile(r"Associated Press|\bAP\b|Reuters|Agence France-Presse|\bAFP\b")
 _REPORTED_FOR = re.compile(r"\b(?:reported|wrote|written|produced)\s+(?:this|the)\s+(?:story|report)\s+for\s+([^.]+)", re.I)
 _ADAPTED_FROM = re.compile(r"\badapted\b[^.]*?\bfrom\s+([^.]+)", re.I)
-_VOA = re.compile(r"\bVOA|Voice of America")  # VOA, VOA's, VOANews.com
+# VOA, VOA's, VOANews.com, and Learning English, which is VOA's own service.
+_VOA = re.compile(r"\bVOA|Voice of America|\bLearning English\b")
 
 
 def credit_verdict(credit: str) -> tuple[bool, str]:

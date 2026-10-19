@@ -85,7 +85,7 @@ def build(args: argparse.Namespace) -> None:
         for line in lines:
             out.write(json.dumps(line, ensure_ascii=False) + "\n")
     print(f"{len(lines)} approved sentences from {len({l['source']['key'] for l in lines})} stories -> {args.out}")
-    print(f"Next: cd ../backend && make datalab-check file=../ingest/{args.out}")
+    print(f"Next: cd ../backend && make datalab-check file={args.out.resolve()}")
 
 
 def main() -> None:

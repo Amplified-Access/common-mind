@@ -1,10 +1,24 @@
 import pytest
 
-from ingest.text import normalise, segment, suggest_category
+from ingest.text import drop_reason, normalise, segment, suggest_category
 
 
 def test_normalise_straightens_quotes_and_collapses_space():
-    assert normalise("  The “clinic”  opens today. It’s new ") == "The \"clinic\" opens today. It's new"
+    assert normalise("  The “clinic”  opens today , at last. It’s new ") == "The \"clinic\" opens today, at last. It's new"
+
+
+@pytest.mark.parametrize(
+    "sentence, reason",
+    [
+        ('"But now, we look at how many students were affected by the closure?', "part of a longer quote"),
+        ("So we are talking six months versus two years.\"", "part of a longer quote"),
+        ('Officials said, "The clinic will open on Monday for all residents."', ""),
+        ("He said the plan for the county was good.", "needs the sentence before it"),
+        ("Call 0722 123 456 for details about the meeting.", "contact details"),
+    ],
+)
+def test_drop_reason(sentence, reason):
+    assert drop_reason(sentence) == reason
 
 
 def test_segment_keeps_abbreviations_and_initials_inside_sentences():

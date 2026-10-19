@@ -64,6 +64,8 @@ def test_record_rejects_articles_not_about_the_launch_countries():
         ("Jane Doe reported this story for VOA News. Jill Robbins adapted it for VOA Learning English.", True),
         ("Jill Robbins wrote this story for VOA Learning English.", True),
         ("Jill Craig reported this story for VOANews.com. Susan Shand adapted her report for Learning English.", True),
+        ("Lenny Ruvaga reported this story from Nairobi. Christopher Jones-Cruise adapted it for Learning English.", True),
+        ("George Grow wrote this story for Learning English. Caty Weaver was the editor.", True),
         ("Tom Odula reported this story for the Associated Press news agency. Pete Musto adapted it for VOA Learning English.", False),
         ("Jill Robbins wrote this story for VOA Learning English. Some information came from Reuters.", False),
         ("Jill Robbins adapted this story for Learning English based on reports from AFP.", False),
