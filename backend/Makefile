@@ -88,6 +88,11 @@ migrate-create:
 datalab-import:
 	@go run ./cmd/datalab import $(file)
 
+# Check a JSONL file without writing anything: make datalab-check file=items.jsonl
+# Runs the full import in a transaction and rolls it back, so the counts are exact.
+datalab-check:
+	@go run ./cmd/datalab import --dry-run $(file)
+
 # Import the development sample (dev/data-lab/sample-items.jsonl)
 datalab-sample:
 	@go run ./cmd/datalab import dev/data-lab/sample-items.jsonl
@@ -105,4 +110,4 @@ datalab-promote:
 .PHONY: all build run test clean watch lint docker-run docker-down itest swagger \
         migrate-up migrate-up-one migrate-down migrate-down-to migrate-reset \
         migrate-status migrate-version migrate-create \
-        datalab-import datalab-sample datalab-sample-translations datalab-promote
+        datalab-import datalab-check datalab-sample datalab-sample-translations datalab-promote

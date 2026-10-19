@@ -1,7 +1,7 @@
 // Command datalab runs Data Lab admin tasks against the database configured
 // by the BLUEPRINT_DB_* environment variables (loaded from .env).
 //
-//	datalab import <file.jsonl>                  add sources and items
+//	datalab import [--dry-run] <file.jsonl>      add sources and items
 //	datalab promote <email> <language> <level>   set a volunteer's level
 package main
 
@@ -24,7 +24,7 @@ import (
 )
 
 const usage = `usage:
-  datalab import <file.jsonl>
+  datalab import [--dry-run] <file.jsonl>
   datalab promote <email> <language> <contributor|reviewer|lead>`
 
 func main() {
@@ -57,8 +57,9 @@ func run(args []string) error {
 	admin := usecase.NewImporter(postgres.NewImportRepository(db), postgres.NewDataLabRepository(db))
 
 	switch {
-	case args[0] == "import" && len(args) == 2:
-		path := args[1]
+	case args[0] == "import" && (len(args) == 2 || len(args) == 3 && args[1] == "--dry-run"):
+		dryRun := len(args) == 3
+		path := args[len(args)-1]
 		rows, err := readRows(path)
 		if err != nil {
 			return err
@@ -67,10 +68,14 @@ func run(args []string) error {
 		if err != nil {
 			return err
 		}
-		batch := usecase.ImportBatch{FileName: filepath.Base(path), FileHash: hash, ImportedBy: os.Getenv("USER")}
+		batch := usecase.ImportBatch{FileName: filepath.Base(path), FileHash: hash, ImportedBy: os.Getenv("USER"), DryRun: dryRun}
 		res, err := admin.ImportItems(ctx, batch, rows)
 		if err != nil {
 			return err
+		}
+		if dryRun {
+			fmt.Printf("dry run: would import %d new sources and %d new items; %d items are already there\n", res.Sources, res.Items, res.Skipped)
+			return nil
 		}
 		fmt.Printf("imported %d new sources and %d new items (batch %d); %d items were already there\n", res.Sources, res.Items, res.BatchID, res.Skipped)
 		return nil
