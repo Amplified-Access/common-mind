@@ -1,6 +1,6 @@
 ---
 topic: data-lab
-last_verified: 2026-10-15
+last_verified: 2026-10-19
 sources:
   - internal/domain/datalab.go
   - internal/usecase/datalab.go
@@ -16,10 +16,13 @@ sources:
   - internal/infrastructure/database/migrations/20261014100628_add_review_corrections.sql
   - internal/infrastructure/database/migrations/20261015101841_add_voice_recordings.sql
   - internal/infrastructure/database/migrations/20261015103845_voice_reads_verified_translations.sql
+  - internal/infrastructure/database/migrations/20261019190500_add_source_provenance_and_import_batches.sql
   - internal/usecase/storage.go
   - internal/usecase/datalab_import.go
   - internal/infrastructure/database/postgres/datalab_import_repository.go
   - cmd/datalab/main.go
+  - Makefile
+  - ../docs/adr/0013-source-acquisition-and-licences.md
 ---
 
 # Data Lab
@@ -50,13 +53,52 @@ A volunteer is a `users` row plus `language_members` (one row per language, with
 
 ## Items, tasks, and contributions
 
-- **Sources** (`sources`) record where items come from: a stable `key` from the import file, licence, and the `train`/`test` split, fixed at ingestion (ADR 0011).
-- **Items** (`items`) are what volunteers work on. `translate` items are segments in a source language; `write` items are civic prompts to answer. One item serves every target language. `category` is one of `domain.CivicCategories`, which match the site's civic categories.
-- **A task** is an item offered in one target language. `NextItem` picks at random among items that have no pending or verified contribution in that language and that the volunteer hasn't done. A rejected contribution reopens the item for everyone except its author.
+- **Sources** (`sources`) record where items come from; see Sources and licences below.
+- **Items** (`items`) are what volunteers work on. `translate` items are segments in a source language; `write` items are civic prompts to answer. One item serves every target language. `category` is one of `domain.CivicCategories`, which match the site's civic categories. Each item also has a nullable `position` (its order within the document), a `status` (`active` or `retired`), and the `import_batch_id` of the import that added it (null for items imported before batches existed).
+- **A task** is an item offered in one target language. `NextItem` picks at random among `active` items that have no pending or verified contribution in that language and that the volunteer hasn't done, for both the `text` and `audio` modalities. A rejected contribution reopens the item for everyone except its author.
 - **Contributions** start `pending`, written (`modality = 'text'`) or recorded (`'audio'`, see Voice recordings). `(item_id, language_code, contributor_id, modality)` is unique, so a volunteer submits an item once per language in each modality. Each row records the consent version in force and whether the text was pasted.
 - **Voice follows text.** `NextItem` takes a modality, and an item is open in a language and modality until it has a pending or verified contribution there. A recording reads a verified translation aloud, so `audio` tasks only offer `translate` items with a verified written contribution in the language, and the task's `text` is that translation (the reviewer's correction when there is one), in the language.
 
 Contributing (`NextTask`, `Contribute`) requires, in order: onboarded, current consent, membership in the language, and the language **open**, meaning at least `domain.MinReviewersToOpen` (2) reviewers or leads. Text is trimmed and capped at `domain.MaxContributionLength` characters.
+
+## Sources and licences
+
+The policy is ADR 0013 (`docs/adr/0013-source-acquisition-and-licences.md`).
+
+`sources` columns:
+
+| Column | Holds |
+|---|---|
+| `key` | Stable identifier from the import file, unique. One source is one document. |
+| `title`, `origin` | Document title and where it comes from |
+| `licence` | One of `domain.AllowedLicences` |
+| `split` | `train` or `test`, from `domain.SplitFor(key)`, fixed at first insert (ADR 0011) |
+| `collection` | Publisher or series shared by several documents; does not affect the split |
+| `url` | The document's URL |
+| `retrieved_at` | `DATE`, null when unknown |
+| `licence_url` | Link to the licence evidence (rights page or statute section) |
+| `raw_object_key` | Object key of the raw copy in R2 |
+| `content_hash` | Content hash of the raw copy |
+
+The split hashes the document `key`, so each document is assigned on its own. Sources imported before migration `20261019190500` have `''` in the text provenance columns and null `retrieved_at`.
+
+`domain.AllowedLicences` is the importer's allowlist:
+
+```go
+"CC0-1.0", "CC-BY-2.0", "CC-BY-2.5", "CC-BY-3.0", "CC-BY-3.0-IGO", "CC-BY-4.0",
+domain.LicencePublicDomain,        // "public-domain"
+domain.LicencePublicDomainStatute, // "public-domain-statute"
+```
+
+A source under either public-domain licence must carry a `licence_url`.
+
+**Retiring items.** An item withdrawn after import (licence problem, personal data, a bad segment) is set to `status = 'retired'` and kept, because contributions refer to it. `NextItem` never offers retired items. There is no command for it yet; retire with SQL, for example by batch:
+
+```sql
+UPDATE items SET status = 'retired' WHERE import_batch_id = 42;
+```
+
+**Import batches.** `import_batches` has one row per import run: `file_name` (base name), `file_hash` (sha256 hex of the file), `imported_by` (`$USER`), `sources_added`, `items_added`, `items_skipped`, `created_at`. Every import, dry runs included, takes an id from the sequence, so gaps in `import_batches.id` are expected.
 
 ## Voice recordings
 
@@ -115,20 +157,38 @@ After every successful contribution and review, the use case reloads that langua
 
 ```bash
 make datalab-sample                                              # import dev/data-lab/sample-items.jsonl
+make datalab-check file=path/to/items.jsonl                      # dry run: validate and count, write nothing
 make datalab-import file=path/to/items.jsonl                     # import a file
 make datalab-promote email=a@example.com language=sw level=reviewer
 ```
 
-An import file has one JSON object per line:
+These wrap `go run ./cmd/datalab import [--dry-run] <file>` and `go run ./cmd/datalab promote <email> <language> <level>`.
+
+An import file has one JSON object per line (blank lines are skipped):
 
 ```json
-{"source": {"key": "council-notices-2026", "title": "Council notices", "origin": "…", "licence": "CC-BY-4.0"},
- "kind": "translate", "language": "en", "category": "public-services", "text": "The clinic opens at eight."}
+{"source": {"key": "council-notices-2026-03", "title": "Council notices, March 2026", "origin": "City Council",
+            "licence": "CC-BY-4.0", "collection": "council-notices", "url": "https://example.org/notices/2026-03",
+            "retrieved_at": "2026-10-19", "licence_url": "https://example.org/copyright",
+            "raw_object_key": "data-lab/sources/council-notices-2026-03.html", "content_hash": "<sha256 hex>"},
+ "kind": "translate", "language": "en", "category": "public-services", "text": "The clinic opens at eight.", "position": 3}
 ```
 
-- Every row is checked before anything is written (`Importer.ImportItems`), and all bad lines are reported together: the kind must be `translate` or `write`, the language a source language, the category one of `domain.CivicCategories`, and the source needs a key, title, and licence.
-- Sources upsert by `key`. The split comes from `domain.SplitFor(key)` (about 1 in 10 to `test`) and is set only on first insert.
-- Items are unique per `(source, kind, text)`, so importing the same file again adds nothing.
+Only `key`, `title` and `licence` are required on the source; `position` is optional.
+
+- Every row is checked before anything is written (`Importer.ImportItems`), and all bad lines are reported together, each as `line N: problem; problem`:
+  - the source needs a key, title, and licence;
+  - the licence must be in `domain.AllowedLicences` (ADR 0013);
+  - `public-domain` and `public-domain-statute` need a `licence_url`;
+  - `retrieved_at`, when given, must be a `YYYY-MM-DD` date;
+  - `position`, when given, must be non-negative;
+  - the kind must be `translate` or `write`, the language a source language, and the category one of `domain.CivicCategories`;
+  - the text, after trimming, must not be empty.
+- One transaction per import (`postgres.importRepository.ImportItems`): it inserts the `import_batches` row first, writes sources and items pointing at it, then fills in the batch counts.
+- Sources upsert by `key`. The split comes from `domain.SplitFor(key)` (about 1 in 10 to `test`) and is set only on first insert. Re-importing an existing key overwrites `title`, `origin`, `licence` and every provenance column with the file's values, so a field omitted from the file is cleared. The split never changes.
+- Items are unique per `(source, kind, text)`, so importing the same file again adds nothing. A skipped item keeps its original `import_batch_id` and `position`.
+- `--dry-run` (`make datalab-check`) runs the whole import, batch row included, and rolls the transaction back, so the counts it prints are exact. It reports no batch id.
+- The command prints the counts: `imported 2 new sources and 40 new items (batch 7); 3 items were already there`, or on a dry run `dry run: would import …`.
 - `promote` changes the level of an existing membership. The volunteer must have joined that language first.
 
 `dev/data-lab/sample-items.jsonl` is written for local development (licence CC0) and is not corpus data.
