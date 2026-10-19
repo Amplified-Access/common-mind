@@ -54,7 +54,7 @@ func TestStartRecording_NeedsVoiceAndAnAudioType(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			store := &fakeStore{volunteer: tt.volunteer, reviewers: 2, translation: 42}
+			store := &fakeStore{volunteer: tt.volunteer, translation: 42}
 			if tt.untranslated {
 				store.translation = 0
 			}
@@ -113,7 +113,7 @@ func TestContribute_Recording_ChecksTheUpload(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			store := &fakeStore{volunteer: tt.volunteer, reviewers: 2, translation: 42}
+			store := &fakeStore{volunteer: tt.volunteer, translation: 42}
 			if tt.untranslated {
 				store.translation = 0
 			}
@@ -185,7 +185,7 @@ func TestNextTask_VoiceNeedsStorageAndConsent(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			store := &fakeStore{volunteer: tt.volunteer, reviewers: 2}
+			store := &fakeStore{volunteer: tt.volunteer}
 
 			task, err := NewDataLab(store, nil, tt.storage).NextTask(context.Background(), &FirebaseToken{UID: "uid-7"}, "sw", tt.modality)
 

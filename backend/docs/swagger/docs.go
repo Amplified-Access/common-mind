@@ -154,7 +154,7 @@ const docTemplate = `{
                         }
                     },
                     "409": {
-                        "description": "already_contributed or language_closed",
+                        "description": "already_contributed",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -543,7 +543,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "modality=text (the default) returns an item to translate or a prompt to answer. modality=audio returns a verified translation in the language to read aloud: only translated, verified items are recorded. 404 no_tasks when the language has nothing left for this volunteer; 409 language_closed until it has two reviewers.",
+                "description": "modality=text (the default) returns an item to translate or a prompt to answer. modality=audio returns a verified translation in the language to read aloud: only translated, verified items are recorded. 404 no_tasks when the language has nothing left for this volunteer.",
                 "produces": [
                     "application/json"
                 ],
@@ -584,15 +584,6 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "no_tasks",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "409": {
-                        "description": "language_closed",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -966,10 +957,6 @@ const docTemplate = `{
                 },
                 "code": {
                     "type": "string"
-                },
-                "open": {
-                    "description": "enough reviewers to accept contributions",
-                    "type": "boolean"
                 },
                 "pending": {
                     "description": "contributions of any kind awaiting review",

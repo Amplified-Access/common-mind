@@ -276,21 +276,6 @@ func TestDataLab_CreateContribution_RejectsRepeatsAndUnknownItems(t *testing.T) 
 	}
 }
 
-func TestDataLab_CountReviewers_CountsReviewersAndLeads(t *testing.T) {
-	truncate(t, "users")
-	a := seedVolunteer(t, "uid-a", "sw")
-	b := seedVolunteer(t, "uid-b", "sw")
-	seedVolunteer(t, "uid-c", "sw")
-	if _, err := testDB.Exec(`UPDATE language_members SET level = CASE user_id WHEN $1 THEN 'reviewer' ELSE 'lead' END WHERE user_id IN ($1, $2)`, a, b); err != nil {
-		t.Fatal(err)
-	}
-
-	n, err := NewDataLabRepository(testDB).CountReviewers(context.Background(), "sw")
-	if err != nil || n != 2 {
-		t.Errorf("CountReviewers = %d, %v, want 2", n, err)
-	}
-}
-
 func TestDataLab_NextPendingContribution_OldestNotOwn(t *testing.T) {
 	truncate(t, "users", "sources")
 	ctx := context.Background()
@@ -382,7 +367,7 @@ func TestDataLab_Progress_CountsSentencePairsPerLanguage(t *testing.T) {
 	if err != nil || len(sw) != 1 {
 		t.Fatalf("Progress(sw) = %v, %v", sw, err)
 	}
-	want := domain.LanguageProgress{Code: "sw", Available: 3, Translated: 2, Verified: 1, Recorded: 2, RecordedVerified: 1, Pending: 2, Reviewers: 1, Open: false}
+	want := domain.LanguageProgress{Code: "sw", Available: 3, Translated: 2, Verified: 1, Recorded: 2, RecordedVerified: 1, Pending: 2}
 	if sw[0] != want {
 		t.Errorf("sw progress = %+v, want %+v", sw[0], want)
 	}

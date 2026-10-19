@@ -22,8 +22,6 @@ func dataLabError(c *gin.Context, err error) {
 		JSONError(c, http.StatusForbidden, "consent_required", "accept the current consent first")
 	case errors.Is(err, usecase.ErrNotMember):
 		JSONError(c, http.StatusForbidden, "not_member", "add this language to your profile first")
-	case errors.Is(err, usecase.ErrLanguageClosed):
-		JSONError(c, http.StatusConflict, "language_closed", "this language opens once it has reviewers")
 	case errors.Is(err, usecase.ErrNoTasks):
 		JSONError(c, http.StatusNotFound, "no_tasks", "nothing left to do in this language right now")
 	case errors.Is(err, usecase.ErrNotFound):

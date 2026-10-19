@@ -120,10 +120,6 @@ func RecordingPrefix(language string, userID int64) string {
 	return fmt.Sprintf("data-lab/voice/%s/%d/", language, userID)
 }
 
-// MinReviewersToOpen is how many reviewers a language needs before it accepts
-// contributions, so every row can get a second speaker (ADR 0010).
-const MinReviewersToOpen = 2
-
 // CivicCategories are the civic topics items are tagged with. They match the
 // ids in web/components/civic/data.ts.
 var CivicCategories = []string{
@@ -202,19 +198,16 @@ const ProgressEvent = "data-lab.progress"
 
 // LanguageProgress is a target language's live counts. Translated and
 // Verified measure the written output: sentence pairs with English, from
-// translate items; Recorded and RecordedVerified count recordings. Pending and Open serve volunteers (the review queue, whether the
-// language accepts contributions); Reviewers stays internal.
+// translate items; Recorded and RecordedVerified count recordings. Pending is the review queue.
 type LanguageProgress struct {
 	Code       string `json:"code"`
 	Available  int    `json:"available"`  // translate items, the whole every language works from
 	Translated int    `json:"translated"` // pairs pending review or verified
 	Verified   int    `json:"verified"`   // pairs a second speaker approved
 	// Recordings, of any kind of item, pending review or verified, and verified.
-	Recorded         int  `json:"recorded"`
-	RecordedVerified int  `json:"recorded_verified"`
-	Pending          int  `json:"pending"` // contributions of any kind awaiting review
-	Open             bool `json:"open"`    // enough reviewers to accept contributions
-	Reviewers        int  `json:"-"`
+	Recorded         int `json:"recorded"`
+	RecordedVerified int `json:"recorded_verified"`
+	Pending          int `json:"pending"` // contributions of any kind awaiting review
 }
 
 // Dataset splits. A source's split is fixed when it is first imported.

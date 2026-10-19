@@ -133,17 +133,6 @@ func (r *dataLabRepository) SaveVoiceConsent(ctx context.Context, userID int64, 
 	return nil
 }
 
-func (r *dataLabRepository) CountReviewers(ctx context.Context, language string) (int, error) {
-	var n int
-	err := r.db.QueryRowContext(ctx, `
-        SELECT count(*) FROM language_members
-        WHERE language_code = $1 AND level IN ('reviewer', 'lead')`, language).Scan(&n)
-	if err != nil {
-		return 0, fmt.Errorf("datalab repository: count reviewers: %w", err)
-	}
-	return n, nil
-}
-
 // verifiedText is a written contribution's verified text: the reviewer's
 // correction when there is one. Use with `c` a contribution.
 const verifiedText = `COALESCE((SELECT rv.corrected_text FROM reviews rv WHERE rv.contribution_id = c.id), c.text)`
@@ -327,8 +316,7 @@ func (r *dataLabRepository) Progress(ctx context.Context, language string) ([]do
                 WHERE c.language_code = l.code AND c.modality = 'audio' AND c.status IN ('pending', 'verified')),
                (SELECT count(*) FROM contributions c
                 WHERE c.language_code = l.code AND c.modality = 'audio' AND c.status = 'verified'),
-               (SELECT count(*) FROM contributions c WHERE c.language_code = l.code AND c.status = 'pending'),
-               (SELECT count(*) FROM language_members m WHERE m.language_code = l.code AND m.level IN ('reviewer', 'lead'))
+               (SELECT count(*) FROM contributions c WHERE c.language_code = l.code AND c.status = 'pending')
         FROM languages l
         WHERE l.role = 'target' AND l.enabled AND ($1 = '' OR l.code = $1)
         ORDER BY l.name`
@@ -342,10 +330,9 @@ func (r *dataLabRepository) Progress(ctx context.Context, language string) ([]do
 	var out []domain.LanguageProgress
 	for rows.Next() {
 		var p domain.LanguageProgress
-		if err := rows.Scan(&p.Code, &p.Available, &p.Translated, &p.Verified, &p.Recorded, &p.RecordedVerified, &p.Pending, &p.Reviewers); err != nil {
+		if err := rows.Scan(&p.Code, &p.Available, &p.Translated, &p.Verified, &p.Recorded, &p.RecordedVerified, &p.Pending); err != nil {
 			return nil, fmt.Errorf("datalab repository: scan progress: %w", err)
 		}
-		p.Open = p.Reviewers >= domain.MinReviewersToOpen
 		out = append(out, p)
 	}
 	return out, rows.Err()

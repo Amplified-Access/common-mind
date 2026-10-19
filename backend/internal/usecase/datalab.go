@@ -31,8 +31,6 @@ type DataLabStore interface {
 	// SaveVoiceConsent marks the volunteer's consent of that version as
 	// covering voice recordings.
 	SaveVoiceConsent(ctx context.Context, userID int64, version string) error
-	// CountReviewers counts reviewers and leads in a language.
-	CountReviewers(ctx context.Context, language string) (int, error)
 	// NextItem returns an item the volunteer hasn't done in the modality that
 	// has no pending or verified contribution in the language and modality, or
 	// nil, nil when none is left. For audio, only items with a verified
@@ -237,7 +235,9 @@ func (d *dataLab) Onboard(ctx context.Context, tok *FirebaseToken, in Onboarding
 }
 
 // contributorIn loads the volunteer and checks they may contribute in the
-// language: onboarded, current consent, a member, and the language open.
+// language: onboarded, current consent, and a member. A language needs no
+// reviewers to accept work; contributions wait as pending until someone other
+// than their author reviews them (ADR 0010).
 func (d *dataLab) contributorIn(ctx context.Context, tok *FirebaseToken, language string) (*domain.Volunteer, error) {
 	v, err := d.Me(ctx, tok)
 	if err != nil {
@@ -248,13 +248,6 @@ func (d *dataLab) contributorIn(ctx context.Context, tok *FirebaseToken, languag
 	}
 	if _, ok := v.Membership(language); !ok {
 		return nil, ErrNotMember
-	}
-	reviewers, err := d.store.CountReviewers(ctx, language)
-	if err != nil {
-		return nil, err
-	}
-	if reviewers < domain.MinReviewersToOpen {
-		return nil, ErrLanguageClosed
 	}
 	return v, nil
 }

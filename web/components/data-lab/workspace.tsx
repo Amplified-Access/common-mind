@@ -53,15 +53,9 @@ function Workspace() {
                   />
                 )}
                 <div className="mt-auto flex flex-wrap gap-2">
-                  {p?.open ? (
-                    <Link href={`/data-lab/contribute/${m.language_code}`} className={primaryButton}>
-                      Contribute
-                    </Link>
-                  ) : (
-                    <p className="max-w-xs text-sm text-subtle">
-                      Contributions open once this language has two reviewers.
-                    </p>
-                  )}
+                  <Link href={`/data-lab/contribute/${m.language_code}`} className={primaryButton}>
+                    Contribute
+                  </Link>
                   {canReview(m.level) && (
                     <Link href={`/data-lab/review/${m.language_code}`} className={secondaryButton}>
                       Review{p?.pending ? ` · ${p.pending}` : ""}
