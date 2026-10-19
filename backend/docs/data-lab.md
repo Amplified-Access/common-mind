@@ -153,7 +153,7 @@ After every successful contribution and review, the use case reloads that langua
 
 ## Admin: importing items and promoting volunteers
 
-`cmd/datalab` runs admin tasks against the database in `.env`:
+Import files for real sources are prepared by the offline pipeline in `ingest/` (see `ingest/README.md`), which ends with a person approving every segment. `cmd/datalab` runs admin tasks against the database in `.env`:
 
 ```bash
 make datalab-sample                                              # import dev/data-lab/sample-items.jsonl

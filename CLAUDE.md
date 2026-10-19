@@ -10,6 +10,7 @@ See `AGENTS.md` for setup, Data Lab rules, and security rules; `docs/adr/` for a
 | Database | PostgreSQL 16 + Redis 7 via Docker Compose |
 | Content | Sanity, Studio embedded at `/studio` — see `web/docs/cms.md` |
 | Inference | Python (FastAPI) on a Runpod GPU pod — see `inference/README.md` |
+| Ingestion | Python (uv) pipeline run offline — see `ingest/README.md` |
 | Dev tools | pnpm, Air (Go hot reload), Testcontainers |
 
 ## Run commands
@@ -115,7 +116,8 @@ web/
 inference/
   server.py                     # FastAPI model server that runs on the Runpod pod
   translator.py                 # Flash worker with the same logic, for local iteration
-docs/adr/                       # architectural decisions (0009–0011 cover the Data Lab)
+ingest/                         # offline pipeline: open documents → review sheet → Data Lab import file (README.md)
+docs/adr/                       # architectural decisions (0009–0011 and 0013 cover the Data Lab)
 ```
 
 ## Swagger / OpenAPI

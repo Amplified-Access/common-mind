@@ -1,0 +1,23 @@
+[project]
+name = "ingest"
+version = "0.1.0"
+description = "Offline pipeline that turns openly licensed documents into Data Lab import files (ADR 0013)"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = ["beautifulsoup4>=4.12"]
+
+[project.scripts]
+ingest = "ingest.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["ingest"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
