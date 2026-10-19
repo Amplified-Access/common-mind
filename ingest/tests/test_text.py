@@ -15,6 +15,8 @@ def test_normalise_straightens_quotes_and_collapses_space():
         ('Officials said, "The clinic will open on Monday for all residents."', ""),
         ("He said the plan for the county was good.", "needs the sentence before it"),
         ("Call 0722 123 456 for details about the meeting.", "contact details"),
+        ("South Sudan in Focus is a joint effort of VOA and the United States Agency for International Development.", "about VOA itself"),
+        ("What is going to be left for development in the county?", "a question"),
     ],
 )
 def test_drop_reason(sentence, reason):
@@ -36,6 +38,9 @@ def test_segment_keeps_abbreviations_and_initials_inside_sentences():
         ("Voters lined up at polling stations to cast ballots in the election.", "elections"),
         ("The government will build a new road and a bridge to connect the villages.", "development"),
         ("Parents say the hospital has no medicine and nurses are on strike.", "public-services"),
+        ("Police arrested the journalist and a court later released her.", "rights"),
+        ("Health workers say malaria cases are rising in the refugee settlement.", "public-services"),
+        ("The opposition said the presidential results were not credible.", "elections"),
         ("Lions are returning to the national park.", ""),
     ],
 )
