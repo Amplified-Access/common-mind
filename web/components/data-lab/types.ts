@@ -39,8 +39,6 @@ export type LanguageProgress = {
   recorded_verified: number;
   /** Contributions of any kind waiting for review. */
   pending: number;
-  /** Whether the language accepts contributions yet. */
-  open: boolean;
 };
 
 export type Task = {
