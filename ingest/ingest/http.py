@@ -1,17 +1,19 @@
-"""A slow, polite HTTP client. Every fetch waits between requests, and
-documents already on disk are never fetched again."""
+"""A slow, polite HTTP client. Requests start at least DELAY_SECONDS apart,
+even across threads, and documents already on disk are never fetched again."""
 
 import gzip
+import threading
 import time
 import urllib.error
 import urllib.request
 from pathlib import Path
 
 USER_AGENT = "CommonMind-ingest/0.1 (civic corpus research; one request every few seconds)"
-DELAY_SECONDS = 2.0
+DELAY_SECONDS = 1.0
 TIMEOUT_SECONDS = 60
 
 _last_request = 0.0
+_lock = threading.Lock()
 
 
 def get(url: str, attempts: int = 3) -> bytes:
@@ -30,15 +32,14 @@ def get(url: str, attempts: int = 3) -> bytes:
 
 def _get_once(url: str) -> bytes:
     global _last_request
-    wait = DELAY_SECONDS - (time.monotonic() - _last_request)
-    if wait > 0:
-        time.sleep(wait)
-    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-    try:
-        with urllib.request.urlopen(req, timeout=TIMEOUT_SECONDS) as resp:
-            body = resp.read()
-    finally:
+    with _lock:
+        wait = DELAY_SECONDS - (time.monotonic() - _last_request)
+        if wait > 0:
+            time.sleep(wait)
         _last_request = time.monotonic()
+    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+    with urllib.request.urlopen(req, timeout=TIMEOUT_SECONDS) as resp:
+        body = resp.read()
     if url.endswith(".gz") or body[:2] == b"\x1f\x8b":
         body = gzip.decompress(body)
     return body
