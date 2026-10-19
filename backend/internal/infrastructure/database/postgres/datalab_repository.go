@@ -156,6 +156,8 @@ const verifiedText = `COALESCE((SELECT rv.corrected_text FROM reviews rv WHERE r
 // Writing works from the source text. Recording reads a verified
 // translation aloud, so only items translated and verified in the language
 // are offered, and the task's text is that translation, in the language.
+//
+// Retired items (ADR 0013) are never offered, in either modality.
 func (r *dataLabRepository) NextItem(ctx context.Context, userID int64, language, modality string) (*domain.Task, error) {
 	const open = `
           NOT EXISTS (
@@ -165,7 +167,7 @@ func (r *dataLabRepository) NextItem(ctx context.Context, userID int64, language
 	q := `
         SELECT i.id, i.kind, i.category, i.text, i.language_code
         FROM items i
-        WHERE i.language_code <> $2 AND` + open + `
+        WHERE i.status = 'active' AND i.language_code <> $2 AND` + open + `
         ORDER BY random()
         LIMIT 1`
 	if modality == domain.ModalityAudio {
@@ -174,7 +176,7 @@ func (r *dataLabRepository) NextItem(ctx context.Context, userID int64, language
         FROM items i
         JOIN contributions c ON c.item_id = i.id AND c.language_code = $2
                             AND c.modality = 'text' AND c.status = 'verified'
-        WHERE i.kind = 'translate' AND` + open + `
+        WHERE i.status = 'active' AND i.kind = 'translate' AND` + open + `
         ORDER BY random()
         LIMIT 1`
 	}

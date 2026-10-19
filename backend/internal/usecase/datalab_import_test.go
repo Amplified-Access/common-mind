@@ -12,7 +12,7 @@ import (
 
 type fakeImportStore struct{ imported []ImportRow }
 
-func (f *fakeImportStore) ImportItems(_ context.Context, rows []ImportRow) (ImportResult, error) {
+func (f *fakeImportStore) ImportItems(_ context.Context, _ ImportBatch, rows []ImportRow) (ImportResult, error) {
 	f.imported = rows
 	return ImportResult{Items: len(rows)}, nil
 }
@@ -32,7 +32,7 @@ func TestImportItems_ReportsEveryBadLineAndWritesNothing(t *testing.T) {
 	store := &fakeImportStore{}
 	langs := &fakeStore{languages: launchLanguages()}
 
-	_, err := NewImporter(store, langs).ImportItems(context.Background(), rows)
+	_, err := NewImporter(store, langs).ImportItems(context.Background(), ImportBatch{}, rows)
 
 	if !errors.Is(err, ErrInvalidInput) {
 		t.Fatalf("error = %v, want ErrInvalidInput", err)

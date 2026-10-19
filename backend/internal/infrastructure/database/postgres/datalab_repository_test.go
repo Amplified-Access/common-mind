@@ -231,6 +231,26 @@ func TestDataLab_NextItem_SkipsTakenAndOwnItems(t *testing.T) {
 	}
 }
 
+func TestDataLab_NextItem_NeverOffersRetiredItems(t *testing.T) {
+	truncate(t, "users", "sources")
+	ctx := context.Background()
+	repo := NewDataLabRepository(testDB)
+	me := seedVolunteer(t, "uid-me", "sw")
+	other := seedVolunteer(t, "uid-other", "sw")
+	// One item open for writing, one translated and verified, so open for recording.
+	ids := seedItems(t, "untranslated", "verified")
+	contribute(t, ids[1], other, domain.StatusVerified)
+	if _, err := testDB.Exec(`UPDATE items SET status = 'retired'`); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, modality := range []string{domain.ModalityText, domain.ModalityAudio} {
+		if task, err := repo.NextItem(ctx, me, "sw", modality); err != nil || task != nil {
+			t.Errorf("NextItem(%s) = %+v, %v, want nil, nil: every item is retired", modality, task, err)
+		}
+	}
+}
+
 func TestDataLab_CreateContribution_RejectsRepeatsAndUnknownItems(t *testing.T) {
 	truncate(t, "users", "sources")
 	ctx := context.Background()
@@ -369,29 +389,30 @@ func TestDataLab_Progress_CountsSentencePairsPerLanguage(t *testing.T) {
 }
 
 func TestDataLab_ImportItems_IsIdempotentAndKeepsSplit(t *testing.T) {
-	truncate(t, "sources")
+	truncate(t, "sources", "import_batches")
 	ctx := context.Background()
 	repo := NewImportRepository(testDB)
+	batch := usecase.ImportBatch{FileName: "items.jsonl", FileHash: "abc123"}
 	src := usecase.ImportSource{Key: "council-notices-2026", Title: "Council notices", Licence: "CC-BY-4.0"}
 	rows := []usecase.ImportRow{
 		{Source: src, Kind: domain.KindTranslate, Language: "en", Category: "public-services", Text: "The clinic opens at eight."},
 		{Source: src, Kind: domain.KindWrite, Language: "en", Category: "elections", Text: "How do you find your polling station?"},
 	}
 
-	first, err := repo.ImportItems(ctx, rows)
+	first, err := repo.ImportItems(ctx, batch, rows)
 	if err != nil {
 		t.Fatalf("first import: %v", err)
 	}
-	if first != (usecase.ImportResult{Sources: 1, Items: 2}) {
-		t.Errorf("first import = %+v, want 1 source and 2 items", first)
+	if first != (usecase.ImportResult{BatchID: first.BatchID, Sources: 1, Items: 2}) || first.BatchID == 0 {
+		t.Errorf("first import = %+v, want a batch with 1 source and 2 items", first)
 	}
 
-	again, err := repo.ImportItems(ctx, rows)
+	again, err := repo.ImportItems(ctx, batch, rows)
 	if err != nil {
 		t.Fatalf("second import: %v", err)
 	}
-	if again != (usecase.ImportResult{Skipped: 2}) {
-		t.Errorf("second import = %+v, want everything skipped", again)
+	if again != (usecase.ImportResult{BatchID: again.BatchID, Skipped: 2}) || again.BatchID == first.BatchID {
+		t.Errorf("second import = %+v, want a new batch with everything skipped", again)
 	}
 
 	var split string
@@ -400,6 +421,73 @@ func TestDataLab_ImportItems_IsIdempotentAndKeepsSplit(t *testing.T) {
 	}
 	if split != domain.SplitFor(src.Key) {
 		t.Errorf("split = %q, want %q", split, domain.SplitFor(src.Key))
+	}
+}
+
+func TestDataLab_ImportItems_RecordsBatchAndProvenance_DryRunWritesNothing(t *testing.T) {
+	truncate(t, "sources", "import_batches")
+	ctx := context.Background()
+	repo := NewImportRepository(testDB)
+	src := usecase.ImportSource{
+		Key: "gv-2026-clinic", Title: "Clinic hours", Origin: "Global Voices", Licence: "CC-BY-3.0",
+		Collection: "global-voices", URL: "https://example.org/clinic", RetrievedAt: "2026-10-01",
+		LicenceURL: "https://example.org/licence", RawObjectKey: "sources/raw/gv-2026-clinic.html", ContentHash: "deadbeef",
+	}
+	two := 2
+	rows := []usecase.ImportRow{
+		{Source: src, Kind: domain.KindTranslate, Language: "en", Category: "public-services", Text: "The clinic opens at eight.", Position: &two},
+		{Source: src, Kind: domain.KindTranslate, Language: "en", Category: "public-services", Text: "It closes at five."},
+	}
+	batch := usecase.ImportBatch{FileName: "gv.jsonl", FileHash: "f00d", ImportedBy: "grace"}
+
+	dry := batch
+	dry.DryRun = true
+	predicted, err := repo.ImportItems(ctx, dry, rows)
+	if err != nil {
+		t.Fatalf("dry run: %v", err)
+	}
+	var written int
+	if err := testDB.QueryRow(`SELECT (SELECT count(*) FROM sources) + (SELECT count(*) FROM items) + (SELECT count(*) FROM import_batches)`).Scan(&written); err != nil {
+		t.Fatal(err)
+	}
+	if written != 0 {
+		t.Errorf("dry run left %d rows behind, want none", written)
+	}
+
+	res, err := repo.ImportItems(ctx, batch, rows)
+	if err != nil {
+		t.Fatalf("import: %v", err)
+	}
+	if predicted != (usecase.ImportResult{Sources: 1, Items: 2}) || res != (usecase.ImportResult{BatchID: res.BatchID, Sources: 1, Items: 2}) {
+		t.Errorf("dry run = %+v, import = %+v, want the same 1 source and 2 items, batch only on the import", predicted, res)
+	}
+
+	var got usecase.ImportBatch
+	var sources, items, skipped int
+	if err := testDB.QueryRow(`SELECT file_name, file_hash, imported_by, sources_added, items_added, items_skipped FROM import_batches WHERE id = $1`, res.BatchID).
+		Scan(&got.FileName, &got.FileHash, &got.ImportedBy, &sources, &items, &skipped); err != nil {
+		t.Fatalf("batch row: %v", err)
+	}
+	if got != batch || sources != 1 || items != 2 || skipped != 0 {
+		t.Errorf("batch = %+v with %d/%d/%d, want %+v with 1/2/0", got, sources, items, skipped, batch)
+	}
+
+	var stored usecase.ImportSource
+	if err := testDB.QueryRow(`SELECT key, title, origin, licence, collection, url, to_char(retrieved_at, 'YYYY-MM-DD'), licence_url, raw_object_key, content_hash FROM sources`).
+		Scan(&stored.Key, &stored.Title, &stored.Origin, &stored.Licence, &stored.Collection, &stored.URL, &stored.RetrievedAt, &stored.LicenceURL, &stored.RawObjectKey, &stored.ContentHash); err != nil {
+		t.Fatalf("source row: %v", err)
+	}
+	if stored != src {
+		t.Errorf("source = %+v, want %+v", stored, src)
+	}
+
+	var withPosition, inBatch int
+	if err := testDB.QueryRow(`SELECT count(*) FILTER (WHERE position = 2), count(*) FILTER (WHERE import_batch_id = $1 AND status = 'active') FROM items`, res.BatchID).
+		Scan(&withPosition, &inBatch); err != nil {
+		t.Fatal(err)
+	}
+	if withPosition != 1 || inBatch != 2 {
+		t.Errorf("items with position 2 = %d, active in the batch = %d; want 1 and 2", withPosition, inBatch)
 	}
 }
 
