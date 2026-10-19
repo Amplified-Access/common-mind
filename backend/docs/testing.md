@@ -1,8 +1,13 @@
 ---
 topic: testing
-last_verified: 2026-10-14
+last_verified: 2026-10-19
 sources:
   - internal/infrastructure/database/postgres/health_repository_test.go
+  - internal/infrastructure/database/postgres/datalab_repository_test.go
+  - internal/usecase/datalab_test.go
+  - internal/usecase/datalab_voice_test.go
+  - internal/usecase/datalab_import_test.go
+  - internal/transport/handlers/datalab_errors_test.go
   - internal/transport/handlers/hello_handler_test.go
   - internal/transport/handlers/health_handler_test.go
   - internal/transport/middleware/logger_test.go
@@ -283,7 +288,7 @@ func TestProbeWithRetry_SuccessAfterRetries(t *testing.T) {
 
 ## Postgres Testcontainers setup
 
-`mustStartPostgresContainer()` starts a `postgres:latest` container, calls `NewPostgresDB(cfg)` with the mapped host/port, and assigns the result to the package-level `var testDB *sql.DB`.
+`mustStartPostgresContainer()` in `health_repository_test.go` starts a `postgres:16` container, calls `NewPostgresDB(cfg)` with the mapped host/port, assigns the result to the package-level `var testDB *sql.DB`, and applies every migration with `goose.Up(db, "../migrations")`. The same file defines `truncate(t, tables...)`, which registers a `t.Cleanup` that runs `TRUNCATE <table> RESTART IDENTITY CASCADE` on each table.
 
 ```go
 var testDB *sql.DB
@@ -291,7 +296,7 @@ var testDB *sql.DB
 func mustStartPostgresContainer() (func(context.Context, ...testcontainers.TerminateOption) error, error) {
     container, err := tcpostgres.Run(
         context.Background(),
-        "postgres:latest",
+        "postgres:16",
         tcpostgres.WithDatabase("database"),
         tcpostgres.WithUsername("user"),
         tcpostgres.WithPassword("password"),
@@ -305,6 +310,15 @@ func mustStartPostgresContainer() (func(context.Context, ...testcontainers.Termi
     cfg := DBConfig{Host: dbHost, Port: dbPort.Port(), ...}
     db, err := NewPostgresDB(cfg)
     testDB = db
+
+    // Tests run against the real schema, so the migrations are exercised too.
+    if err := goose.SetDialect("postgres"); err != nil {
+        return container.Terminate, err
+    }
+    goose.SetLogger(goose.NopLogger())
+    if err := goose.Up(db, "../migrations"); err != nil {
+        return container.Terminate, err
+    }
     return container.Terminate, nil
 }
 
@@ -323,7 +337,7 @@ func TestMain(m *testing.M) {
 ## Adding a new integration test
 
 1. Add a `TestXxx(t *testing.T)` function in a `_test.go` file under `internal/infrastructure/database/postgres/` (same package).
-2. Construct the repository under test using `testDB`: e.g. `repo := NewHealthRepository(testDB)`.
+2. Construct the repository under test using `testDB`: e.g. `repo := NewHealthRepository(testDB)`. Call `truncate(t, "table", …)` for every table the test writes to. `datalab_repository_test.go` is a worked example.
 3. Call repository methods directly and assert on the results.
 4. Use table-driven tests for multiple cases.
 5. Each test must set up its own data and not assume anything from other tests.
