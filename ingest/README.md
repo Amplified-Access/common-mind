@@ -2,7 +2,9 @@
 
 Turns openly licensed documents into Data Lab import files: the English source segments volunteers translate. It runs offline on a laptop, and only approved segments reach the database ([ADR 0013](../docs/adr/0013-source-acquisition-and-licences.md)). The import format and the importer's checks are in [backend/docs/data-lab.md](../backend/docs/data-lab.md).
 
-Sources so far, all public domain when VOA produced the story:
+**[SOURCES.md](SOURCES.md)** is the ledger of every source considered: what has been ingested and imported, what is ready to build, what needs permission, and what was ruled out. Read it before looking for new sources.
+
+Sources built so far, all public domain when VOA produced the story:
 
 | `--site` | Source | Judged by |
 |---|---|---|

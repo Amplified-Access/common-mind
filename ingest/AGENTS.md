@@ -1,6 +1,8 @@
 # AGENTS.md — ingest
 
-Offline pipeline that turns openly licensed documents into Data Lab import files. Read `README.md` and ADR 0013 (`../docs/adr/0013-source-acquisition-and-licences.md`) first.
+Offline pipeline that turns openly licensed documents into Data Lab import files. Read `README.md`, `SOURCES.md` and ADR 0013 (`../docs/adr/0013-source-acquisition-and-licences.md`) first.
+
+- `SOURCES.md` is the ledger of every source checked. Look there before researching a source, and update it after every run, import (with its batch ids) or licence check.
 
 - A source is admitted only with a licence on the ADR 0013 allowlist, checked on the publisher's own pages. Record the evidence in the source's `licence_url`.
 - Text is copied as published. Normalising quotes and whitespace is fine; rewording, summarising or translating is not. No model writes or rewrites a segment.
