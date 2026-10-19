@@ -1,0 +1,6 @@
+# Fetched documents, review sheets and import files stay local.
+data/
+.venv/
+__pycache__/
+*.egg-info/
+.pytest_cache/

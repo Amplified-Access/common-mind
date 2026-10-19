@@ -30,6 +30,7 @@ Each ADR follows this structure:
 | [0010](0010-human-only-civic-corpus.md) | The Data Lab: a human-only platform for civic language data | Accepted |
 | [0011](0011-triggered-corpus-releases.md) | Live corpus with metric-triggered snapshot releases | Accepted |
 | [0012](0012-sanity-cms.md) | Sanity for the site's words and editorial content | Accepted |
+| [0013](0013-source-acquisition-and-licences.md) | Source acquisition and licence policy | Accepted |
 
 ## Adding a new ADR
 

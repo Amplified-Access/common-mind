@@ -1,7 +1,8 @@
 ---
 topic: database
-last_verified: 2026-06-23
+last_verified: 2026-10-19
 sources:
+  - internal/infrastructure/database/migrations/20261014053245_init.sql
   - internal/domain/health.go
   - internal/domain/user.go
   - internal/domain/pagination.go
@@ -114,15 +115,15 @@ func (p PageRequest) Offset() int   // returns SQL OFFSET value
 ```
 
 ## Users table schema
-Added via migration `20260623063851_add_user_profile.sql`:
+Created by migration `20261014053245_init.sql`:
 
 | Column | Type | Constraints |
 |---|---|---|
 | `id` | `BIGSERIAL` | PRIMARY KEY |
 | `firebase_uid` | `TEXT` | NOT NULL, UNIQUE |
-| `name` | `TEXT` | — |
-| `email` | `TEXT` | — |
-| `photo_url` | `TEXT` | — |
+| `name` | `TEXT` | NOT NULL DEFAULT '' |
+| `email` | `TEXT` | NOT NULL DEFAULT '' |
+| `photo_url` | `TEXT` | NOT NULL DEFAULT '' |
 | `created_at` | `TIMESTAMPTZ` | NOT NULL DEFAULT now() |
 | `updated_at` | `TIMESTAMPTZ` | NOT NULL DEFAULT now() |
 

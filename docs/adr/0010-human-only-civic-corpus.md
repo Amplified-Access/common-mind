@@ -34,5 +34,5 @@ Build the **Data Lab**, CommonMind's volunteer platform at `/data-lab`, backed b
 - Throughput depends on recruiting and keeping volunteer reviewers in every language.
 
 ## Open questions
-- The licence volunteers grant on their contributions (CC-BY-4.0 or CC0).
+- ~~The licence volunteers grant on their contributions (CC-BY-4.0 or CC0).~~ Settled as CC-BY-4.0 by ADR 0013.
 - Minimum contributor age, or a guardian-consent flow.

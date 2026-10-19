@@ -1,17 +1,21 @@
 // Command datalab runs Data Lab admin tasks against the database configured
 // by the BLUEPRINT_DB_* environment variables (loaded from .env).
 //
-//	datalab import <file.jsonl>                  add sources and items
+//	datalab import [--dry-run] <file.jsonl>      add sources and items
 //	datalab promote <email> <language> <level>   set a volunteer's level
 package main
 
 import (
 	"bufio"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
+	"path/filepath"
 
 	_ "github.com/joho/godotenv/autoload"
 
@@ -20,7 +24,7 @@ import (
 )
 
 const usage = `usage:
-  datalab import <file.jsonl>
+  datalab import [--dry-run] <file.jsonl>
   datalab promote <email> <language> <contributor|reviewer|lead>`
 
 func main() {
@@ -53,16 +57,27 @@ func run(args []string) error {
 	admin := usecase.NewImporter(postgres.NewImportRepository(db), postgres.NewDataLabRepository(db))
 
 	switch {
-	case args[0] == "import" && len(args) == 2:
-		rows, err := readRows(args[1])
+	case args[0] == "import" && (len(args) == 2 || len(args) == 3 && args[1] == "--dry-run"):
+		dryRun := len(args) == 3
+		path := args[len(args)-1]
+		rows, err := readRows(path)
 		if err != nil {
 			return err
 		}
-		res, err := admin.ImportItems(ctx, rows)
+		hash, err := fileHash(path)
 		if err != nil {
 			return err
 		}
-		fmt.Printf("imported %d new sources and %d new items; %d items were already there\n", res.Sources, res.Items, res.Skipped)
+		batch := usecase.ImportBatch{FileName: filepath.Base(path), FileHash: hash, ImportedBy: os.Getenv("USER"), DryRun: dryRun}
+		res, err := admin.ImportItems(ctx, batch, rows)
+		if err != nil {
+			return err
+		}
+		if dryRun {
+			fmt.Printf("dry run: would import %d new sources and %d new items; %d items are already there\n", res.Sources, res.Items, res.Skipped)
+			return nil
+		}
+		fmt.Printf("imported %d new sources and %d new items (batch %d); %d items were already there\n", res.Sources, res.Items, res.BatchID, res.Skipped)
 		return nil
 	case args[0] == "promote" && len(args) == 4:
 		err := admin.SetMemberLevel(ctx, args[1], args[2], args[3])
@@ -101,6 +116,20 @@ func readRows(path string) ([]usecase.ImportRow, error) {
 		rows = append(rows, r)
 	}
 	return rows, sc.Err()
+}
+
+// fileHash is the sha256 of the file in hex, recorded on the import batch.
+func fileHash(path string) (string, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+	h := sha256.New()
+	if _, err := io.Copy(h, f); err != nil {
+		return "", fmt.Errorf("hash %s: %w", path, err)
+	}
+	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
 func envOr(key, fallback string) string {

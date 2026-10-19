@@ -6,6 +6,7 @@ Each layer has its own `AGENTS.md`. Read the file closest to what you are editin
 - `backend/AGENTS.md` + `backend/docs/` — Go API (Data Lab, release engine)
 - `web/AGENTS.md` — Next.js site, and later the Data Lab UI at `/data-lab`
 - `inference/AGENTS.md` + `inference/README.md` — model server behind the Playground
+- `ingest/AGENTS.md` + `ingest/README.md` — offline pipeline that prepares Data Lab import files (ADR 0013)
 
 Architectural decisions live in `docs/adr/`. Read 0009–0011 before working on the Data Lab.
 
