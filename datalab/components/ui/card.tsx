@@ -1,8 +1,18 @@
 import { cn } from "@/lib/utils";
 
-/** A bordered, rounded panel; panels inside set their own surface. */
-function Card({ className, children }: { className?: string; children: React.ReactNode }) {
-  return <div className={cn("overflow-hidden rounded-3xl border border-line", className)}>{children}</div>;
+// The main site's card in black and white: a hairline-edged frame around
+// panels that sit flush inside it.
+type FramedCardProps = React.ComponentProps<"div"> & {
+  /** Classes for the inner box that holds the panels (a grid, say). */
+  panelsClassName?: string;
+};
+
+function FramedCard({ className, panelsClassName, children, ...props }: FramedCardProps) {
+  return (
+    <div className={cn("flex rounded-card border border-frame-line bg-frame p-1.5 sm:p-2", className)} {...props}>
+      <div className={cn("min-w-0 flex-1 overflow-hidden rounded-inset", panelsClassName)}>{children}</div>
+    </div>
+  );
 }
 
 /** A small mono label above a heading or a block. */
@@ -14,4 +24,4 @@ function Container({ className, children }: { className?: string; children: Reac
   return <div className={cn("mx-auto w-full max-w-6xl px-4 md:px-8", className)}>{children}</div>;
 }
 
-export { Card, Container, Eyebrow };
+export { Container, Eyebrow, FramedCard };

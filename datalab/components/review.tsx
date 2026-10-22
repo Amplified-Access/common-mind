@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { Card, Eyebrow } from "@/components/ui/card";
+import { Eyebrow, FramedCard } from "@/components/ui/card";
 import { categoryLabel } from "@/lib/categories";
 import { cn } from "@/lib/utils";
 
@@ -114,23 +114,23 @@ function Review({ language }: { language: string }) {
       {view.status === "loading" && <p className="font-mono text-xs text-faint">Loading the next contribution…</p>}
 
       {view.status === "empty" && (
-        <Card className="bg-surface p-6 sm:p-8">
+        <FramedCard panelsClassName="bg-surface p-6 sm:p-8">
           <p className="text-lg">Nothing is waiting for review in {target?.name ?? language}.</p>
           <p className="pt-2 text-sm text-subtle">New contributions appear here as volunteers submit them.</p>
-        </Card>
+        </FramedCard>
       )}
 
       {view.status === "blocked" && (
-        <Card className="flex flex-col items-start gap-4 bg-surface p-6 sm:p-8">
+        <FramedCard panelsClassName="flex flex-col items-start gap-4 bg-surface p-6 sm:p-8">
           <p className="text-lg">{view.message}</p>
           <Link href="/workspace" className={primaryButton}>
             Back to your workspace
           </Link>
-        </Card>
+        </FramedCard>
       )}
 
       {view.status === "item" && (
-        <Card className="flex flex-col bg-background">
+        <FramedCard panelsClassName="flex flex-col bg-background">
           <div className="grid md:grid-cols-2">
             <div className="flex flex-col gap-5 bg-surface p-6 sm:p-8">
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -290,7 +290,7 @@ function Review({ language }: { language: string }) {
               )}
             </div>
           </div>
-        </Card>
+        </FramedCard>
       )}
     </div>
   );

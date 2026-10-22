@@ -6,7 +6,7 @@ import { FirebaseError } from "firebase/app";
 import { useId, useState } from "react";
 import { toast } from "sonner";
 
-import { Card } from "@/components/ui/card";
+import { FramedCard } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 import { useAuth } from "./auth-provider";
@@ -45,17 +45,17 @@ function SignIn() {
 
   if (!configured) {
     return (
-      <Card className="mx-auto w-full max-w-md bg-surface p-6 sm:p-8">
+      <FramedCard className="mx-auto w-full max-w-md" panelsClassName="bg-surface p-6 sm:p-8">
         <p className="text-sm text-subtle">
           Sign-in isn&apos;t configured here. Set the <code className="font-mono">NEXT_PUBLIC_FIREBASE_*</code>{" "}
           variables from <code className="font-mono">datalab/.env.example</code>.
         </p>
-      </Card>
+      </FramedCard>
     );
   }
 
   return (
-    <Card className="mx-auto w-full max-w-md bg-surface p-6 sm:p-8">
+    <FramedCard className="mx-auto w-full max-w-md" panelsClassName="bg-surface p-6 sm:p-8">
       <div className="flex flex-col gap-6">
         <h1 className="text-h3">{mode === "create" ? "Create an account" : "Sign in"}</h1>
 
@@ -110,7 +110,7 @@ function SignIn() {
           {mode === "create" ? "I already have an account" : "Create an account with email"}
         </button>
       </div>
-    </Card>
+    </FramedCard>
   );
 }
 

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 
-import { Card, Eyebrow } from "@/components/ui/card";
+import { Eyebrow, FramedCard } from "@/components/ui/card";
 
 import { useVolunteerReady } from "./lab-app";
 import { PairsBar } from "./pairs-bar";
@@ -36,7 +36,7 @@ function Workspace() {
           const p = board?.progress[m.language_code];
           return (
             <li key={m.language_code}>
-              <Card className="h-full flex h-full flex-col gap-6 bg-surface p-6">
+              <FramedCard className="h-full" panelsClassName="flex h-full flex-col gap-6 bg-surface p-6">
                 <div className="flex flex-col gap-1">
                   <span className="text-h3">{lang?.native_name ?? m.language_code}</span>
                   <span className="font-mono text-xs text-faint">
@@ -61,7 +61,7 @@ function Workspace() {
                     </Link>
                   )}
                 </div>
-              </Card>
+              </FramedCard>
             </li>
           );
         })}

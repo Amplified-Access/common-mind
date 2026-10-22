@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { Card, Eyebrow } from "@/components/ui/card";
+import { Eyebrow, FramedCard } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 import { dataLabApi } from "./api";
@@ -55,7 +55,7 @@ function Onboarding({ languages, volunteer, onDone }: OnboardingProps) {
   };
 
   return (
-    <Card className="bg-surface p-6 sm:p-8">
+    <FramedCard panelsClassName="bg-surface p-6 sm:p-8">
       <form onSubmit={submit} className="flex flex-col gap-8">
         <div className="flex flex-col gap-3">
           <Eyebrow>{volunteer ? "Your languages" : "Welcome"}</Eyebrow>
@@ -129,7 +129,7 @@ function Onboarding({ languages, volunteer, onDone }: OnboardingProps) {
           {volunteer ? "Save" : "Join"}
         </button>
       </form>
-    </Card>
+    </FramedCard>
   );
 }
 

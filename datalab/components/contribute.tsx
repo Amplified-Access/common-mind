@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { Card, Eyebrow } from "@/components/ui/card";
+import { Eyebrow, FramedCard } from "@/components/ui/card";
 import { Segmented } from "@/components/ui/segmented";
 import { categoryLabel } from "@/lib/categories";
 import { cn } from "@/lib/utils";
@@ -173,7 +173,7 @@ function Contribute({ language }: { language: string }) {
       </div>
 
       {askingConsent ? (
-        <Card className="flex flex-col gap-6 bg-surface p-6 sm:p-8">
+        <FramedCard panelsClassName="flex flex-col gap-6 bg-surface p-6 sm:p-8">
           <div className="flex flex-col gap-3">
             <Eyebrow>Before you record</Eyebrow>
             <p className="text-lg">Recording your voice adds to what you agreed to when you joined.</p>
@@ -194,7 +194,7 @@ function Contribute({ language }: { language: string }) {
               Keep writing
             </button>
           </div>
-        </Card>
+        </FramedCard>
       ) : (
         <>
           {view.status === "loading" && (
@@ -204,7 +204,7 @@ function Contribute({ language }: { language: string }) {
           )}
 
           {view.status === "empty" && (
-            <Card className="bg-surface p-6 sm:p-8">
+            <FramedCard panelsClassName="bg-surface p-6 sm:p-8">
               {modality === "audio" ? (
                 <>
                   <p className="text-lg">
@@ -220,20 +220,20 @@ function Contribute({ language }: { language: string }) {
                   <p className="pt-2 text-sm text-subtle">New items are added regularly. Check back soon.</p>
                 </>
               )}
-            </Card>
+            </FramedCard>
           )}
 
           {view.status === "blocked" && (
-            <Card className="flex flex-col items-start gap-4 bg-surface p-6 sm:p-8">
+            <FramedCard panelsClassName="flex flex-col items-start gap-4 bg-surface p-6 sm:p-8">
               <p className="text-lg">{view.message}</p>
               <Link href="/workspace" className={primaryButton}>
                 Back to your workspace
               </Link>
-            </Card>
+            </FramedCard>
           )}
 
           {view.status === "task" && (
-            <Card className="grid bg-background md:grid-cols-2">
+            <FramedCard panelsClassName="grid bg-background md:grid-cols-2">
               <div className="flex flex-col gap-5 bg-surface p-6 sm:p-8">
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                   <Eyebrow>
@@ -311,7 +311,7 @@ function Contribute({ language }: { language: string }) {
                   </button>
                 </div>
               </form>
-            </Card>
+            </FramedCard>
           )}
         </>
       )}
