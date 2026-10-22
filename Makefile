@@ -1,8 +1,8 @@
 .PHONY: setup dev \
-        dev-backend dev-web \
+        dev-backend dev-web dev-datalab \
         test test-backend \
-        build build-backend build-web \
-        lint lint-backend lint-web \
+        build build-backend build-web build-datalab \
+        lint lint-backend lint-web lint-datalab \
         tidy itest-backend deploy-prod
 
 # ── Setup ──────────────────────────────────────────────────────────────────────
@@ -29,6 +29,9 @@ dev-backend:
 dev-web:
 	cd web && pnpm dev
 
+dev-datalab:
+	cd datalab && pnpm dev
+
 # ── Testing ────────────────────────────────────────────────────────────────────
 
 test-backend:
@@ -45,7 +48,10 @@ build-backend:
 build-web:
 	cd web && pnpm build
 
-build: build-backend build-web
+build-datalab:
+	cd datalab && pnpm build
+
+build: build-backend build-web build-datalab
 
 # ── Utilities ──────────────────────────────────────────────────────────────────
 
@@ -58,11 +64,15 @@ lint-backend:
 lint-web:
 	cd web && pnpm lint
 
-lint: lint-backend lint-web
+lint-datalab:
+	cd datalab && pnpm lint
+
+lint: lint-backend lint-web lint-datalab
 
 tidy:
 	cd backend && go mod tidy
 	cd web && pnpm install
+	cd datalab && pnpm install
 
 # ── Deploy ─────────────────────────────────────────────────────────────────────
 
