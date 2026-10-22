@@ -82,7 +82,6 @@ Production accounts required:
 | `NEXT_PUBLIC_FIREBASE_API_KEY` | Yes | Firebase web app config |
 | `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | Yes | Firebase web app config |
 | `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | Yes | Same project as the backend's `FIREBASE_PROJECT_ID` |
-| `NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_HOST` | No | Local only (`localhost:9099`). Leave unset in staging and production. |
 
 `NEXT_PUBLIC_` values are inlined at build time, so set them before `next build`.
 
