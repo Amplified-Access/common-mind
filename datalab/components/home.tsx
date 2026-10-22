@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
+import { cn } from "@/lib/utils";
+
 import { useAuth } from "./auth-provider";
 import { primaryButton } from "./styles";
 import { ThemeToggle } from "./theme-toggle";
@@ -29,7 +31,7 @@ function Home() {
             written text and translations, you can help us build better language tools for everyone.
           </p>
           <p className="text-subtle">Every contribution makes a difference.</p>
-          <Link href="/sign-in" className={primaryButton}>
+          <Link href="/sign-in" className={cn(primaryButton, "self-end")}>
             Start contributing →
           </Link>
         </FramedCard>
