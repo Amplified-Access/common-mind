@@ -34,7 +34,7 @@ function ThemeToggle({ className }: { className?: string }) {
       onClick={toggle}
       aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
       className={cn(
-        "flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-line text-foreground transition-colors hover:border-foreground",
+        "chamfer flex size-10 shrink-0 cursor-pointer items-center justify-center border border-line-strong text-foreground transition-colors hover:border-foreground",
         className,
       )}
     >

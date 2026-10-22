@@ -19,7 +19,7 @@ function Home() {
 
   return (
     <main className="relative flex min-h-svh items-center justify-center p-4">
-      <ThemeToggle className="absolute top-4 right-4" />
+      <ThemeToggle className="absolute top-4 right-4 md:right-8" />
       {!loading && !user && (
         <Link href="/sign-in" className={primaryButton}>
           Sign in
