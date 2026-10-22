@@ -4,11 +4,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
+import { cn } from "@/lib/utils";
+
 import { useAuth } from "./auth-provider";
 import { primaryButton } from "./styles";
 import { ThemeToggle } from "./theme-toggle";
+import { FramedCard } from "./ui/card";
 
-/** The front door: one Sign in button. Signed-in volunteers go to their workspace. */
+/** The front door: what the Data Lab is for and a way in. Signed-in volunteers go to their workspace. */
 function Home() {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -21,9 +24,17 @@ function Home() {
     <main className="relative flex min-h-svh items-center justify-center p-4">
       <ThemeToggle className="absolute top-4 right-4 md:right-8" />
       {!loading && !user && (
-        <Link href="/sign-in" className={primaryButton}>
-          Sign in
-        </Link>
+        <FramedCard className="w-full max-w-xl" panelsClassName="flex flex-col items-start gap-5 bg-surface p-5 sm:gap-6 sm:p-8">
+          <h1 className="text-h3 font-semibold tracking-tight sm:text-h2">Help your language be better understood.</h1>
+          <p className="text-sm/relaxed text-subtle sm:text-base/relaxed">
+            The way we speak and write carries meaning that technology doesn&apos;t always understand. By sharing
+            written text and translations, you can help us build better language tools for everyone.
+          </p>
+          <p className="text-sm/relaxed text-subtle sm:text-base/relaxed">Every contribution makes a difference.</p>
+          <Link href="/sign-in" className={cn(primaryButton, "mt-1 w-full sm:w-auto sm:self-end")}>
+            Start contributing →
+          </Link>
+        </FramedCard>
       )}
     </main>
   );
