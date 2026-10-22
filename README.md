@@ -41,7 +41,7 @@ make dev     # Postgres + Redis, backend (:8080, hot reload), and web (:3000) in
 Or start each part on its own:
 
 ```bash
-cd backend && make docker-run   # Postgres :5434, Redis :6380, Auth Emulator :9099 (UI :4000), Prometheus :9092, Grafana :3012
+cd backend && make docker-run   # Postgres :5434, Redis :6380, Prometheus :9092, Grafana :3012
 cd backend && make watch        # API → http://localhost:8080 (Swagger at /swagger/index.html)
 cd web && pnpm dev              # site → http://localhost:3000
 ```
