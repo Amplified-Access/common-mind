@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -19,12 +20,22 @@ var upgrader = websocket.Upgrader{
 		if gin.IsDebugging() {
 			return true
 		}
-		allowed := os.Getenv("BLUEPRINT_WS_ALLOWED_ORIGIN")
-		if allowed == "" {
-			return false
-		}
-		return r.Header.Get("Origin") == allowed
+		return originAllowed(r.Header.Get("Origin"), os.Getenv("BLUEPRINT_WS_ALLOWED_ORIGIN"))
 	},
+}
+
+// originAllowed reports whether origin is one of the comma-separated allowed
+// origins: the main site and the standalone Data Lab are deployed apart.
+func originAllowed(origin, allowed string) bool {
+	if origin == "" {
+		return false
+	}
+	for _, o := range strings.Split(allowed, ",") {
+		if strings.TrimSpace(o) == origin {
+			return true
+		}
+	}
+	return false
 }
 
 // WsHandler godoc
