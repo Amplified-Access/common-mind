@@ -1,6 +1,6 @@
 ---
 topic: environment
-last_verified: 2026-10-14
+last_verified: 2026-10-22
 sources:
   - .env
   - .env.example
@@ -37,9 +37,8 @@ This runs on package init before any env var is read — no explicit `godotenv.L
 | `RATE_LIMIT_BURST` | `bootstrap.go` | `int(RPS) * 5`, min 1 | Token-bucket burst capacity. Derived as `int(RPS)*5` when omitted; clamped to 1 so fractional RPS values never block all traffic. |
 | `FIREBASE_PROJECT_ID` | `bootstrap.go`, `pkg/firebase/admin.go` | — | Firebase project ID. When omitted the Firebase Admin client is not initialised and `FirebaseAuth` middleware is skipped (auth disabled). |
 | `FIREBASE_SERVICE_ACCOUNT_JSON` | `bootstrap.go`, `pkg/firebase/admin.go` | — | Raw JSON content of a Firebase service account key file. When omitted the SDK uses Application Default Credentials (ADC) if the host has them (GCP). Elsewhere (local machines, Railway) it starts without credentials: ID token verification still works, since it only needs Google's public keys, but admin calls such as user lookups fail. Only relevant when `FIREBASE_PROJECT_ID` is set. |
-| `FIREBASE_AUTH_EMULATOR_HOST` | Firebase Admin SDK (read directly), `bootstrap.go` | — | Host of the Firebase Auth Emulator (`localhost:9099` locally, started by `docker-compose`). The SDK then accepts the emulator's unsigned tokens, so `validateConfig` rejects it when `ENV` is `staging` or `production`. |
 | `REDIS_URL` | `bootstrap.go` | — | Redis connection URL. When omitted or empty, cache/Redis initialization is skipped and the app runs without Redis. |
-| `BLUEPRINT_WS_ALLOWED_ORIGIN` | `internal/transport/handlers/ws_handler.go` | — | Allowed origin for WebSocket CORS checks in staging/production. When omitted, WebSocket origin validation is skipped (local dev). |
+| `BLUEPRINT_WS_ALLOWED_ORIGIN` | `internal/transport/handlers/ws_handler.go` | — | Comma-separated origins allowed to open a WebSocket in staging/production: the site and the standalone Data Lab (`datalab/`). In debug mode (local dev) every origin is allowed; outside it, an empty value refuses all. |
 | `SENTRY_DSN` | `bootstrap.go`, `internal/transport/handlers/routes.go` | — | Sentry error-tracking DSN. When omitted, the Sentry middleware is not registered. |
 | `MAILJET_API_KEY` | `bootstrap.go` | — | Mailjet API key. When omitted (or empty), `App.EmailSender` is `nil` and no email is sent. |
 | `MAILJET_SECRET_KEY` | `bootstrap.go` | — | Mailjet secret key. Must be provided alongside `MAILJET_API_KEY`. |

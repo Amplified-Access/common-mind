@@ -41,7 +41,7 @@ make dev     # Postgres + Redis, backend (:8080, hot reload), and web (:3000) in
 Or start each part on its own:
 
 ```bash
-cd backend && make docker-run   # Postgres :5434, Redis :6380, Auth Emulator :9099 (UI :4000), Prometheus :9092, Grafana :3012
+cd backend && make docker-run   # Postgres :5434, Redis :6380, Prometheus :9092, Grafana :3012
 cd backend && make watch        # API → http://localhost:8080 (Swagger at /swagger/index.html)
 cd web && pnpm dev              # site → http://localhost:3000
 ```
@@ -50,10 +50,10 @@ The Playground needs a running inference pod; see [inference/README.md](inferenc
 
 ## Try the Data Lab locally
 
-Sign-in runs against the Firebase Auth Emulator that `make docker-run` starts, so no Firebase project is needed.
+Sign-in uses the real Firebase project: set `FIREBASE_PROJECT_ID` and `FIREBASE_SERVICE_ACCOUNT_JSON` in `backend/.env`, and the web app config in `web/.env.local`.
 
 ```bash
-cd backend && make docker-run          # Postgres, Redis, Auth Emulator (UI at http://localhost:4000)
+cd backend && make docker-run          # Postgres and Redis
 cd backend && make migrate-up && make datalab-sample   # schema + sample civic items
 cd backend && make watch               # API on :8080
 cd web && pnpm dev                     # site on :3000

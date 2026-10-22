@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+/* Dark mode follows the .dark class the theme toggle sets on <html>. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: #ffffff;
+  --foreground: #000000;
+  --surface: #f5f5f5;
+  --frame: #e8e8e8;
+  --frame-line: #dadada;
+  --subtle: #525252;
+  --faint: #8a8a8a;
+  --line: #e5e5e5;
+  --line-strong: #a3a3a3;
+  --destructive: #b91c1c;
+  color-scheme: light;
+}
+
+.dark {
+  --background: #000000;
+  --foreground: #ffffff;
+  --surface: #1a1a1a;
+  --frame: #0f0f0f;
+  --frame-line: #222222;
+  --subtle: #a3a3a3;
+  --faint: #737373;
+  --line: #262626;
+  --line-strong: #525252;
+  --destructive: #f87171;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-frame: var(--frame);
+  --color-frame-line: var(--frame-line);
+  --color-subtle: var(--subtle);
+  --color-faint: var(--faint);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-destructive: var(--destructive);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --radius-card: 4px;
+  --radius-inset: 3px;
+  --text-h2: 2.25rem;
+  --text-h2--line-height: 1.15;
+  --text-h3: 1.5rem;
+  --text-h3--line-height: 1.25;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* The main site's cut corners: top-left and bottom-right cut at 45°. Size
+   with --chamfer (default 8px). Where corner-shape is supported the border
+   follows the cut; elsewhere the corners are clipped. */
+@utility chamfer {
+  clip-path: polygon(
+    var(--chamfer, 8px) 0,
+    100% 0,
+    100% calc(100% - var(--chamfer, 8px)),
+    calc(100% - var(--chamfer, 8px)) 100%,
+    0 100%,
+    0 var(--chamfer, 8px)
+  );
+  @supports (corner-shape: bevel) {
+    clip-path: none;
+    corner-shape: bevel;
+    border-radius: var(--chamfer, 8px) 0;
+  }
+}
