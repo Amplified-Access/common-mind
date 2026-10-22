@@ -24,14 +24,14 @@ function Home() {
     <main className="relative flex min-h-svh items-center justify-center p-4">
       <ThemeToggle className="absolute top-4 right-4 md:right-8" />
       {!loading && !user && (
-        <FramedCard className="w-full max-w-xl" panelsClassName="flex flex-col items-start gap-6 bg-surface p-6 sm:p-8">
-          <h1 className="text-h2 font-semibold tracking-tight">Help your language be better understood.</h1>
-          <p className="text-subtle">
+        <FramedCard className="w-full max-w-xl" panelsClassName="flex flex-col items-start gap-5 bg-surface p-5 sm:gap-6 sm:p-8">
+          <h1 className="text-h3 font-semibold tracking-tight sm:text-h2">Help your language be better understood.</h1>
+          <p className="text-sm/relaxed text-subtle sm:text-base/relaxed">
             The way we speak and write carries meaning that technology doesn&apos;t always understand. By sharing
             written text and translations, you can help us build better language tools for everyone.
           </p>
-          <p className="text-subtle">Every contribution makes a difference.</p>
-          <Link href="/sign-in" className={cn(primaryButton, "self-end")}>
+          <p className="text-sm/relaxed text-subtle sm:text-base/relaxed">Every contribution makes a difference.</p>
+          <Link href="/sign-in" className={cn(primaryButton, "mt-1 w-full sm:w-auto sm:self-end")}>
             Start contributing →
           </Link>
         </FramedCard>
