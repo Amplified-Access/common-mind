@@ -32,6 +32,8 @@ type PageHeroProps = {
   ruled?: boolean;
   /** Faint grids at either edge of the hero. */
   sideGrids?: boolean;
+  /** Full-bleed imagery or video behind the heading, over the wash. */
+  media?: React.ReactNode;
   className?: string;
 };
 
@@ -48,6 +50,7 @@ function PageHero({
   beneathLede,
   ruled,
   sideGrids,
+  media,
   className,
 }: PageHeroProps) {
   const centered = align === "center";
@@ -60,6 +63,11 @@ function PageHero({
       )}
     >
       <Backdrop wash grain stars shade sideGrids={sideGrids} />
+      {media && (
+        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+          {media}
+        </div>
+      )}
       <Container
         className={cn(
           "flex flex-col gap-6",
