@@ -4,5 +4,10 @@
 !.env.example
 node_modules/
 
+# Next.js build output, for every Next app in the repo (web/, datalab/)
+.next/
+*.tsbuildinfo
+next-env.d.ts
+
 #Temporary files not for committing
 tmp/
