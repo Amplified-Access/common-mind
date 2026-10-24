@@ -29,8 +29,8 @@ type ColorCardProps = {
   className?: string;
 };
 
-// A solid colored card with a large CommonMind mark as watermark, centered
-// on its right edge so half of it shows.
+// A solid colored card with the whole CommonMind mark as a watermark in its
+// bottom-left corner. On hover the mark lifts up and right with the arrow.
 function ColorCard({ href, title, kind, description, tags, cta, color, className }: ColorCardProps) {
   const external = isExternalHref(href);
   const body = (
@@ -41,7 +41,7 @@ function ColorCard({ href, title, kind, description, tags, cta, color, className
         width={52}
         height={44}
         aria-hidden
-        className="pointer-events-none absolute top-1/2 right-0 h-52 w-auto translate-x-1/2 -translate-y-1/2 opacity-[0.07] transition-transform duration-500 group-hover:-rotate-12"
+        className="pointer-events-none absolute bottom-5 left-5 h-28 w-auto opacity-[0.07] transition-[translate,opacity] duration-500 ease-out group-hover:translate-x-2 group-hover:-translate-y-2 group-hover:opacity-[0.12]"
       />
       <div className="relative flex flex-col gap-3">
         {/* Two lines at most, so long titles don't stretch the row. */}
