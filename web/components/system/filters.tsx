@@ -82,8 +82,11 @@ function SearchField({
   const formRef = useRef<HTMLFormElement>(null);
   const lenis = useLenis();
 
-  // Measured from the header itself, so it holds at any zoom.
-  const headerBottom = () => document.querySelector("header")?.getBoundingClientRect().bottom ?? 0;
+  // Measured from the header's bar, so it holds at any zoom and as the bar
+  // docks or floats. The <header> itself takes no height; the bar hangs
+  // out of it.
+  const headerBottom = () =>
+    document.querySelector("header")?.firstElementChild?.getBoundingClientRect().bottom ?? 0;
 
   const bringUp = () => {
     const form = formRef.current;
