@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 
 import { cardColor, ColorCard } from "@/components/system/color-card";
-import { FilterChips, FilterSelect, SearchField } from "@/components/system/filters";
+import { FilterSelect, SearchField } from "@/components/system/filters";
 
 import type { ResearchItem } from "./items";
 
@@ -40,42 +40,46 @@ function ResearchGrid({ items }: { items: ResearchItem[] }) {
   }, [items, query, kind, topic, language, year]);
 
   return (
-    <div className="flex flex-col gap-16">
-      <div className="flex flex-col items-center gap-6">
-        <SearchField
-          value={query}
-          onChange={setQuery}
-          placeholder="Explore Research"
-          label="Explore research"
-          className="max-w-md"
-        />
-        <FilterChips
-          label="Kind"
-          value={kind}
-          onChange={setKind}
-          chips={[{ id: ALL, label: "All" }, ...options.kinds.map((k) => ({ id: k, label: k }))]}
-          className="justify-center"
-        />
-        <div className="flex flex-wrap justify-center gap-x-7 gap-y-3">
+    <div className="flex flex-col gap-14">
+      {/* One row, as on the languages page: filters on the left, search on the right. */}
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-wrap gap-2.5">
           <FilterSelect
+            variant="pill"
+            label="Kind"
+            value={kind}
+            onChange={setKind}
+            options={[{ value: ALL, label: "All kinds" }, ...options.kinds.map((k) => ({ value: k, label: k }))]}
+          />
+          <FilterSelect
+            variant="pill"
             label="Topic"
             value={topic}
             onChange={setTopic}
             options={[{ value: ALL, label: "All topics" }, ...options.topics.map((t) => ({ value: t, label: t }))]}
           />
           <FilterSelect
+            variant="pill"
             label="Language"
             value={language}
             onChange={setLanguage}
             options={[{ value: ALL, label: "All languages" }, ...options.languages.map((l) => ({ value: l, label: l }))]}
           />
           <FilterSelect
+            variant="pill"
             label="Year"
             value={year}
             onChange={setYear}
             options={[{ value: ALL, label: "Any year" }, ...options.years.map((y) => ({ value: y, label: y }))]}
           />
         </div>
+        <SearchField
+          value={query}
+          onChange={setQuery}
+          placeholder="Explore Research"
+          label="Explore research"
+          className="lg:max-w-md"
+        />
       </div>
 
       {visible.length > 0 ? (

@@ -1,11 +1,11 @@
 import { Container } from "@/components/common/container";
-import { ModelsIcon } from "@/components/icons/page-icons";
-import { modelCatalog } from "@/components/models/catalog";
+import { modelCatalog, servedLanguages, taskLabel } from "@/components/models/catalog";
+import { ModelsHero } from "@/components/models/models-hero";
 import { RegistryGrid } from "@/components/models/registry-grid";
-import { tasks } from "@/components/models/registry";
+import { registryModels, tasks } from "@/components/models/registry";
 import { Translator } from "@/components/playground/translator";
-import { PageHero } from "@/components/system/page-hero";
 import { Section, SectionHeader } from "@/components/system/primitives";
+import { copyFor, getContent } from "@/lib/content";
 import { getPageCopy, pageMetadata } from "@/lib/copy";
 import { Emphasized } from "@/lib/copy/emphasized";
 
@@ -17,21 +17,26 @@ const modelTasks = tasks
   .map(({ id, label }) => ({ id, label }));
 
 const ModelsPage = async () => {
-  const copy = await getPageCopy("models");
+  const [content, copy] = await Promise.all([getContent(), getPageCopy("models")]);
   return (
     <>
-      <PageHero
-        tile={ModelsIcon}
+      <ModelsHero
         eyebrow={copy.hero.eyebrow}
         title={<Emphasized text={copy.hero.title} />}
         lede={copy.hero.lede}
-        className="pb-(--section-pad)"
-        after={
-          <Container id="registry" className="scroll-mt-24">
-            <RegistryGrid entries={modelCatalog} tasks={modelTasks} />
-          </Container>
-        }
+        windows={registryModels.map((m) => ({
+          name: m.name,
+          language: servedLanguages(m).join(", "),
+          tab: taskLabel(m.task),
+          code: copyFor(content, m.slug).usage.code,
+        }))}
       />
+
+      <Section id="registry">
+        <Container>
+          <RegistryGrid entries={modelCatalog} tasks={modelTasks} />
+        </Container>
+      </Section>
 
       <Section id="try">
         <Container className="flex flex-col gap-16">

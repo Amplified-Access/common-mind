@@ -9,7 +9,14 @@ import { splitEmphasis } from "./emphasis";
 function Emphasized({ text }: { text: string }) {
   return text.split("\n").map((line, l) => (
     <Fragment key={l}>
-      {l > 0 && <br className="max-sm:hidden" />}
+      {/* The space keeps the words apart where phones hide the break;
+          wider screens drop it at the line end. */}
+      {l > 0 && (
+        <>
+          {" "}
+          <br className="max-sm:hidden" />
+        </>
+      )}
       {splitEmphasis(line).map((part, i) =>
         part.em ? (
           <span key={i} className="text-signal">
