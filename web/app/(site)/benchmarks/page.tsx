@@ -11,7 +11,6 @@ import {
 import { EfficiencyChart } from "@/components/benchmarks/efficiency-chart";
 import { RadarChart, type RadarModel } from "@/components/benchmarks/radar-chart";
 import { Container } from "@/components/common/container";
-import { BenchmarksIcon } from "@/components/icons/page-icons";
 import { registryModels } from "@/components/models/registry";
 import { Translator } from "@/components/playground/translator";
 import { Arrow } from "@/components/system/arrow";
@@ -34,12 +33,15 @@ const BenchmarksPage = async () => {
 
   return (
     <>
+      {/* No tile here: the heading sits centered in the height the tile
+          would have taken, over the video. */}
       <PageHero
-        tile={BenchmarksIcon}
         eyebrow={copy.hero.eyebrow}
         title={copy.hero.title}
         lede={copy.hero.lede}
         tags={copy.hero.tags}
+        media={<HeroVideo />}
+        contentClassName="py-32 sm:py-34"
       />
 
       <Section id="results" className="isolate pt-6 sm:pt-8">
@@ -224,6 +226,25 @@ const BenchmarksPage = async () => {
     </>
   );
 };
+
+// Slow-moving terrain behind the hero, dimmed so the heading reads over it
+// and fading into the page below. Held on its first frame for reduced motion.
+function HeroVideo() {
+  return (
+    <div className="size-full bg-[url(/benchmarks/hero-poster.webp)] bg-cover bg-center opacity-45 mask-[linear-gradient(to_bottom,#000_55%,transparent)]">
+      <video
+        autoPlay
+        muted
+        loop
+        playsInline
+        poster="/benchmarks/hero-poster.webp"
+        className="size-full object-cover motion-reduce:hidden"
+      >
+        <source src="/benchmarks/hero.mp4" type="video/mp4" />
+      </video>
+    </div>
+  );
+}
 
 function MethodNote({ title, children }: { title: string; children: React.ReactNode }) {
   return (
