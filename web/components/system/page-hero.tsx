@@ -35,6 +35,8 @@ type PageHeroProps = {
   /** Full-bleed imagery or video behind the heading, over the wash. */
   media?: React.ReactNode;
   className?: string;
+  /** Classes for the container around the heading, e.g. to set its padding. */
+  contentClassName?: string;
 };
 
 function PageHero({
@@ -52,6 +54,7 @@ function PageHero({
   sideGrids,
   media,
   className,
+  contentClassName,
 }: PageHeroProps) {
   const centered = align === "center";
   return (
@@ -74,6 +77,7 @@ function PageHero({
           align === "columns" ? "py-20 sm:py-28" : "pt-16 pb-14 sm:pt-20 sm:pb-16",
           centered ? "items-center text-center" : "items-start",
           tile && "pt-10 sm:pt-12",
+          contentClassName,
         )}
       >
         {tile && <NodeTile icon={tile} />}
