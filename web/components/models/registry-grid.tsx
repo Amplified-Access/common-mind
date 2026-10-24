@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 
-import { FilterChips, FilterSelect, SearchField } from "@/components/system/filters";
+import { FilterSelect, SearchField } from "@/components/system/filters";
 
 import type { CatalogEntry } from "./catalog";
 import { ModelCard } from "./model-card";
@@ -63,24 +63,19 @@ function RegistryGrid({ entries, tasks }: RegistryGridProps) {
   }, [entries, query, task, language, license, availability, sort]);
 
   return (
-    <div className="flex flex-col gap-16">
-      <div className="flex flex-col items-center gap-6">
-        <SearchField
-          value={query}
-          onChange={setQuery}
-          placeholder="Search Models"
-          label="Search models"
-          className="max-w-md"
-        />
-        <FilterChips
-          label="Task"
-          value={task}
-          onChange={setTask}
-          chips={[{ id: ALL, label: "All" }, ...tasks.map((t) => ({ id: t.id, label: t.label }))]}
-          className="justify-center"
-        />
-        <div className="flex flex-wrap justify-center gap-x-7 gap-y-3">
+    <div className="flex flex-col gap-14">
+      {/* One row, as on the languages page: filters on the left, search on the right. */}
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-wrap gap-2.5">
           <FilterSelect
+            variant="pill"
+            label="Task"
+            value={task}
+            onChange={setTask}
+            options={[{ value: ALL, label: "All tasks" }, ...tasks.map((t) => ({ value: t.id, label: t.label }))]}
+          />
+          <FilterSelect
+            variant="pill"
             label="Language"
             value={language}
             onChange={setLanguage}
@@ -90,6 +85,7 @@ function RegistryGrid({ entries, tasks }: RegistryGridProps) {
             ]}
           />
           <FilterSelect
+            variant="pill"
             label="License"
             value={license}
             onChange={setLicense}
@@ -99,6 +95,7 @@ function RegistryGrid({ entries, tasks }: RegistryGridProps) {
             ]}
           />
           <FilterSelect
+            variant="pill"
             label="Availability"
             value={availability}
             onChange={setAvailability}
@@ -107,8 +104,15 @@ function RegistryGrid({ entries, tasks }: RegistryGridProps) {
               ...options.availability.map((a) => ({ value: a, label: a })),
             ]}
           />
-          <FilterSelect label="Sort By" value={sort} onChange={setSort} options={sorts} />
+          <FilterSelect variant="pill" label="Sort By" value={sort} onChange={setSort} options={sorts} />
         </div>
+        <SearchField
+          value={query}
+          onChange={setQuery}
+          placeholder="Search Models"
+          label="Search models"
+          className="lg:max-w-md"
+        />
       </div>
 
       {visible.length > 0 ? (
