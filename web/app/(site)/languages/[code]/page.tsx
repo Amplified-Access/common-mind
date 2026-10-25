@@ -136,7 +136,7 @@ const LanguagePage = async ({ params }: PageProps) => {
               ))}
             </ul>
             <div>
-              <LinkButton href={content.settings.organization.href} arrow>
+              <LinkButton href="/data-lab" arrow>
                 {copy.contribute.cta}
               </LinkButton>
             </div>

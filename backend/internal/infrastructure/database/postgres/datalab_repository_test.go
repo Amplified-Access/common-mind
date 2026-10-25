@@ -22,8 +22,8 @@ func TestDataLab_ListLanguages_TargetsFirstSkipsDisabled(t *testing.T) {
 		t.Fatalf("ListLanguages: %v", err)
 	}
 
-	if len(langs) != 10 {
-		t.Fatalf("got %d languages, want the 9 targets plus English", len(langs))
+	if len(langs) != 11 {
+		t.Fatalf("got %d languages, want the 10 targets plus English", len(langs))
 	}
 	if last := langs[len(langs)-1]; last.Code != "en" {
 		t.Errorf("last language = %q, want the source language en", last.Code)
@@ -31,6 +31,9 @@ func TestDataLab_ListLanguages_TargetsFirstSkipsDisabled(t *testing.T) {
 	for _, l := range langs {
 		if l.Code == "din" && len(l.ExtraCharacters) != 10 {
 			t.Errorf("din extra characters = %v, want 10", l.ExtraCharacters)
+		}
+		if l.Code == "kdj" && (l.NativeName != "Ngakarimojong" || l.Role != "target") {
+			t.Errorf("kdj = %+v, want the target language Ngakarimojong", l)
 		}
 	}
 }
@@ -360,8 +363,8 @@ func TestDataLab_Progress_CountsSentencePairsPerLanguage(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Progress: %v", err)
 	}
-	if len(all) != 9 {
-		t.Fatalf("got %d languages, want the 9 targets", len(all))
+	if len(all) != 10 {
+		t.Fatalf("got %d languages, want the 10 targets", len(all))
 	}
 	sw, err := NewDataLabRepository(testDB).Progress(ctx, "sw")
 	if err != nil || len(sw) != 1 {

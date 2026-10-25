@@ -103,7 +103,7 @@ The web app uses Vitest (`cd web && pnpm test`, run in CI) for `lib/` logic. For
 
 - Every corpus row is written by a person. The Data Lab never calls the inference server (ADR 0010).
 - Every row keeps its provenance: contributor, consent version, source and licence, reviewer, timestamps.
-- Languages are database rows, keyed by the BCP-47 codes Watchtower uses (`sw`, `lg`, `rw`, `am`, `ki`, `suk`, `luo`, `om`, `din`).
+- Languages are database rows, keyed by the BCP-47 codes Watchtower uses (`sw`, `lg`, `rw`, `am`, `ki`, `suk`, `luo`, `om`, `din`), plus Karimojong (`kdj`).
 - Release thresholds are configuration, never constants in code (ADR 0011).
 
 ---

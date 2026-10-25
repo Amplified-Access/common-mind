@@ -66,6 +66,12 @@ export const languages: Language[] = [
     location: [-2.52, 32.9],
     tags: ["Sukuma"],
   },
+  {
+    code: "kdj",
+    name: "Karimojong",
+    location: [2.53, 34.66],
+    tags: ["Karimojong"],
+  },
 ];
 
 export function getLanguage(code: string) {
