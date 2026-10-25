@@ -27,6 +27,19 @@ def test_candidates_drop_short_pronoun_led_contact_and_duplicate_sentences():
     assert out[0].category == "public-meetings"
 
 
+def test_candidates_skip_sentences_already_found_on_another_site():
+    already = {ARTICLE["paragraphs"][0].lower()}
+    assert candidates([ARTICLE], already_seen=already) == []
+
+
+def test_a_name_in_several_stories_is_public_and_not_flagged():
+    sentence = "Riek Machar returned to the capital for talks on the peace deal with the government."
+    stories = [dict(ARTICLE, key=f"voa-{n}", paragraphs=[sentence if n == 0 else f"Riek Machar met officials in town number {n} today."])
+               for n in range(3)]
+    assert candidates(stories)[0].flags == ""
+    assert candidates(stories[:2])[0].flags == "names"
+
+
 def test_candidates_flag_quotes_and_names():
     art = dict(ARTICLE, paragraphs=['Mary Wanjiku said, "We need the county to fix the road to the market before the rains."'])
     (c,) = candidates([art])

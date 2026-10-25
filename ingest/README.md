@@ -2,12 +2,15 @@
 
 Turns openly licensed documents into Data Lab import files: the English source segments volunteers translate. It runs offline on a laptop, and only approved segments reach the database ([ADR 0013](../docs/adr/0013-source-acquisition-and-licences.md)). The import format and the importer's checks are in [backend/docs/data-lab.md](../backend/docs/data-lab.md).
 
-Sources so far, all public domain when VOA produced the story:
+**[SOURCES.md](SOURCES.md)** is the ledger of every source considered: what has been ingested and imported, what is ready to build, what needs permission, and what was ruled out. Read it before looking for new sources.
+
+Sources built so far, all public domain when VOA produced the story:
 
 | `--site` | Source | Judged by |
 |---|---|---|
 | `voa-le` | [VOA Learning English](https://learningenglish.voanews.com): plain-language news | the credit line |
 | `voa-af` | [VOA Africa](https://www.voaafrica.com): VOA's Africa news, including South Sudan in Focus | the byline |
+| `voa-news` | [VOA News](https://www.voanews.com): VOA's main English news site | the byline |
 
 ## Running it
 
@@ -47,13 +50,13 @@ VOA's terms put in the public domain only what is "produced exclusively by the V
 | Reported for, or adapted from, any other organisation | rejected |
 | No credit line (common on pages from before 2015) | rejected |
 
-**VOA Africa** stories carry a byline. Wire stories are bylined with the agency ("Reuters", "Agence France-Presse"). A story is accepted when its byline is a person or VOA, and no line such as "Some information in this report came from Reuters" acknowledges wire material. Audio and video pages without story text are left out.
+**VOA Africa** and **voanews.com** stories carry a byline. Wire stories are bylined with the agency ("Reuters", "Agence France-Presse"). A story is accepted when its byline is a person or VOA, and no line such as "Some information in this report came from Reuters" acknowledges wire material. Audio and video pages without story text are left out.
 
 An accepted story must also mention a launch country in its title or text.
 
 **Discovery** reads each site's sitemaps, because site search is closed to robots. It matches story URLs whose slug names a launch country or its cities. Stories with ID-only URLs (`/a/8207750.html`) are not found this way.
 
-**Keys.** Learning English sources are keyed `voa-le-<id>`. VOA Africa shares story ids with voanews.com, so its sources are keyed `voa-<id>`, and a story published on both sites stays one source.
+**Keys.** Learning English sources are keyed `voa-le-<id>`, VOA Africa and voanews.com sources `voa-<id>`. Story ids are unique across VOA's sites. A story republished on another site gets a new id, so `review` skips sentences already found on another site.
 
 ## The review sheet
 

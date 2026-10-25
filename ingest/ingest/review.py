@@ -11,9 +11,14 @@ from collections import Counter
 from pathlib import Path
 from typing import Iterable, NamedTuple
 
-from ingest.text import CIVIC_CATEGORIES, drop_reason, flags, segment, suggest_category
+from ingest.text import CIVIC_CATEGORIES, drop_reason, flags, segment, suggest_category, unknown_names
 
 APPROVED = {"y", "yes", "x", "1"}
+
+# A name in at least this many stories is a public figure, place or body:
+# private individuals rarely recur across the news (ADR 0013 allows public
+# officials).
+PUBLIC_NAME_MIN_STORIES = 3
 
 
 class Candidate(NamedTuple):
@@ -28,12 +33,16 @@ class Candidate(NamedTuple):
     published: str
 
 
-def candidates(articles: Iterable[dict], dropped: Counter | None = None) -> list[Candidate]:
+def candidates(articles: Iterable[dict], dropped: Counter | None = None,
+               already_seen: Iterable[str] = ()) -> list[Candidate]:
     """Splits each article into sentences and keeps the ones worth a
     reviewer's time. position counts every sentence in the article, kept or
     not, so it records the sentence's place in the document. A sentence seen
-    before, in any article, is skipped."""
-    seen: set[str] = set()
+    before, in any article or in already_seen (lowercased sentences found on
+    other sites, which republish each other's stories), is skipped."""
+    articles = list(articles)
+    public = public_names(articles)
+    seen: set[str] = set(already_seen)
     out = []
     for art in articles:
         position = 0
@@ -47,11 +56,19 @@ def candidates(articles: Iterable[dict], dropped: Counter | None = None) -> list
                     seen.add(sentence.lower())
                     out.append(Candidate(
                         approve="", category=suggest_category(sentence), text=sentence,
-                        flags=" ".join(flags(sentence)), source_key=art["key"], position=position,
+                        flags=" ".join(flags(sentence, public)), source_key=art["key"], position=position,
                         title=art["title"], url=art["url"], published=art["published"],
                     ))
                 position += 1
     return out
+
+
+def public_names(articles: list[dict]) -> frozenset[str]:
+    """Names that appear in at least PUBLIC_NAME_MIN_STORIES articles."""
+    stories: Counter[str] = Counter()
+    for art in articles:
+        stories.update({run for para in art["paragraphs"] for run in unknown_names(para)})
+    return frozenset(run for run, n in stories.items() if n >= PUBLIC_NAME_MIN_STORIES)
 
 
 _NEEDS_CONTEXT = re.compile(r"\b(he|she|him|her|his|hers|they|them|their|theirs|it|its|this|these|those)\b", re.I)

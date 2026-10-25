@@ -78,14 +78,22 @@ def review(args: argparse.Namespace) -> None:
         key=lambda pair: -pair[0],
     )
     civic = [a for score, a in scored if score >= MIN_ARTICLE_CIVIC_SCORE]
+    # VOA sites republish each other's stories under new ids, so sentences
+    # already found on another site are skipped.
+    others = {s.lower() for site in voa.SITES if site != args.site
+              for s in _sheet_texts(Path("data") / site / "review.csv")}
     dropped: Counter[str] = Counter()
-    rows = candidates(civic, dropped)
+    rows = candidates(civic, dropped, already_seen=others)
     out = data_dir(args) / "review.csv"
     write_review(rows, out)
     print(f"{len(accepted)} of {len(articles)} stories are VOA-produced; {len(civic)} are civic enough to review")
     print(f"{len(rows)} candidate sentences -> {out}")
     for reason, count in dropped.most_common():
         print(f"  dropped {count:5}  {reason}")
+
+
+def _sheet_texts(sheet: Path) -> list[str]:
+    return [row.text for row in read_review(sheet)] if sheet.exists() else []
 
 
 def approve(args: argparse.Namespace) -> None:

@@ -101,17 +101,23 @@ def drop_reason(sentence: str) -> str:
     return ""
 
 
-def flags(sentence: str) -> list[str]:
-    """Things the reviewer should look at before approving."""
+def unknown_names(text: str) -> list[str]:
+    """Runs of capitalised words that may name a person: not made only of
+    known places, bodies and calendar words."""
+    return [run for run in _CAPITALISED_RUN.findall(text) if not all(w in _KNOWN for w in run.split())]
+
+
+def flags(sentence: str, public_names: frozenset[str] = frozenset()) -> list[str]:
+    """Things the reviewer should look at before approving. Names in
+    public_names (people, places and bodies the news covers often) are not
+    flagged."""
     out = []
     if '"' in sentence:
         out.append("quote")
     if _first_word(sentence) in _CONTEXT_LED:
         out.append("context")
-    for run in _CAPITALISED_RUN.findall(sentence):
-        if not all(w in _KNOWN for w in run.split()):
-            out.append("names")
-            break
+    if any(run not in public_names for run in unknown_names(sentence)):
+        out.append("names")
     return out
 
 
@@ -134,14 +140,16 @@ _KEYWORDS = {
                "women and girls", "press freedom"],
     "public-meetings": ["public meeting", "baraza", "hearing", "town hall", "forum", "public participation",
                         "consult", "summit", "dialogue", "talks"],
-    "promises": ["promise", "pledge", "commitment", "committed to", "manifesto", "vow", "peace deal", "agreement"],
+    "promises": ["promise", "pledge", "commitment", "committed to", "manifesto", "vow", "peace deal", "agreement",
+                 "ceasefire", "cessation of hostilities", "signed", "power-sharing", "transitional government"],
     "development": ["build", "construct", "road", "bridge", "project", "infrastructure", "develop", "irrigation",
                     "econom", "invest", "farm", "agricultur", "crop", "jobs", "business", "trade", "railway",
                     "energy", "solar", "technolog", "loan"],
     "community-problems": ["drought", "flood", "shortage", "hunger", "famine", "crime", "insecurity", "garbage",
                            "waste", "unemploy", "pollution", "displaced", "refugee", "attack", "violence",
                            "militant", "al-shabab", "fighting", "conflict", "poverty", "prices", "inflation",
-                           "locust", "landslide", "disaster", "evict", "kidnap", "climate"],
+                           "locust", "landslide", "disaster", "evict", "kidnap", "climate", "killed", "rebel",
+                           "army", "civilians", "clashes", "armed", "wounded", "looting", "war"],
     "feedback": ["complain", "feedback", "petition", "hotline", "suggestion", "report problems", "survey"],
 }
 _PATTERNS = {cat: [(re.compile(r"\b" + re.escape(k)), 2 if " " in k else 1) for k in ks] for cat, ks in _KEYWORDS.items()}

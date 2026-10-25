@@ -35,10 +35,13 @@ class Site:
 SITES = {
     "voa-le": Site("voa-le", "https://learningenglish.voanews.com", "sitemap_428_", "voa-learning-english",
                    "VOA Learning English", "https://learningenglish.voanews.com/p/6021.html", "voa-le-", "credit"),
-    # VOA Africa shares story ids with voanews.com, so its keys carry no site
-    # prefix and a story published on both sites is one source.
+    # Story ids are unique across VOA's sites, so news-site keys need no site
+    # prefix. A story republished on another site gets a new id; review skips
+    # its sentences as duplicates.
     "voa-af": Site("voa-af", "https://www.voaafrica.com", "sitemap_463_", "voa-africa",
                    "VOA Africa", "https://www.voaafrica.com/p/8177.html", "voa-", "byline"),
+    "voa-news": Site("voa-news", "https://www.voanews.com", "sitemap_415_", "voa-news",
+                     "VOA News", "https://www.voanews.com/p/5338.html", "voa-", "byline"),
 }
 
 # Slug words naming a launch country or one of its cities. "sudan" alone is
