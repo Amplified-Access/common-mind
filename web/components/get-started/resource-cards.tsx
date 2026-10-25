@@ -1,5 +1,4 @@
-import type { IconSvgElement } from "@hugeicons/react";
-import { HugeiconsIcon } from "@hugeicons/react";
+import type { CarbonIconType } from "@carbon/icons-react";
 import Link from "next/link";
 
 import { Arrow } from "@/components/system/arrow";
@@ -18,7 +17,8 @@ type ResourceCardProps = {
   title: string;
   text: string;
   cta: string;
-  icon: IconSvgElement;
+  /** A Carbon icon: geometric, to sit with IBM Plex Mono. */
+  icon: CarbonIconType;
   /** The one card filled yellow, as the mock draws Datasets. */
   highlight?: boolean;
 };
@@ -26,7 +26,7 @@ type ResourceCardProps = {
 // A card that links to one of the site's resources: the title with its icon
 // in the corner, a line on what it holds, and the action as a button at the
 // foot. The whole card is the link.
-function ResourceCard({ href, title, text, cta, icon, highlight }: ResourceCardProps) {
+function ResourceCard({ href, title, text, cta, icon: Icon, highlight }: ResourceCardProps) {
   return (
     <Link
       href={href}
@@ -47,12 +47,7 @@ function ResourceCard({ href, title, text, cta, icon, highlight }: ResourceCardP
       >
         <div className="flex items-start justify-between gap-4">
           <h3 className="min-w-0 text-[1.375rem] leading-[1.2] tracking-[-0.01em] text-balance">{title}</h3>
-          <HugeiconsIcon
-            icon={icon}
-            strokeWidth={2}
-            aria-hidden
-            className={cn("size-7 shrink-0", highlight ? "text-background" : "text-signal")}
-          />
+          <Icon aria-hidden className={cn("size-7 shrink-0", highlight ? "text-background" : "text-signal")} />
         </div>
         <p className={cn("max-w-sm text-sm text-pretty", highlight ? "text-background" : "text-faint")}>{text}</p>
         <div className="mt-auto pt-8">
