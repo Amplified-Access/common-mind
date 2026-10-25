@@ -1,15 +1,15 @@
 import {
-  AiNetworkIcon,
-  ChartEvaluationIcon,
-  ComputerProgramming01Icon,
-  Database01Icon,
-  Database02Icon,
-  LanguageSkillIcon,
-  LeftToRightListBulletIcon,
-  Tag01Icon,
-  TranslateIcon,
-  UserGroup03Icon,
-} from "@hugeicons/core-free-icons";
+  ChartEvaluation,
+  Code,
+  DataBase,
+  DataCollection,
+  Language,
+  MachineLearningModel,
+  Tag,
+  TextMining,
+  Translate,
+  UserMultiple,
+} from "@carbon/icons-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -45,19 +45,19 @@ const sidebar = {
 } as const;
 
 const overview = [
-  { id: "models", href: "/models", icon: AiNetworkIcon },
-  { id: "datasets", href: "/datasets", icon: Database01Icon, highlight: true },
-  { id: "build", href: "/build", icon: ComputerProgramming01Icon },
-  { id: "dataLab", href: "/data-lab", icon: Database02Icon },
+  { id: "models", href: "/models", icon: MachineLearningModel },
+  { id: "datasets", href: "/datasets", icon: DataBase, highlight: true },
+  { id: "build", href: "/build", icon: Code },
+  { id: "dataLab", href: "/data-lab", icon: DataCollection },
 ] as const;
 
 const tasks = [
-  { id: "translation", href: "/models#registry", icon: TranslateIcon },
-  { id: "understanding", href: "/research/civic-corpus", icon: LeftToRightListBulletIcon },
-  { id: "languages", href: "/languages", icon: LanguageSkillIcon },
-  { id: "classification", href: "/applications", icon: Tag01Icon },
-  { id: "evaluation", href: "/benchmarks", icon: ChartEvaluationIcon },
-  { id: "community", href: "/data-lab", icon: UserGroup03Icon },
+  { id: "translation", href: "/models#registry", icon: Translate },
+  { id: "understanding", href: "/research/civic-corpus", icon: TextMining },
+  { id: "languages", href: "/languages", icon: Language },
+  { id: "classification", href: "/applications", icon: Tag },
+  { id: "evaluation", href: "/benchmarks", icon: ChartEvaluation },
+  { id: "community", href: "/data-lab", icon: UserMultiple },
 ] as const;
 
 const quickstarts = [
