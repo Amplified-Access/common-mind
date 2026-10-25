@@ -27,6 +27,11 @@ def test_candidates_drop_short_pronoun_led_contact_and_duplicate_sentences():
     assert out[0].category == "public-meetings"
 
 
+def test_candidates_skip_sentences_already_found_on_another_site():
+    already = {ARTICLE["paragraphs"][0].lower()}
+    assert candidates([ARTICLE], already_seen=already) == []
+
+
 def test_a_name_in_several_stories_is_public_and_not_flagged():
     sentence = "Riek Machar returned to the capital for talks on the peace deal with the government."
     stories = [dict(ARTICLE, key=f"voa-{n}", paragraphs=[sentence if n == 0 else f"Riek Machar met officials in town number {n} today."])

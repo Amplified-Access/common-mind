@@ -33,14 +33,16 @@ class Candidate(NamedTuple):
     published: str
 
 
-def candidates(articles: Iterable[dict], dropped: Counter | None = None) -> list[Candidate]:
+def candidates(articles: Iterable[dict], dropped: Counter | None = None,
+               already_seen: Iterable[str] = ()) -> list[Candidate]:
     """Splits each article into sentences and keeps the ones worth a
     reviewer's time. position counts every sentence in the article, kept or
     not, so it records the sentence's place in the document. A sentence seen
-    before, in any article, is skipped."""
+    before, in any article or in already_seen (lowercased sentences found on
+    other sites, which republish each other's stories), is skipped."""
     articles = list(articles)
     public = public_names(articles)
-    seen: set[str] = set()
+    seen: set[str] = set(already_seen)
     out = []
     for art in articles:
         position = 0

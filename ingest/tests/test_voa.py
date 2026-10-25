@@ -66,6 +66,15 @@ def test_record_keys_voa_africa_stories_by_their_shared_voa_id():
     assert rec["source"]["origin"] == "VOA Africa, published 2024-05-02. By Mohammed Yusuf."
 
 
+def test_record_describes_a_voanews_story_with_its_own_terms():
+    url = "https://www.voanews.com/a/kenya-budget/7900001.html"
+    html = page(["Residents of Kenya met county officials to talk about the budget."], author="Mohammed Yusuf", url=url)
+    rec = record(url, html.encode(), "2026-10-25", SITES["voa-news"])
+    assert (rec["accepted"], rec["key"]) == (True, "voa-7900001")
+    assert rec["source"]["licence_url"] == "https://www.voanews.com/p/5338.html"
+    assert rec["source"]["collection"] == "voa-news"
+
+
 def test_record_describes_the_article_as_a_public_domain_source():
     html = page(["Residents of Kenya met county officials to talk about the budget.",
                  "Jane Doe reported this story for VOA News."])
