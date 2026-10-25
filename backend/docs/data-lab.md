@@ -1,6 +1,6 @@
 ---
 topic: data-lab
-last_verified: 2026-10-20
+last_verified: 2026-10-25
 sources:
   - internal/domain/datalab.go
   - internal/usecase/datalab.go
@@ -40,7 +40,7 @@ The volunteer platform for creating, annotating, and verifying civic language da
 
 ## Languages
 
-`languages` is reference data seeded by its migration: the nine target languages (BCP-47 codes shared with Watchtower) and English and French as source languages. Each row carries its ISO 15924 `script` and the `extra_characters` a standard keyboard lacks, which the web editor offers as a palette. Disable a language with `enabled = false`; never delete rows other tables reference.
+`languages` is reference data seeded by its migration: the ten target languages (BCP-47 codes: nine shared with Watchtower, plus Karimojong `kdj`, which a later migration adds) and English and French as source languages. Each row carries its ISO 15924 `script` and the `extra_characters` a standard keyboard lacks, which the web editor offers as a palette. Disable a language with `enabled = false`; never delete rows other tables reference.
 
 ## Volunteers, levels, and consent
 
