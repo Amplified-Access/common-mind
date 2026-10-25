@@ -8,8 +8,9 @@ The licence rules are in [ADR 0013](../docs/adr/0013-source-acquisition-and-lice
 
 | Source | `--site` | Licence | Run | Stories found → accepted | Sentences imported |
 |---|---|---|---|---|---|
-| VOA Learning English | `voa-le` | public domain (VOA-produced only) | 2026-10-19 | 310 → 127 | 434 from 98 stories |
-| VOA Africa | `voa-af` | public domain (VOA-produced only) | 2026-10-19/20 | 3,245 → 906 | 1,846 from 702 stories |
+| VOA Learning English | `voa-le` | public domain (VOA-produced only) | 2026-10-19, rebuilt 2026-10-25 | 310 → 127 | 488 from 103 stories |
+| VOA Africa | `voa-af` | public domain (VOA-produced only) | 2026-10-19/20, rebuilt 2026-10-25 | 3,245 → 906 | 2,995 from 789 stories |
+| VOA News (voanews.com) | `voa-news` | public domain (VOA-produced only) | 2026-10-25, **first 3,000 of 8,117 stories only** | 3,000 → 2,013 | 6,885 from 1,646 stories |
 
 **Imports** (identical in dev and production). Every batch is recorded as `items.jsonl`, so this table maps ids to sources. Dry runs also use up ids, which leaves gaps.
 
@@ -18,23 +19,30 @@ The licence rules are in [ADR 0013](../docs/adr/0013-source-acquisition-and-lice
 | VOA Learning English, first rules | 2 | 5 | 40 | 137 |
 | VOA Learning English, broader categories | 4 | 7 | 58 | 297 (135 already there) |
 | VOA Africa | 6 | 9 | 702 | 1,846 |
+| VOA Learning English, public names rule | 7 | 11 | 5 | 54 |
+| VOA Africa, public names rule | 8 | 13 | 87 | 1,149 |
+| VOA News (prod in 800-line chunks after a dropped connection; dev in one) | 10–12, 14–19 | 15 | 1,646 | 6,885 |
 
-Production total: 2,280 sentences from 800 stories (train 2,075, test 205).
+Production total on 2026-10-25: 10,368 sentences from 2,538 stories (test split 1,006). Dev holds the same plus the dev sample.
+
+**Importing into production over a home connection:** one long transaction failed when the network dropped (it rolled back cleanly). Split big files with `split -l 800` and import the chunks in a retry loop; re-importing a chunk skips what is already there.
 
 **What these runs left out,** if more is needed from the same sources:
 - **Stories with ID-only URLs** (`/a/8207750.html`). Discovery matches East Africa slugs only, and newer stories have no slug.
 - **Learning English, pre-2015:** 80 stories have no credit line in the current format. About 20 are old "VOA Special English" reports ("…written by Jerilyn Watson"), VOA-produced but rejected. The rest have no parseable body.
 - **VOA Africa without a byline:** 30 stories with text, rejected. The other 1,219 are audio or video.
-- **Candidate sentences the rules didn't approve:** 1,835 (Learning English) and 9,829 (VOA Africa), in `data/<site>/review.csv`. They lack a category guess, carry a flag, or contain a pronoun.
-- **Skew:** VOA Africa's own East Africa stories are mostly by its South Sudan in Focus team.
+- **voanews.com, 5,117 stories not yet fetched:** `data/voa-news/urls.txt` lists all 8,117. Only the first 3,000 were fetched (`--limit 3000`); running `fetch --site voa-news` without a limit adds the rest, and cached pages aren't fetched again.
+- **Candidate sentences the rules didn't approve:** 1,869 (Learning English), 8,780 (VOA Africa) and 21,610 (VOA News), in `data/<site>/review.csv`. They lack a category guess, carry a flag for an unrecurring name, a quote or a context opening, or contain a pronoun.
+- **Skew:** VOA Africa's own East Africa stories are mostly by its South Sudan in Focus team; VOA News leans to Ethiopia and South Sudan.
 
-**Wire copy found and refused:** 100 Learning English stories adapted from AP or Reuters. 931 VOA Africa stories bylined AFP, Reuters or AP.
+**Wire copy found and refused:** 100 Learning English stories adapted from AP or Reuters. 931 VOA Africa and 562 VOA News stories bylined AFP, Reuters or AP.
+
+**Story ids** are unique across VOA's sites (none of the 8,117 voanews.com East Africa ids appeared among VOA Africa's). A story republished on another site gets a new id, so `review` skips sentences already found on another site.
 
 ## Ready to build (licence checked, no code yet)
 
 | Source | Licence | Evidence | Categories it helps | Notes |
 |---|---|---|---|---|
-| **voanews.com** | public domain (VOA-produced) | same terms as VOA Africa | all | Add a `Site` entry in `voa.py` (byline judging). Story ids are shared with VOA Africa (`voa-<id>` keys), so overlaps import once. |
 | **Kenyan county legislation** (public participation acts, ward development fund acts, access to information) | `public-domain-statute` | Copyright Act Cap. 130, s.2: a literary work "does not include a written law or a judicial decision". Read in full on 2026-10-19. | rights, public-meetings, local-government, feedback | Legal register, so filter for short plain clauses. Use the official text. Most county acts have no Kiswahili version. |
 | **Ugandan laws** (Local Governments Act, Access to Information Act) | `public-domain-statute` | Copyright and Neighbouring Rights Act 2006, s.7 "public benefit works not protected" (s.6 in the Cap. 222 revision) | rights, local-government | **Read s.7's text before building.** It was confirmed from search summaries only, because ULII blocked the download. |
 | **Global Voices** | `CC-BY-3.0` | republishing guidelines, globalvoices.org/about/global-voices-attribution-policy | rights, elections, accountability, community-problems | Skip articles with a Swahili or Amharic Lingua version. Images are excluded. Quoted social-media posts are personal data. |
