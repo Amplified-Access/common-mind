@@ -27,8 +27,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const { settings } = await getContent();
   return {
     title: {
-      default: `${site.name} · ${settings.statement}`,
-      template: `%s · ${site.name}`,
+      default: `${site.name} | ${settings.statement}`,
+      template: `%s | ${site.name}`,
     },
     description: settings.tagline,
   };
