@@ -6,7 +6,7 @@ import { LinkButton, Panel, Section, SectionHeader } from "@/components/system/p
 import { getPageCopy, pageMetadata } from "@/lib/copy";
 import { cn } from "@/lib/utils";
 
-export const generateMetadata = () => pageMetadata("civicCorpus");
+export const generateMetadata = () => pageMetadata("civicCorpus", "/research/civic-corpus");
 
 // Training mixtures as reported in each technical report. Totals are the sum
 // of the listed sources.

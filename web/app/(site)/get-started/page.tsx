@@ -19,7 +19,7 @@ import { LinkButton } from "@/components/system/primitives";
 import { Emphasized, getPageCopy, pageMetadata } from "@/lib/copy";
 import heroHead from "@/public/get-started/hero-head.webp";
 
-export const generateMetadata = () => pageMetadata("getStarted");
+export const generateMetadata = () => pageMetadata("getStarted", "/get-started");
 
 // Where each link and card leads. The words are in lib/copy/pages/get-started.ts.
 const firstModel = registryModels[0];

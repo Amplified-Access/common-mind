@@ -26,6 +26,10 @@ const plexMono = IBM_Plex_Mono({
 export async function generateMetadata(): Promise<Metadata> {
   const { settings } = await getContent();
   return {
+    // Pages give their canonical URL as a path; Next resolves it against this.
+    // Each page sets its own: one set here would be inherited by every page
+    // that didn't, pointing them all at the home page.
+    metadataBase: new URL(site.url),
     title: {
       default: `${site.name} | ${settings.statement}`,
       template: `%s | ${site.name}`,

@@ -6,6 +6,7 @@ import { safeNext } from "@/components/data-lab/sign-in-route";
 
 export const metadata: Metadata = {
   title: "Sign in | Data Lab",
+  alternates: { canonical: "/data-lab/sign-in" },
 };
 
 export default async function DataLabSignInPage({ searchParams }: PageProps<"/data-lab/sign-in">) {

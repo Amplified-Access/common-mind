@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+
 import { lugandaHeldOut, swahiliFlores } from "@/components/benchmarks/data";
 import { Container } from "@/components/common/container";
 import { BenchShowcase } from "@/components/home/bench-showcase";
@@ -26,6 +28,11 @@ import {
 import { getContent } from "@/lib/content";
 import { getPageCopy } from "@/lib/copy";
 import { fill } from "@/lib/copy/fill";
+
+// The title and description come from the layout.
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 export default async function Home() {
   const [content, copy] = await Promise.all([getContent(), getPageCopy("home")]);

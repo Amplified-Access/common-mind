@@ -34,7 +34,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { slug } = await params;
   const dataset = await getDataset(slug);
   if (!dataset) return {};
-  return { title: dataset.name, description: dataset.description };
+  return {
+    title: dataset.name,
+    description: dataset.description,
+    alternates: { canonical: `/datasets/${slug}` },
+  };
 }
 
 const SECTIONS = ["overview", "data", "methodology", "usage", "models", "limitations", "versions"] as const;

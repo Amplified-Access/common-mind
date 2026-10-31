@@ -8,7 +8,7 @@ import { Eyebrow, Section, SectionHeader } from "@/components/system/primitives"
 import { getContent, languageCopyFor } from "@/lib/content";
 import { getPageCopy, pageMetadata } from "@/lib/copy";
 
-export const generateMetadata = () => pageMetadata("languages");
+export const generateMetadata = () => pageMetadata("languages", "/languages");
 
 const LanguagesPage = async () => {
   const [content, copy] = await Promise.all([getContent(), getPageCopy("languages")]);

@@ -15,9 +15,11 @@ const monthYear = (iso: string) =>
     timeZone: "UTC",
   });
 
-export async function legalMetadata(id: string): Promise<Metadata> {
+export async function legalMetadata(id: string, path: string): Promise<Metadata> {
   const page = await getLegalPage(id);
-  return page ? { title: page.title, description: page.description } : {};
+  return page
+    ? { title: page.title, description: page.description, alternates: { canonical: path } }
+    : {};
 }
 
 export async function CmsLegalPage({ id }: { id: string }) {

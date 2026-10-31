@@ -30,7 +30,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const model = getModel(slug);
   if (!model) return {};
   const { tagline } = copyFor(await getContent(), slug);
-  return { title: model.name, description: tagline };
+  return {
+    title: model.name,
+    description: tagline,
+    alternates: { canonical: `/models/${slug}` },
+  };
 }
 
 const ModelPage = async ({ params }: PageProps) => {

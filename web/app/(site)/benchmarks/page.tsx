@@ -21,7 +21,7 @@ import { Eyebrow, Panel, Section, SectionHeader } from "@/components/system/prim
 import { getPageCopy, pageMetadata } from "@/lib/copy";
 import { cn } from "@/lib/utils";
 
-export const generateMetadata = () => pageMetadata("benchmarks");
+export const generateMetadata = () => pageMetadata("benchmarks", "/benchmarks");
 
 const BenchmarksPage = async () => {
   const copy = await getPageCopy("benchmarks");

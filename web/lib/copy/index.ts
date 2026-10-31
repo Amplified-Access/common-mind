@@ -20,8 +20,11 @@ type PageWithMeta = {
   [K in PageKey]: PageCopy<K> extends { meta: { title: string; description: string } } ? K : never;
 }[PageKey];
 
-/** A page's title and description for search results and link previews. */
-export async function pageMetadata(key: PageWithMeta): Promise<Metadata> {
+/**
+ * A page's title and description for search results and link previews, and
+ * its canonical URL: the page's path, resolved against the site's address.
+ */
+export async function pageMetadata(key: PageWithMeta, path: string): Promise<Metadata> {
   const { meta } = await getPageCopy(key);
-  return { title: meta.title, description: meta.description };
+  return { title: meta.title, description: meta.description, alternates: { canonical: path } };
 }

@@ -10,7 +10,7 @@ import { Section, SectionHeader } from "@/components/system/primitives";
 import { getContent } from "@/lib/content";
 import { getPageCopy, pageMetadata } from "@/lib/copy";
 
-export const generateMetadata = () => pageMetadata("research");
+export const generateMetadata = () => pageMetadata("research", "/research");
 
 const ResearchPage = async () => {
   const [content, copy] = await Promise.all([getContent(), getPageCopy("research")]);

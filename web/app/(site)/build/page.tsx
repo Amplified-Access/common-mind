@@ -10,7 +10,7 @@ import { ArrowLink, LinkButton, Section, SectionHeader } from "@/components/syst
 import { getPageCopy, pageMetadata } from "@/lib/copy";
 import { site } from "@/lib/site";
 
-export const generateMetadata = () => pageMetadata("build");
+export const generateMetadata = () => pageMetadata("build", "/build");
 
 const BuildPage = async () => {
   const copy = await getPageCopy("build");

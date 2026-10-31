@@ -28,6 +28,9 @@ export const navItems = [
 // edited in the Studio (lib/content).
 export const site = {
   name: "CommonMind",
+  // The production address. Every canonical URL starts here, so previews and
+  // the bare domain (which redirects here) never compete with it in search.
+  url: "https://www.thecommonmind.org",
   links: {
     huggingface: "https://huggingface.co/AmplifiedAccess",
     kaggle: "https://www.kaggle.com/amplifiedaccess",

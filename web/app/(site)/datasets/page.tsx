@@ -5,7 +5,7 @@ import { LinkButton } from "@/components/system/primitives";
 import { getContent } from "@/lib/content";
 import { getPageCopy, pageMetadata } from "@/lib/copy";
 
-export const generateMetadata = () => pageMetadata("datasets");
+export const generateMetadata = () => pageMetadata("datasets", "/datasets");
 
 const DatasetsPage = async () => {
   const [{ datasets }, copy] = await Promise.all([getContent(), getPageCopy("datasets")]);
