@@ -6,7 +6,7 @@ import { Section } from "@/components/system/primitives";
 import { TagChain } from "@/components/system/tag-chain";
 import { getPageCopy, pageMetadata } from "@/lib/copy";
 
-export const generateMetadata = () => pageMetadata("dataLab");
+export const generateMetadata = () => pageMetadata("dataLab", "/data-lab");
 
 const DataLabPage = async () => {
   const copy = await getPageCopy("dataLab");

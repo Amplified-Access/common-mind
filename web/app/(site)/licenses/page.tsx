@@ -5,7 +5,7 @@ import { registryModels } from "@/components/models/registry";
 import { getContent } from "@/lib/content";
 import { getPageCopy, pageMetadata } from "@/lib/copy";
 
-export const generateMetadata = () => pageMetadata("licenses");
+export const generateMetadata = () => pageMetadata("licenses", "/licenses");
 
 const LicensesPage = async () => {
   const [{ datasets }, copy] = await Promise.all([getContent(), getPageCopy("licenses")]);

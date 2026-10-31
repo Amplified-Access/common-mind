@@ -3,7 +3,7 @@ import { Container } from "@/components/common/container";
 import { PageHero } from "@/components/system/page-hero";
 import { getPageCopy, pageMetadata } from "@/lib/copy";
 
-export const generateMetadata = () => pageMetadata("applications");
+export const generateMetadata = () => pageMetadata("applications", "/applications");
 
 const ApplicationsPage = async () => {
   const copy = await getPageCopy("applications");

@@ -9,7 +9,7 @@ import { copyFor, getContent } from "@/lib/content";
 import { getPageCopy, pageMetadata } from "@/lib/copy";
 import { Emphasized } from "@/lib/copy/emphasized";
 
-export const generateMetadata = () => pageMetadata("models");
+export const generateMetadata = () => pageMetadata("models", "/models");
 
 // Research is a kind of release, not a task a model performs.
 const modelTasks = tasks

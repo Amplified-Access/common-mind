@@ -34,6 +34,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: publication.title,
     description: publication.dek,
+    alternates: { canonical: `/research/${slug}` },
   };
 }
 

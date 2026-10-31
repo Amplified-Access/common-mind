@@ -28,7 +28,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const language = getLanguage(code);
   if (!language) return {};
   const { tagline } = languageCopyFor(await getContent(), code);
-  return { title: language.name, description: tagline };
+  return {
+    title: language.name,
+    description: tagline,
+    alternates: { canonical: `/languages/${code}` },
+  };
 }
 
 const CONTRIBUTIONS = ["corpus", "terminology", "models", "benchmarks"] as const;
