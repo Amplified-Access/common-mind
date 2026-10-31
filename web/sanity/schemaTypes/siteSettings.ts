@@ -18,7 +18,7 @@ export const siteSettings = defineType({
       name: "statement",
       type: "string",
       group: "identity",
-      description: 'Follows the name in the home page\'s browser tab: "CommonMind · …".',
+      description: 'Follows the name in the home page\'s browser tab: "CommonMind | …".',
       validation: (rule) => rule.required(),
     }),
     defineField({
