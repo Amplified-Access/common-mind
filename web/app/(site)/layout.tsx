@@ -31,7 +31,8 @@ export async function generateMetadata(): Promise<Metadata> {
     // that didn't, pointing them all at the home page.
     metadataBase: new URL(site.url),
     title: {
-      default: `${site.name} | ${settings.statement}`,
+      // The statement is a sentence; a title has no full stop.
+      default: `${site.name} | ${settings.statement.replace(/\.$/, "")}`,
       template: `%s | ${site.name}`,
     },
     description: settings.tagline,
