@@ -22,9 +22,10 @@ const avatar = (id: string, name: string, look: string): Character => ({
   portrait: `/sign/avatars/${id}.webp`,
 });
 
+// Deeper skin tones first. The first is the default signer.
 export const CHARACTERS: Character[] = [
-  avatar("nakato", "Nakato", "Dark blazer"),
-  avatar("amani", "Amani", "Suit and tie"),
   avatar("okello", "Okello", "Denim jacket"),
   avatar("achieng", "Achieng", "Afro, print top"),
+  avatar("amani", "Amani", "Suit and tie"),
+  avatar("nakato", "Nakato", "Dark blazer"),
 ];
