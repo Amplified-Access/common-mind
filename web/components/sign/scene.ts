@@ -38,11 +38,15 @@ export function createScene(renderer: WebGLRenderer) {
   key.position.set(-1.2, 2.2, 2.6);
   const fill = new DirectionalLight("#cfdcff", 0.6);
   fill.position.set(2, 0.8, 1.6);
-  // A warm rim from behind, in the brand yellow, to lift the outline off
-  // the dark background.
-  const rim = new DirectionalLight("#ffd300", 1.6);
-  rim.position.set(0.6, 1.6, -2.2);
-  scene.add(key, fill, rim);
+  // A warm rim from behind each side, in the brand yellow, to lift the
+  // outline off the dark background. They come in low, from shoulder
+  // height: with no shadows, a light from above would shine into an open
+  // mouth.
+  const rimLeft = new DirectionalLight("#ffd300", 1.1);
+  rimLeft.position.set(1.8, 0.5, -1.6);
+  const rimRight = new DirectionalLight("#ffd300", 0.8);
+  rimRight.position.set(-1.8, 0.5, -1.6);
+  scene.add(key, fill, rimLeft, rimRight);
   return scene;
 }
 
