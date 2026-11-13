@@ -18,6 +18,8 @@ type SignStageProps = {
   run: number;
   speed: number;
   paused: boolean;
+  /** Shape the English words on the lips while signing. */
+  mouthing: boolean;
   /** Called every frame while signing, with the time into the timeline. */
   onFrame?: (time: number, timeline: Timeline) => void;
   onEnd?: () => void;
@@ -35,7 +37,7 @@ const GAZE_PLANE_Z = 1.4;
 const GAZE_TIMEOUT = 4;
 
 // The 3D signer: a canvas the avatar is drawn into, playing a timeline.
-function SignStage({ character, timeline, run, speed, paused, onFrame, onEnd, onBody, className }: SignStageProps) {
+function SignStage({ character, timeline, run, speed, paused, mouthing, onFrame, onEnd, onBody, className }: SignStageProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stageRef = useRef<Stage | null>(null);
   const avatarRef = useRef<RiggedAvatar | null>(null);
@@ -45,10 +47,10 @@ function SignStage({ character, timeline, run, speed, paused, onFrame, onEnd, on
   const loading = shown !== character.id;
 
   // The loop reads these, so changes take effect without restarting it.
-  const playback = useRef({ timeline, speed, paused, onFrame, onEnd, t: 0, playing: false });
+  const playback = useRef({ timeline, speed, paused, mouthing, onFrame, onEnd, t: 0, playing: false });
   useEffect(() => {
-    Object.assign(playback.current, { timeline, speed, paused, onFrame, onEnd });
-  }, [timeline, speed, paused, onFrame, onEnd]);
+    Object.assign(playback.current, { timeline, speed, paused, mouthing, onFrame, onEnd });
+  }, [timeline, speed, paused, mouthing, onFrame, onEnd]);
 
   useEffect(() => {
     playback.current.t = 0;
@@ -144,7 +146,7 @@ function SignStage({ character, timeline, run, speed, paused, onFrame, onEnd, on
         gaze.lerp(gazeTarget, 1 - Math.exp(-dt * 8));
         // The head follows the gaze only between signs.
         idle += ((pb.playing ? 0 : 1) - idle) * (1 - Math.exp(-dt * 4));
-        avatar.update(tl ? samplePose(tl, pb.t) : restPose(avatar.body), elapsed, gaze, idle);
+        avatar.update(tl ? samplePose(tl, pb.t) : restPose(avatar.body), elapsed, gaze, idle, pb.mouthing);
       }
       renderer.render(scene, camera);
     };
