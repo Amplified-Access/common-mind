@@ -263,8 +263,8 @@ export const LEXICON: SignDef[] = [
   ]),
   sign("KNOW", ["know", "knew"], [
     ...repeat([
-      { r: { shape: "bent-B", at: "temple", off: [-0.02, 0.01, 0.06], contact: "tips", palm: "back", fingers: "up" }, dur: 0.24, hold: 0 },
-      { r: { off: [-0.02, 0.01, 0.025] }, dur: 0.12, hold: 0.04 },
+      { r: { shape: "bent-B", at: "temple", off: [0.035, 0.01, 0], contact: "tips", palm: "in", fingers: "up" }, dur: 0.24, hold: 0 },
+      { r: { off: [0.006, 0.01, 0] }, dur: 0.12, hold: 0.04 },
     ], 2),
   ]),
   sign("THINK", ["think", "thought"], [
@@ -295,7 +295,7 @@ export const LEXICON: SignDef[] = [
   ]),
   sign("EAT", ["eat", "food", "ate"], [
     ...repeat([
-      { r: { shape: "flat-O", at: "mouth", off: [0, 0, 0.06], contact: "tips", palm: "down", fingers: "back" }, dur: 0.22, hold: 0 },
+      { r: { shape: "flat-O", at: "mouth", off: [0, -0.005, 0.05], contact: "tips", palm: "back-down", fingers: "up-back" }, dur: 0.22, hold: 0 },
       { r: { off: [0, 0, 0.01] }, dur: 0.12, hold: 0.04, mouth: "open" },
     ], 2),
   ]),
@@ -379,7 +379,7 @@ export const LEXICON: SignDef[] = [
     ], 2),
   ]),
   sign("HOME", ["home"], [
-    { r: { shape: "flat-O", at: "mouth", off: [0.03, 0, 0.005], contact: "tips", palm: "down", fingers: "back" }, dur: 0.34, hold: 0.06 },
+    { r: { shape: "flat-O", at: "mouth", off: [0.03, 0, 0.005], contact: "tips", palm: "back-down", fingers: "up-back" }, dur: 0.34, hold: 0.06 },
     { r: { at: "cheek", off: [0.012, 0.01, 0.005] }, dur: 0.22, hold: 0.1 },
   ]),
   sign("TIME", ["time", "clock"], [
