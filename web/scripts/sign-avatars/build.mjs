@@ -25,13 +25,22 @@ const work = join(tmpdir(), "sign-avatars");
 const REPO = "microsoft/Microsoft-Rocketbox";
 const RAW = `https://raw.githubusercontent.com/${REPO}/master/Assets/Avatars`;
 
-// Our id → the Rocketbox avatar it is drawn from. lib/sign/characters.ts
+// Okello's skin tone, from his face and neck texture.
+const DEEP_BROWN = [84, 55, 39];
+
+// Parts of a Rocketbox head texture that are not skin, as rectangles on the
+// 1024px texture: the eyes and mouth down the left, jewellery along the
+// bottom.
+const HEAD_ATLAS = ["0,614 287,1023", "0,752 1023,1023"];
+
+// Our id → the Rocketbox avatar it is drawn from, and a skin tone to give
+// it where the library's differs from the one wanted. lib/sign/characters.ts
 // names them and describes them.
 const CAST = {
-  nakato: "Professions/Business_Female_01",
-  amani: "Professions/Business_Male_05",
-  okello: "Adults/Male_Adult_12",
-  achieng: "Adults/Female_Party_02",
+  okello: { source: "Adults/Male_Adult_12" },
+  achieng: { source: "Adults/Female_Party_02", skin: DEEP_BROWN },
+  amani: { source: "Professions/Business_Male_05" },
+  nakato: { source: "Professions/Business_Female_01" },
 };
 
 // The ARKit face shapes kept: brows and eyes for the grammar of questions
@@ -58,15 +67,50 @@ async function download(url, file) {
   writeFileSync(file, Buffer.from(await res.arrayBuffer()));
 }
 
-async function textureNames(source) {
+/** The avatar's texture files, listed once and kept with the downloads. */
+async function textureNames(source, dir) {
+  const cache = join(dir, "textures.json");
+  if (existsSync(cache)) return JSON.parse(readFileSync(cache, "utf8"));
   const res = await fetch(`https://api.github.com/repos/${REPO}/contents/Assets/Avatars/${source}/Textures`);
   if (!res.ok) throw new Error(`${res.status} listing ${source}`);
-  return (await res.json()).map((f) => f.name);
+  const names = (await res.json()).map((f) => f.name);
+  writeFileSync(cache, JSON.stringify(names));
+  return names;
 }
 
 const magick = (...args) => execFileSync("magick", args, { stdio: "inherit" });
 
-async function build(id, source) {
+/**
+ * Gives an image's skin a new tone. Skin is picked out by colour (a warm
+ * hue, some saturation, not dark), which leaves hair, eyes and dark clothes
+ * alone, and is multiplied toward the target so its shading and detail
+ * stay. `skip` lists rectangles to leave alone; `light` is the least
+ * lightness counted as skin.
+ */
+function reskin(file, target, { skip = [], light = 0.32 } = {}) {
+  const mask = `${file}.mask.png`;
+  magick(
+    file, "-alpha", "off", "-colorspace", "HSL",
+    "-fx", `((u.r<0.11||u.r>0.95)&&u.g>0.18&&u.b>${light})?1:0`,
+    "-channel", "R", "-separate", "+channel",
+    ...skip.flatMap((r) => ["-fill", "black", "-draw", `rectangle ${r}`]),
+    "-blur", "0x1.5", mask,
+  );
+  const mean = execFileSync(
+    "magick",
+    [file, "-alpha", "off", mask, "-compose", "CopyOpacity", "-composite", "-scale", "1x1!", "-format", "%[fx:255*u.r] %[fx:255*u.g] %[fx:255*u.b]", "info:"],
+    { encoding: "utf8" },
+  ).trim().split(" ").map(Number);
+  const [r, g, b] = target.map((t, i) => String(t / mean[i]));
+  magick(
+    file,
+    "(", "+clone", "-channel", "R", "-evaluate", "multiply", r, "-channel", "G", "-evaluate", "multiply", g,
+    "-channel", "B", "-evaluate", "multiply", b, "+channel", ")",
+    mask, "-composite", file,
+  );
+}
+
+async function build(id, { source, skin }) {
   const name = source.split("/").pop();
   const dir = join(work, id);
   mkdirSync(dir, { recursive: true });
@@ -79,15 +123,18 @@ async function build(id, source) {
   // Textures: colour and normal maps for body and head, and the hair and
   // lashes with their alpha. Specular maps are left out.
   const textures = {};
-  for (const file of await textureNames(source)) {
+  for (const file of await textureNames(source, dir)) {
     const m = file.match(/_(body|head)_(color|normal)\.tga$|_(opacity)_color\.tga$/);
     if (!m) continue;
     const key = m[3] ? "opacity" : `${m[1]}_${m[2]}`;
     const tga = join(dir, file);
     await download(`${RAW}/${source}/Textures/${file}`, tga);
+    const png = join(dir, `${key}.png`);
+    magick(tga, "-resize", "1024x1024", png);
+    if (skin && key.endsWith("color") && key !== "opacity") reskin(png, skin, { skip: key === "head_color" ? HEAD_ATLAS : [] });
     const webp = join(dir, `${key}.webp`);
     const quality = key.endsWith("normal") ? "90" : "84";
-    magick(tga, "-resize", "1024x1024", "-quality", quality, "-define", "webp:alpha-quality=90", webp);
+    magick(png, "-quality", quality, "-define", "webp:alpha-quality=90", webp);
     textures[key] = readFileSync(webp);
   }
 
@@ -142,20 +189,26 @@ async function build(id, source) {
   await io.write(join(out, `${id}.glb`), doc);
 
   // A portrait for the picker: the head from the library's preview, with
-  // the white backdrop cleared.
+  // the white backdrop cleared, and the same skin tone as the model.
+  const portrait = join(dir, "portrait.png");
   magick(
     join(dir, "preview.png"),
     "-trim", "+repage",
     "-gravity", "north", "-crop", "44%x17%+0+0", "+repage",
     "-alpha", "set", "-bordercolor", "white", "-border", "1",
     "-fill", "none", "-fuzz", "7%", "-draw", "color 0,0 floodfill", "-shave", "1x1",
+    // Pull the cut-out edge in a pixel, so no white fringe is left.
+    "-channel", "A", "-morphology", "Erode", "Disk:2.5", "+channel",
     "-gravity", "center", "-background", "none", "-extent", "%[fx:max(w,h)]x%[fx:max(w,h)]",
-    "-resize", "160x160", "-quality", "86",
-    join(out, `${id}.webp`),
+    portrait,
   );
+  // In the small preview, brown hair passes for skin unless only lighter
+  // pixels count.
+  if (skin) reskin(portrait, skin, { light: 0.45 });
+  magick(portrait, "-resize", "160x160", "-quality", "86", join(out, `${id}.webp`));
 }
 
 mkdirSync(out, { recursive: true });
-for (const [id, source] of Object.entries(CAST)) await build(id, source);
+for (const [id, entry] of Object.entries(CAST)) await build(id, entry);
 copyFileSync(join(here, "LICENSE.md"), join(out, "LICENSE.md"));
 console.log(`Wrote ${Object.keys(CAST).length} avatars to ${out}`);
