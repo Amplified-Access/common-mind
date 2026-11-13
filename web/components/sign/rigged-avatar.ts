@@ -17,6 +17,7 @@ import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.j
 import { type Body, type Landmarks, bodyFrom } from "@/lib/sign/body";
 import { contactPoint, digitPoints, jointsFor } from "@/lib/sign/hand";
 import { solveArm } from "@/lib/sign/ik";
+import { VISEMES } from "@/lib/sign/mouthing";
 import type { FacePose, HandPose, Pose, Vec3 } from "@/lib/sign/types";
 
 // A rigged avatar (3ds Max Biped skeleton, ARKit face shapes) driven by the
@@ -314,7 +315,7 @@ export class RiggedAvatar {
     });
   }
 
-  private applyFace(face: FacePose, time: number) {
+  private applyFace(face: FacePose, time: number, mouthing: boolean) {
     if (time > this.nextBlink) {
       this.blinkAt = time;
       this.nextBlink = time + 2.4 + Math.random() * 3;
@@ -341,6 +342,14 @@ export class RiggedAvatar {
       mouthPucker: face.round * 0.8,
       mouthFunnel: face.round * 0.45,
     };
+    // Mouthing: while a word is mouthed its visemes take the mouth, softened
+    // a little, as signers mouth more lightly than they speak.
+    const visemes = mouthing ? face.visemes : undefined;
+    const speaking = visemes ? Math.min(1, Object.values(visemes).reduce((a, b) => a + (b ?? 0), 0)) : 0;
+    for (const v of VISEMES) shapes[`viseme_${v}`] = (visemes?.[v] ?? 0) * 0.85;
+    if (speaking > 0) {
+      for (const k of ["jawOpen", "mouthPucker", "mouthFunnel"]) shapes[k] *= 1 - speaking;
+    }
     for (const mesh of this.faces) {
       const dict = mesh.morphTargetDictionary;
       const influences = mesh.morphTargetInfluences;
@@ -353,8 +362,9 @@ export class RiggedAvatar {
   }
 
   /** Puts the avatar in a pose. `gaze` is a point to look at; `idle` (0–1)
-   * is how far the head may follow it. */
-  update(pose: Pose, time: number, gaze: Vector3 | null = null, idle = 1) {
+   * is how far the head may follow it; `mouthing` shapes the words on the
+   * lips. */
+  update(pose: Pose, time: number, gaze: Vector3 | null = null, idle = 1, mouthing = true) {
     for (const [b, q] of this.rest) b.quaternion.copy(q);
     // Breathing and a slight sway.
     this.spine.quaternion.multiply(
@@ -364,7 +374,7 @@ export class RiggedAvatar {
 
     for (const arm of this.arms) this.applyArm(arm, arm.side === "L" ? pose.l : pose.r);
     this.applyHead(pose, gaze, idle, time);
-    this.applyFace(pose.face, time);
+    this.applyFace(pose.face, time, mouthing);
   }
 
   dispose() {

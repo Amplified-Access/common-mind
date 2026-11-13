@@ -35,6 +35,7 @@ const EXAMPLES = ["Hello, my name is Grace", "Thank you, friend", "What is your 
 
 const HISTORY_KEY = "sign:recent";
 const SIGNER_KEY = "sign:signer";
+const MOUTHING_KEY = "sign:mouthing";
 
 // Per-viewer conveniences: the signer they chose and what they signed lately.
 function readStored<T>(key: string, fallback: T): T {
@@ -65,6 +66,9 @@ function SignStudio() {
   const [paused, setPaused] = useState(false);
   const [speed, setSpeed] = useState("1");
   const [captions, setCaptions] = useState(true);
+  // Shaping the English words on the lips while signing, which helps a
+  // viewer who lip-reads. On unless the viewer turned it off.
+  const [mouthing, setMouthing] = useState(true);
   const [signer, setSigner] = useState<Character>(CHARACTERS[0]);
   // The loaded avatar's measurements: each sign is placed on its body.
   const [body, setBody] = useState<Body>(DEFAULT_BODY);
@@ -99,6 +103,7 @@ function SignStudio() {
     const initial = params.get("text");
     queueMicrotask(() => {
       if (saved) setSigner(saved);
+      setMouthing(readStored<boolean>(MOUTHING_KEY, true));
       setHistory(readStored<string[]>(HISTORY_KEY, []));
       if (initial) {
         setText(initial);
@@ -170,6 +175,23 @@ function SignStudio() {
             )}
           >
             <HugeiconsIcon icon={ClosedCaptionIcon} size={16} />
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              setMouthing((m) => {
+                store(MOUTHING_KEY, !m);
+                return !m;
+              })
+            }
+            aria-pressed={mouthing}
+            title="Shape the English words on the lips while signing"
+            className={cn(
+              "inline-flex h-8 items-center rounded-full border px-3 font-mono text-xs leading-none transition-colors",
+              mouthing ? "border-signal bg-signal text-background" : "border-line text-subtle hover:text-foreground",
+            )}
+          >
+            Mouthing
           </button>
         </div>
       </header>
@@ -261,6 +283,7 @@ function SignStudio() {
               run={run}
               speed={Number(speed)}
               paused={paused}
+              mouthing={mouthing}
               onFrame={onFrame}
               onEnd={onEnd}
               onBody={setBody}

@@ -72,6 +72,17 @@ describe("buildTimeline", () => {
     expect(shift).toBeCloseTo(0.7 - DEFAULT_BODY.anchors.chin[1], 5);
   });
 
+  it("mouths each word while it is signed, and rests the mouth around it", () => {
+    const tl = buildTimeline(planSigns("thank you grace"));
+    const mouthing = (t: number) => Object.values(samplePose(tl, t).face.visemes ?? {}).some((w) => w > 0.5);
+    for (const item of tl.items) {
+      const span = Array.from({ length: 20 }, (_, i) => item.start + ((item.end - item.start) * i) / 20);
+      expect(span.some(mouthing), item.gloss).toBe(true);
+    }
+    expect(samplePose(tl, 0).face.visemes).toBeUndefined();
+    expect(samplePose(tl, tl.duration).face.visemes).toBeUndefined();
+  });
+
   it("is empty for an empty plan", () => {
     const tl = buildTimeline(planSigns(""));
     expect(tl.items).toEqual([]);

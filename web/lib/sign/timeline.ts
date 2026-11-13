@@ -3,6 +3,7 @@ import { Quaternion } from "three";
 import { spellFrames } from "./alphabet";
 import type { Plan } from "./plan";
 import { type Body, DEFAULT_BODY } from "./body";
+import { type Viseme, isVowel, visemesFor } from "./mouthing";
 import { faceFor, resolveHand, restHand } from "./resolve";
 import type { FacePose, HandPose, HandSpec, HeadPose, Keyframe, Pose } from "./types";
 
@@ -18,6 +19,9 @@ const DEFAULT_DUR = 0.3;
 const DEFAULT_HOLD = 0.08;
 /** A yes/no question holds its last sign, brows up, a moment longer. */
 const QUESTION_HOLD = 0.25;
+/** Seconds a consonant is mouthed at 1x; a vowel a little longer. */
+const SOUND = 0.075;
+const VOWEL = 1.6;
 
 export type TimelineItem = {
   gloss: string;
@@ -29,7 +33,10 @@ export type TimelineItem = {
 
 type Frame = { t: number; pose: Pose; flow: boolean };
 
-export type Timeline = { duration: number; frames: Frame[]; items: TimelineItem[] };
+/** A mouth shape starting at a time; null closes the mouth. */
+type Sound = { t: number; viseme: Viseme | null };
+
+export type Timeline = { duration: number; frames: Frame[]; items: TimelineItem[]; mouth: Sound[] };
 
 const NEUTRAL_HEAD: HeadPose = { nod: 0, turn: 0, tilt: 0 };
 
@@ -46,6 +53,7 @@ export function buildTimeline(plan: Plan, body: Body = DEFAULT_BODY): Timeline {
   const REST = restPose(body);
   const frames: Frame[] = [{ t: 0, pose: REST, flow: false }];
   const items: TimelineItem[] = [];
+  const mouth: Sound[] = [];
   let t = LEAD_IN;
   frames.push({ t, pose: REST, flow: false });
 
@@ -103,6 +111,7 @@ export function buildTimeline(plan: Plan, body: Body = DEFAULT_BODY): Timeline {
       end: t,
       negates: item.kind === "sign" && !!item.sign.negates,
     });
+    mouth.push(...mouthWord(item.word, start + Math.max(keyframes[0]?.dur ?? DEFAULT_DUR, TRANSITION) * 0.6, t));
   }
 
   if (plan.mood === "yn-question" && items.length > 0) {
@@ -117,7 +126,41 @@ export function buildTimeline(plan: Plan, body: Body = DEFAULT_BODY): Timeline {
     frames.push({ t, pose: REST, flow: false });
   }
 
-  return { duration: t, frames, items };
+  return { duration: t, frames, items, mouth };
+}
+
+/** The sounds of a word, spread from when the hand is nearly there to the
+ * end of the sign, quicker if the sign is short. */
+function mouthWord(word: string, from: number, to: number): Sound[] {
+  const visemes = word.split(/\s+/).flatMap(visemesFor);
+  if (visemes.length === 0) return [];
+  const weights = visemes.map((v) => (isVowel(v) ? VOWEL : 1));
+  const total = weights.reduce((a, b) => a + b, 0) * SOUND;
+  const scale = Math.min(1, (to - from) / total);
+  const sounds: Sound[] = [];
+  let t = from;
+  visemes.forEach((viseme, i) => {
+    sounds.push({ t, viseme });
+    t += weights[i] * SOUND * scale;
+  });
+  sounds.push({ t, viseme: null });
+  return sounds;
+}
+
+/** The mouth shapes at a time: the current one rising as the one before
+ * falls, so sounds run into each other as in speech. */
+function sampleMouth(mouth: Sound[], t: number): Partial<Record<Viseme, number>> | undefined {
+  let i = -1;
+  while (i + 1 < mouth.length && mouth[i + 1].t <= t) i++;
+  if (i < 0) return undefined;
+  const cur = mouth[i];
+  const prev = mouth[i - 1];
+  const next = mouth[i + 1]?.t ?? cur.t + 0.15;
+  const u = Math.min(1, (t - cur.t) / Math.max(Math.min(0.07, (next - cur.t) * 0.6), 1e-3));
+  const out: Partial<Record<Viseme, number>> = {};
+  if (cur.viseme) out[cur.viseme] = u;
+  if (prev?.viseme && u < 1 && cur.t - prev.t < 0.5) out[prev.viseme] = (out[prev.viseme] ?? 0) + (1 - u);
+  return Object.keys(out).length > 0 ? out : undefined;
 }
 
 /** The item being signed at a time, or -1 between and around them. */
@@ -194,7 +237,7 @@ export function samplePose(tl: Timeline, time: number): Pose {
   return {
     r: lerpHand(a.pose.r, b.pose.r, u),
     l: lerpHand(a.pose.l, b.pose.l, u),
-    face: lerpFace(a.pose.face, b.pose.face, u),
+    face: { ...lerpFace(a.pose.face, b.pose.face, u), visemes: sampleMouth(tl.mouth, t) },
     head,
   };
 }

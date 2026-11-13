@@ -1,3 +1,5 @@
+import type { Viseme } from "./mouthing";
+
 // The vocabulary signs are written in.
 //
 // Coordinates are in metres, in the signer's upper body, with the origin at
@@ -87,6 +89,8 @@ export type FacePose = {
   wide: number;
   /** How rounded ("oo"), 0–1. */
   round: number;
+  /** Mouth shapes of the word being mouthed, 0–1 each. */
+  visemes?: Partial<Record<Viseme, number>>;
 };
 
 export type HeadPose = { nod: number; turn: number; tilt: number };
