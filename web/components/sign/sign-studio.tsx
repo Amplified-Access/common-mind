@@ -408,18 +408,6 @@ function SignStudio() {
         </main>
       </div>
 
-      <footer className="shrink-0 px-4 pb-4 font-mono text-[0.6875rem] text-subtle md:px-6">
-        Signs are hand-written ASL citation forms, awaiting review by Deaf signers. Avatars from the{" "}
-        <a
-          href="https://github.com/microsoft/Microsoft-Rocketbox"
-          target="_blank"
-          rel="noreferrer"
-          className="underline decoration-line underline-offset-2 hover:text-signal"
-        >
-          Microsoft Rocketbox library
-        </a>{" "}
-        (MIT).
-      </footer>
     </div>
   );
 }
