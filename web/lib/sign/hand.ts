@@ -146,29 +146,36 @@ export const fingerBaseEuler = (spread: number, bend: number) =>
 export const thumbBaseEuler = (tilt: number, oppose: number, bend: number) =>
   tmpEuler.set(bend, oppose, THUMB.lean + tilt, "YZX");
 
-function chainTip(
-  base: Vec3,
-  baseEuler: Euler,
-  lengths: Vec3,
-  bends: readonly [number, number],
-): Vector3 {
-  // From the tip back to the base: each joint rotates everything after it.
-  const p = new Vector3(0, lengths[2], 0);
-  p.applyAxisAngle(X, bends[1]).add(new Vector3(0, lengths[1], 0));
-  p.applyAxisAngle(X, bends[0]).add(new Vector3(0, lengths[0], 0));
-  p.applyQuaternion(new Quaternion().setFromEuler(baseEuler));
-  return p.add(new Vector3(...base));
+const X = new Vector3(1, 0, 0);
+
+/** The joints along a finger, base to tip: the base turned by its Euler,
+ * each later joint bending about x. */
+function chainPoints(base: Vec3, baseEuler: Euler, lengths: Vec3, bends: readonly [number, number]): Vector3[] {
+  const turn = new Quaternion().setFromEuler(baseEuler);
+  const points = [new Vector3(...base)];
+  [0, ...bends].forEach((bend, i) => {
+    if (i > 0) turn.multiply(new Quaternion().setFromAxisAngle(X, bend));
+    points.push(points[i].clone().add(new Vector3(0, lengths[i], 0).applyQuaternion(turn)));
+  });
+  return points;
 }
 
-const X = new Vector3(1, 0, 0);
+/** The four joints of a digit (0–3 the fingers, index to pinky; 4 the
+ * thumb), base to tip, in the hand's frame. An avatar's finger bones are
+ * aimed along these. */
+export function digitPoints(digit: number, joints: readonly number[]): Vector3[] {
+  if (digit === 4) {
+    const [tilt, oppose, a, b, c] = joints.slice(16, 21);
+    return chainPoints(THUMB.base, thumbBaseEuler(tilt, oppose, a), THUMB.lengths, [b, c]);
+  }
+  const f = FINGERS[digit];
+  const [spread, a, b, c] = joints.slice(digit * 4, digit * 4 + 4);
+  return chainPoints(f.base, fingerBaseEuler(spread, a), f.lengths, [b, c]);
+}
 
 /** Where a part of the hand is, in the hand's frame, for a set of joints. */
 export function contactPoint(contact: Contact, joints: readonly number[]): Vector3 {
-  const finger = (i: number) => {
-    const f = FINGERS[i];
-    const [spread, a, b, c] = joints.slice(i * 4, i * 4 + 4);
-    return chainTip(f.base, fingerBaseEuler(spread, a), f.lengths, [b, c]);
-  };
+  const finger = (i: number) => digitPoints(i, joints)[3];
   const surface = PALM.depth / 2;
   switch (contact) {
     case "palm":
@@ -179,22 +186,17 @@ export function contactPoint(contact: Contact, joints: readonly number[]): Vecto
       return new Vector3(0, 0, 0);
     case "edge":
       return new Vector3(PALM.width / 2, PALM.length * 0.6, 0);
-    case "knuckles": {
-      // The front of a closed hand: the middle finger's second segment.
-      const f = FINGERS[1];
-      const [spread, a] = joints.slice(4, 6);
-      return chainTip(f.base, fingerBaseEuler(spread, a), [f.lengths[0], 0, 0], [0, 0]);
-    }
+    case "knuckles":
+      // The front of a closed hand: the middle finger's second joint.
+      return digitPoints(1, joints)[1];
     case "index":
       return finger(0);
     case "tips":
       return finger(1);
     case "pinky":
       return finger(3);
-    case "thumb": {
-      const [tilt, oppose, a, b, c] = joints.slice(16, 21);
-      return chainTip(THUMB.base, thumbBaseEuler(tilt, oppose, a), THUMB.lengths, [b, c]);
-    }
+    case "thumb":
+      return digitPoints(4, joints)[3];
   }
 }
 

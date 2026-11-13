@@ -2,7 +2,8 @@ import { Quaternion } from "three";
 
 import { spellFrames } from "./alphabet";
 import type { Plan } from "./plan";
-import { REST_HAND, faceFor, resolveHand } from "./resolve";
+import { type Body, DEFAULT_BODY } from "./body";
+import { faceFor, resolveHand, restHand } from "./resolve";
 import type { FacePose, HandPose, HandSpec, HeadPose, Keyframe, Pose } from "./types";
 
 // A plan laid out in time: a list of poses the avatar eases between, and the
@@ -32,18 +33,21 @@ export type Timeline = { duration: number; frames: Frame[]; items: TimelineItem[
 
 const NEUTRAL_HEAD: HeadPose = { nod: 0, turn: 0, tilt: 0 };
 
-export const REST_POSE: Pose = {
-  r: REST_HAND,
-  l: REST_HAND,
-  face: faceFor("rest", 0),
-  head: NEUTRAL_HEAD,
-};
+/** Standing at rest, hands down, face neutral. */
+export function restPose(body: Body = DEFAULT_BODY): Pose {
+  const hand = restHand(body);
+  return { r: hand, l: hand, face: faceFor("rest", 0), head: NEUTRAL_HEAD };
+}
 
-export function buildTimeline(plan: Plan): Timeline {
-  const frames: Frame[] = [{ t: 0, pose: REST_POSE, flow: false }];
+export const REST_POSE: Pose = restPose();
+
+/** Lays a plan out in time, with every hand placed on the given body. */
+export function buildTimeline(plan: Plan, body: Body = DEFAULT_BODY): Timeline {
+  const REST = restPose(body);
+  const frames: Frame[] = [{ t: 0, pose: REST, flow: false }];
   const items: TimelineItem[] = [];
   let t = LEAD_IN;
-  frames.push({ t, pose: REST_POSE, flow: false });
+  frames.push({ t, pose: REST, flow: false });
 
   const brows = plan.mood === "wh-question" ? -0.85 : plan.mood === "yn-question" ? 0.9 : 0;
   const lean: HeadPose =
@@ -62,14 +66,14 @@ export function buildTimeline(plan: Plan): Timeline {
     let rSpec: HandSpec = {};
     let lSpec: HandSpec = {};
     let r: HandPose = frames.at(-1)!.pose.r;
-    let l: HandPose = REST_HAND;
+    let l: HandPose = REST.l;
 
     keyframes.forEach((kf, j) => {
-      if (kf.r === "rest") r = REST_HAND;
-      else if (kf.r) r = resolveHand((rSpec = { ...rSpec, ...kf.r }));
+      if (kf.r === "rest") r = REST.r;
+      else if (kf.r) r = resolveHand((rSpec = { ...rSpec, ...kf.r }), body);
 
-      if (kf.l === "rest") l = REST_HAND;
-      else if (kf.l) l = resolveHand((lSpec = { ...lSpec, ...kf.l }));
+      if (kf.l === "rest") l = REST.l;
+      else if (kf.l) l = resolveHand((lSpec = { ...lSpec, ...kf.l }), body);
 
       const dur = kf.dur ?? DEFAULT_DUR;
       t += j === 0 ? Math.max(dur, TRANSITION) : dur;
@@ -108,9 +112,9 @@ export function buildTimeline(plan: Plan): Timeline {
 
   if (items.length > 0) {
     t += LEAD_OUT;
-    frames.push({ t, pose: REST_POSE, flow: false });
+    frames.push({ t, pose: REST, flow: false });
     t += SETTLE;
-    frames.push({ t, pose: REST_POSE, flow: false });
+    frames.push({ t, pose: REST, flow: false });
   }
 
   return { duration: t, frames, items };

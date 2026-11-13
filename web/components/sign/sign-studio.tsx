@@ -17,10 +17,10 @@ import { Segmented } from "@/components/system/segmented";
 import { CHARACTERS, type Character } from "@/lib/sign/characters";
 import { LEXICON } from "@/lib/sign/lexicon";
 import { type Plan, planSigns } from "@/lib/sign/plan";
+import { type Body, DEFAULT_BODY } from "@/lib/sign/body";
 import { type Timeline, activeItem, buildTimeline } from "@/lib/sign/timeline";
 import { cn } from "@/lib/utils";
 
-import { renderPortraits } from "./scene";
 import { SignStage } from "./sign-stage";
 import { useSpeech } from "./use-speech";
 
@@ -53,7 +53,7 @@ function store(key: string, value: unknown) {
   }
 }
 
-type Current = { text: string; plan: Plan; timeline: Timeline };
+type Current = { text: string; plan: Plan };
 
 const GLOSSES = [...new Set(LEXICON.map((s) => s.gloss))].sort();
 
@@ -66,7 +66,8 @@ function SignStudio() {
   const [speed, setSpeed] = useState("1");
   const [captions, setCaptions] = useState(true);
   const [signer, setSigner] = useState<Character>(CHARACTERS[0]);
-  const [portraits, setPortraits] = useState<Record<string, string>>({});
+  // The loaded avatar's measurements: each sign is placed on its body.
+  const [body, setBody] = useState<Body>(DEFAULT_BODY);
   const [history, setHistory] = useState<string[]>([]);
   const [active, setActive] = useState(-1);
   const progressRef = useRef<HTMLSpanElement>(null);
@@ -77,7 +78,7 @@ function SignStudio() {
     if (!clean) return;
     const plan = planSigns(clean);
     if (plan.items.length === 0) return;
-    setCurrent({ text: clean, plan, timeline: buildTimeline(plan) });
+    setCurrent({ text: clean, plan });
     setRun((r) => r + 1);
     setPlaying(true);
     setPaused(false);
@@ -104,15 +105,7 @@ function SignStudio() {
         sign(initial);
       }
     });
-    // Portraits come from the same 3D models, drawn once off screen.
-    const idle = window.setTimeout(() => {
-      try {
-        setPortraits(renderPortraits(CHARACTERS));
-      } catch {
-        // No WebGL: the picker shows initials.
-      }
-    }, 300);
-    return () => window.clearTimeout(idle);
+
   }, [sign]);
 
   const speech = useSpeech(
@@ -146,7 +139,8 @@ function SignStudio() {
   };
 
   const status = playing ? (paused ? "Paused" : "Signing") : "Ready";
-  const items = useMemo(() => current?.timeline.items ?? [], [current]);
+  const timeline = useMemo(() => (current ? buildTimeline(current.plan, body) : null), [current, body]);
+  const items = timeline?.items ?? [];
 
   return (
     <div className="flex min-h-svh flex-col bg-background lg:h-svh">
@@ -199,14 +193,7 @@ function SignStudio() {
                       )}
                     >
                       <span className="relative size-12 shrink-0 overflow-hidden rounded-full border border-line bg-[radial-gradient(circle_at_50%_40%,#3a3833,#121110)]">
-                        {portraits[c.id] ? (
-                          // Drawn in the browser as a data URL; nothing to optimise.
-                          <Image src={portraits[c.id]} alt="" width={48} height={48} unoptimized className="size-full object-cover" />
-                        ) : (
-                          <span className="flex size-full items-center justify-center font-mono text-sm text-foreground/80">
-                            {c.name[0]}
-                          </span>
-                        )}
+                        <Image src={c.portrait} alt="" width={48} height={48} className="size-full object-cover" />
                       </span>
                       <span className="min-w-0">
                         <span className={cn("block text-sm", selected ? "text-signal" : "text-foreground")}>{c.name}</span>
@@ -270,12 +257,13 @@ function SignStudio() {
           <FramedCard className="min-h-112 flex-1 lg:min-h-0" panelsClassName="relative bg-[radial-gradient(ellipse_at_50%_30%,#3b3934_0%,#1a1915_50%,#0b0a07_100%)]">
             <SignStage
               character={signer}
-              timeline={current?.timeline ?? null}
+              timeline={timeline}
               run={run}
               speed={Number(speed)}
               paused={paused}
               onFrame={onFrame}
               onEnd={onEnd}
+              onBody={setBody}
               className="absolute inset-0"
             />
 
@@ -398,7 +386,16 @@ function SignStudio() {
       </div>
 
       <footer className="shrink-0 px-4 pb-4 font-mono text-[0.6875rem] text-subtle md:px-6">
-        Signs are hand-written ASL citation forms, awaiting review by Deaf signers.
+        Signs are hand-written ASL citation forms, awaiting review by Deaf signers. Avatars from the{" "}
+        <a
+          href="https://github.com/microsoft/Microsoft-Rocketbox"
+          target="_blank"
+          rel="noreferrer"
+          className="underline decoration-line underline-offset-2 hover:text-signal"
+        >
+          Microsoft Rocketbox library
+        </a>{" "}
+        (MIT).
       </footer>
     </div>
   );

@@ -2,7 +2,7 @@ import { Vector3 } from "three";
 import { describe, expect, it } from "vitest";
 
 import { spellFrames } from "./alphabet";
-import { FOREARM, SHOULDER, UPPER_ARM } from "./body";
+import { type Body, DEFAULT_BODY, DEFAULT_LANDMARKS, bodyFrom } from "./body";
 import { LEXICON } from "./lexicon";
 import { planSigns } from "./plan";
 import { REST_HAND, resolveHand } from "./resolve";
@@ -58,6 +58,20 @@ describe("buildTimeline", () => {
     expect(Math.min(...turns)).toBeLessThan(-0.1);
   });
 
+  it("places the hands on the body it is given", () => {
+    // A taller signer with a lower chin: CHIN-located signs follow it.
+    const tall: Body = bodyFrom({
+      ...DEFAULT_LANDMARKS,
+      points: { ...DEFAULT_LANDMARKS.points, chin: [0, 0.7, 0.09] },
+    });
+    const at = (body: Body) => {
+      const tl = buildTimeline(planSigns("thank you"), body);
+      return samplePose(tl, tl.items[0].start + 0.4).r.wrist;
+    };
+    const shift = at(tall)[1] - at(DEFAULT_BODY)[1];
+    expect(shift).toBeCloseTo(0.7 - DEFAULT_BODY.anchors.chin[1], 5);
+  });
+
   it("is empty for an empty plan", () => {
     const tl = buildTimeline(planSigns(""));
     expect(tl.items).toEqual([]);
@@ -68,7 +82,8 @@ describe("buildTimeline", () => {
 // Every written sign must resolve, and stay within the arm's reach, so a
 // typo in the lexicon fails here instead of on screen.
 describe("the written signs", () => {
-  const reach = UPPER_ARM + FOREARM + 0.02;
+  const { shoulder, upperArm, forearm } = DEFAULT_BODY;
+  const reach = upperArm + forearm + 0.02;
   const check = (label: string, frames: Keyframe[]) => {
     let r: HandSpec = {};
     let l: HandSpec = {};
@@ -78,7 +93,7 @@ describe("the written signs", () => {
       for (const spec of [f.r && r, f.l && l]) {
         if (!spec) continue;
         const pose = resolveHand(spec);
-        const d = new Vector3(...pose.wrist).distanceTo(new Vector3(...SHOULDER));
+        const d = new Vector3(...pose.wrist).distanceTo(new Vector3(...shoulder));
         expect(d, `${label} reaches ${d.toFixed(3)}m`).toBeLessThan(reach);
       }
     }

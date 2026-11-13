@@ -2,42 +2,45 @@ import {
   ACESFilmicToneMapping,
   DirectionalLight,
   HemisphereLight,
-  PerspectiveCamera,
+  type PerspectiveCamera,
+  PMREMGenerator,
   SRGBColorSpace,
   Scene,
   WebGLRenderer,
 } from "three";
-
-import type { Character } from "@/lib/sign/characters";
-import { REST_POSE } from "@/lib/sign/timeline";
-
-import { SignerAvatar } from "./avatar";
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 
 // What the camera frames: waist to just above the head, wide enough for the
-// hands at their furthest.
-const FRAME = { centerY: 0.43, height: 0.98, width: 0.78 };
+// hands at their furthest. Avatars are placed with their shoulders at 0.5.
+const FRAME = { centerY: 0.42, height: 0.96, width: 0.78 };
 const FOV = 24;
 
-export function createRenderer(canvas: HTMLCanvasElement, preserve = false) {
-  const renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer: preserve });
+export function createRenderer(canvas: HTMLCanvasElement) {
+  const renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true });
   renderer.outputColorSpace = SRGBColorSpace;
   renderer.toneMapping = ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.05;
+  renderer.toneMappingExposure = 1.0;
   renderer.setClearColor(0x000000, 0);
   return renderer;
 }
 
-export function createScene() {
+export function createScene(renderer: WebGLRenderer) {
   const scene = new Scene();
-  scene.add(new HemisphereLight("#fff3df", "#5e4a3a", 1.3));
+  // A soft room for skin and cloth to reflect, so textures read as
+  // materials rather than paint.
+  const pmrem = new PMREMGenerator(renderer);
+  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+  scene.environmentIntensity = 0.45;
+  pmrem.dispose();
 
-  const key = new DirectionalLight("#ffe8cc", 2.8);
+  scene.add(new HemisphereLight("#fff3df", "#5e4a3a", 0.8));
+  const key = new DirectionalLight("#ffe8cc", 2.2);
   key.position.set(-1.2, 2.2, 2.6);
-  const fill = new DirectionalLight("#cfdcff", 0.7);
+  const fill = new DirectionalLight("#cfdcff", 0.6);
   fill.position.set(2, 0.8, 1.6);
   // A warm rim from behind, in the brand yellow, to lift the outline off
   // the dark background.
-  const rim = new DirectionalLight("#ffd300", 1.4);
+  const rim = new DirectionalLight("#ffd300", 1.6);
   rim.position.set(0.6, 1.6, -2.2);
   scene.add(key, fill, rim);
   return scene;
@@ -56,29 +59,4 @@ export function frameCamera(camera: PerspectiveCamera, aspect: number) {
   camera.position.set(0, FRAME.centerY + distance * 0.09, distance);
   camera.lookAt(0, FRAME.centerY, 0);
   camera.updateProjectionMatrix();
-}
-
-/** Head-and-shoulders pictures of each character, for the picker. */
-export function renderPortraits(characters: Character[], size = 160): Record<string, string> {
-  const canvas = document.createElement("canvas");
-  const renderer = createRenderer(canvas, true);
-  renderer.setPixelRatio(1);
-  renderer.setSize(size, size, false);
-  const scene = createScene();
-  const camera = new PerspectiveCamera(22, 1, 0.1, 10);
-  camera.position.set(0, 0.7, 1.05);
-  camera.lookAt(0, 0.69, 0);
-
-  const out: Record<string, string> = {};
-  for (const c of characters) {
-    const avatar = new SignerAvatar(c);
-    avatar.update(REST_POSE, 0);
-    scene.add(avatar.root);
-    renderer.render(scene, camera);
-    out[c.id] = canvas.toDataURL("image/png");
-    avatar.dispose();
-  }
-  renderer.dispose();
-  renderer.forceContextLoss();
-  return out;
 }
