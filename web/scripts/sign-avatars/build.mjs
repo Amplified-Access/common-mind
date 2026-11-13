@@ -2,8 +2,8 @@
 // Rocketbox library (MIT). For each character it downloads the rigged FBX
 // with facial blendshapes, converts it to glTF, keeps the face shapes
 // signing uses (renamed to their ARKit names) and the visemes for mouthing,
-// swaps the textures for 1024px WebP, compresses with meshopt, and writes a
-// small portrait for the picker.
+// swaps the textures for 1024px WebP and compresses with meshopt. The
+// picker's portraits are then taken from the avatars by portraits.mjs.
 //
 //   cd web/scripts/sign-avatars && pnpm install --ignore-workspace && node build.mjs
 //
@@ -130,7 +130,6 @@ async function build(id, { source, skin }) {
 
   const fbx = join(dir, `${name}_facial.fbx`);
   await download(`${RAW}/${source}/Export/${name}_facial.fbx`, fbx);
-  await download(`${RAW}/${source}/${name}.png`, join(dir, "preview.png"));
 
   // Textures: colour and normal maps for body and head, and the hair and
   // lashes with their alpha. Specular maps are left out.
@@ -208,25 +207,6 @@ async function build(id, { source, skin }) {
   // rest of each compresses to almost nothing.
   await doc.transform(prune(), dedup(), meshopt({ encoder: MeshoptEncoder, level: "medium" }));
   await io.write(join(out, `${id}.glb`), doc);
-
-  // A portrait for the picker: the head from the library's preview, with
-  // the white backdrop cleared, and the same skin tone as the model.
-  const portrait = join(dir, "portrait.png");
-  magick(
-    join(dir, "preview.png"),
-    "-trim", "+repage",
-    "-gravity", "north", "-crop", "44%x17%+0+0", "+repage",
-    "-alpha", "set", "-bordercolor", "white", "-border", "1",
-    "-fill", "none", "-fuzz", "7%", "-draw", "color 0,0 floodfill", "-shave", "1x1",
-    // Pull the cut-out edge in a pixel, so no white fringe is left.
-    "-channel", "A", "-morphology", "Erode", "Disk:2.5", "+channel",
-    "-gravity", "center", "-background", "none", "-extent", "%[fx:max(w,h)]x%[fx:max(w,h)]",
-    portrait,
-  );
-  // In the small preview, brown hair passes for skin unless only lighter
-  // pixels count.
-  if (skin) reskin(portrait, skin, { light: 0.45 });
-  magick(portrait, "-resize", "160x160", "-quality", "86", join(out, `${id}.webp`));
 }
 
 await MeshoptEncoder.ready;
