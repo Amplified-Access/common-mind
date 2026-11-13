@@ -1,0 +1,15 @@
+{
+  "name": "sign-avatars",
+  "private": true,
+  "description": "Builds public/sign/avatars from the Microsoft Rocketbox library. Kept apart from the web app's dependencies.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "dependencies": {
+    "@gltf-transform/core": "4.5.1",
+    "@gltf-transform/extensions": "4.5.1",
+    "@gltf-transform/functions": "4.5.1",
+    "fbx2gltf": "0.9.7-p1"
+  }
+}
