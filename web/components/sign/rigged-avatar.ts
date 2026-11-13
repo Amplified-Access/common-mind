@@ -12,6 +12,7 @@ import {
   Vector3,
 } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 
 import { type Body, type Landmarks, bodyFrom } from "@/lib/sign/body";
 import { contactPoint, digitPoints, jointsFor } from "@/lib/sign/hand";
@@ -95,7 +96,7 @@ export class RiggedAvatar {
   private blinkAt = -10;
 
   static async load(url: string): Promise<RiggedAvatar> {
-    const gltf = await new GLTFLoader().loadAsync(url);
+    const gltf = await new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync(url);
     return new RiggedAvatar(gltf.scene);
   }
 

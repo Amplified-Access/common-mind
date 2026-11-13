@@ -1,8 +1,9 @@
 // Builds the signing avatars in public/sign/avatars from the Microsoft
 // Rocketbox library (MIT). For each character it downloads the rigged FBX
 // with facial blendshapes, converts it to glTF, keeps the face shapes
-// signing uses (renamed to their ARKit names), swaps the textures for
-// 1024px WebP, quantizes, and writes a small portrait for the picker.
+// signing uses (renamed to their ARKit names) and the visemes for mouthing,
+// swaps the textures for 1024px WebP, compresses with meshopt, and writes a
+// small portrait for the picker.
 //
 //   cd web/scripts/sign-avatars && pnpm install --ignore-workspace && node build.mjs
 //
@@ -17,7 +18,8 @@ import { fileURLToPath } from "node:url";
 
 import { NodeIO } from "@gltf-transform/core";
 import { ALL_EXTENSIONS, EXTTextureWebP } from "@gltf-transform/extensions";
-import { dedup, prune, quantize } from "@gltf-transform/functions";
+import { dedup, meshopt, prune } from "@gltf-transform/functions";
+import { MeshoptDecoder, MeshoptEncoder } from "meshoptimizer";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const out = join(here, "../../public/sign/avatars");
@@ -32,6 +34,11 @@ const DEEP_BROWN = [84, 55, 39];
 // 1024px texture: the eyes and mouth down the left, jewellery along the
 // bottom.
 const HEAD_ATLAS = ["0,614 287,1023", "0,752 1023,1023"];
+
+// The inside of the mouth (tongue, gums and teeth) in a head texture, which
+// is shaded darker: the avatars cast no shadows, so an open mouth would
+// otherwise be lit as brightly as the face.
+const MOUTH_INSIDE = "205x340+0+684";
 
 // Our id → the Rocketbox avatar it is drawn from, and a skin tone to give
 // it where the library's differs from the one wanted. lib/sign/characters.ts
@@ -52,6 +59,11 @@ const KEEP = [
   "MouthSmileLeft", "MouthSmileRight", "MouthFrownLeft", "MouthFrownRight",
   "MouthStretchLeft", "MouthStretchRight", "MouthRollLower", "MouthPressLeft", "MouthPressRight",
 ];
+
+// The visemes, mouth shapes for speech sounds, for mouthing words while
+// signing. Kept under their Oculus names (viseme_PP, viseme_aa, …); the
+// silent one is left out.
+const VISEMES = ["PP", "FF", "TH", "DD", "KK", "CH", "SS", "nn", "RR", "aa", "E", "I", "O", "U"];
 
 const fbx2gltf = join(
   dirname(createRequire(import.meta.url).resolve("fbx2gltf/package.json")),
@@ -132,6 +144,7 @@ async function build(id, { source, skin }) {
     const png = join(dir, `${key}.png`);
     magick(tga, "-resize", "1024x1024", png);
     if (skin && key.endsWith("color") && key !== "opacity") reskin(png, skin, { skip: key === "head_color" ? HEAD_ATLAS : [] });
+    if (key === "head_color") magick(png, "-region", MOUTH_INSIDE, "-evaluate", "multiply", "0.4", "+region", png);
     const webp = join(dir, `${key}.webp`);
     const quality = key.endsWith("normal") ? "90" : "84";
     magick(png, "-quality", quality, "-define", "webp:alpha-quality=90", webp);
@@ -146,7 +159,9 @@ async function build(id, { source, skin }) {
   const log = run.stdout + run.stderr;
   const channels = [...log.matchAll(/blendshape channel: [^.]+\.(\S+)/g)].map((m) => m[1]);
 
-  const io = new NodeIO().registerExtensions(ALL_EXTENSIONS);
+  const io = new NodeIO()
+    .registerExtensions(ALL_EXTENSIONS)
+    .registerDependencies({ "meshopt.encoder": MeshoptEncoder, "meshopt.decoder": MeshoptDecoder });
   const doc = await io.read(`${raw}.glb`);
   const root = doc.getRoot();
 
@@ -157,16 +172,20 @@ async function build(id, { source, skin }) {
     order.forEach((channel, i) => {
       const m = channel.match(/^AK_\d+_(.+)$/);
       if (m && KEEP.includes(m[1])) keep.push({ i, name: m[1][0].toLowerCase() + m[1].slice(1) });
+      const v = channel.match(/^AA_VI_\d+_(.+)$/);
+      if (v && VISEMES.includes(v[1])) keep.push({ i, name: `viseme_${v[1] === "KK" ? "kk" : v[1]}` });
     });
     for (const prim of mesh.listPrimitives()) {
       const targets = prim.listTargets();
+      keep.forEach((k) => targets[k.i].setName(k.name));
       const kept = new Set(keep.map((k) => targets[k.i]));
       for (const t of targets) if (!kept.has(t)) prim.removeTarget(t);
       prim.setAttribute("COLOR_0", null);
     }
+    // The writer names a mesh's targets (extras.targetNames) from the
+    // targets themselves, so they are named above.
     mesh.setWeights(keep.map(() => 0));
-    mesh.setExtras({ targetNames: keep.map((k) => k.name) });
-    console.log(`  ${keep.length} face shapes`);
+    console.log(`  ${keep.length} face shapes and visemes`);
   }
   for (const animation of root.listAnimations()) animation.dispose();
 
@@ -185,7 +204,9 @@ async function build(id, { source, skin }) {
   }
 
   doc.createExtension(EXTTextureWebP).setRequired(true);
-  await doc.transform(prune(), dedup(), quantize());
+  // Meshopt compression: face shapes move only part of the face, and the
+  // rest of each compresses to almost nothing.
+  await doc.transform(prune(), dedup(), meshopt({ encoder: MeshoptEncoder, level: "medium" }));
   await io.write(join(out, `${id}.glb`), doc);
 
   // A portrait for the picker: the head from the library's preview, with
@@ -208,6 +229,8 @@ async function build(id, { source, skin }) {
   magick(portrait, "-resize", "160x160", "-quality", "86", join(out, `${id}.webp`));
 }
 
+await MeshoptEncoder.ready;
+await MeshoptDecoder.ready;
 mkdirSync(out, { recursive: true });
 for (const [id, entry] of Object.entries(CAST)) await build(id, entry);
 copyFileSync(join(here, "LICENSE.md"), join(out, "LICENSE.md"));
