@@ -69,6 +69,15 @@ definitions:
       level:
         type: string
     type: object
+  domain.TranslatorLanguage:
+    properties:
+      contributions:
+        type: integer
+      language_code:
+        type: string
+      level:
+        type: string
+    type: object
   handlers.AdminContributionPageAlias:
     properties:
       contributions:
@@ -248,7 +257,7 @@ definitions:
         type: string
       languages:
         items:
-          $ref: '#/definitions/domain.Membership'
+          $ref: '#/definitions/domain.TranslatorLanguage'
         type: array
       last_active_at:
         description: LastActiveAt is their latest contribution or review; nil when

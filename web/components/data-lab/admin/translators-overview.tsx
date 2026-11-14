@@ -3,9 +3,10 @@ import Link from "next/link";
 import { FramedCard } from "@/components/system/framed-card";
 import { Eyebrow } from "@/components/system/primitives";
 import { acceptanceRate, adminHref, type AdminView } from "@/lib/data-lab-admin/view";
+import { cn } from "@/lib/utils";
 
 import type { Language } from "../types";
-import { formatDate, languageNamer, levelLabel } from "./format";
+import { formatDate, languageNamer } from "./format";
 import { FilterChips, StatRow } from "./parts";
 import { ADMIN_PATH } from "./session";
 import type { Translator } from "./types";
@@ -82,12 +83,24 @@ function TranslatorsOverview({ translators, languages, view }: { translators: Tr
                         <span className="font-mono text-xs text-faint">{t.email}</span>
                       </Link>
                     </td>
-                    <td className="px-3 py-4 font-mono text-xs text-subtle">
-                      {t.languages.map((m) => (
-                        <span key={m.language_code} className="block whitespace-nowrap">
-                          {nameOf(m.language_code)} · {levelLabel[m.level]}
-                        </span>
-                      ))}
+                    <td className="px-3 py-4 font-mono text-xs">
+                      {/* Every language they joined, with what they've done in it: 0 marks one they haven't started. */}
+                      <ul className="flex flex-col gap-1">
+                        {t.languages.map((l) => (
+                          <li
+                            key={l.language_code}
+                            className={cn(
+                              "flex justify-between gap-4 whitespace-nowrap",
+                              l.contributions > 0 ? "text-subtle" : "text-faint",
+                            )}
+                          >
+                            <span>{nameOf(l.language_code)}</span>
+                            <span className={cn("tabular-nums", l.contributions > 0 && "text-foreground")}>
+                              {l.contributions}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
                     </td>
                     <Num cell>{t.written}</Num>
                     <Num cell>{t.recorded}</Num>

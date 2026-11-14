@@ -43,7 +43,7 @@ A non-numeric `:id`, `contributor`, `limit` or `offset` is 400 `invalid_input`. 
 
 ### Translators
 
-`ListTranslators` lists every user who joined a language (`language_members`) or contributed, most contributions first, then by name. Each `Translator` (`internal/domain/datalab_admin.go`) has their `languages` with levels, `joined_at`, and:
+`ListTranslators` lists every user who joined a language (`language_members`) or contributed, most contributions first, then by name. Each `Translator` (`internal/domain/datalab_admin.go`) has `joined_at`, `languages`, and the counts below. `languages` lists every language they joined, plus any they contributed in without being a member now (`level` `""`), each with `contributions`: everything they've written or recorded in it. It is ordered busiest first, and a language they joined but haven't worked in shows 0.
 
 | Field | Counts |
 |---|---|
@@ -53,7 +53,7 @@ A non-numeric `:id`, `contributor`, `limit` or `offset` is 400 `invalid_input`. 
 | `reviewed` | reviews they made (`reviews.reviewer_id`) |
 | `last_active_at` | their latest contribution or review; `null` when neither |
 
-With `language`, only that language's members and contributors are listed, and every count (reviews included) covers that language only; `languages` still lists all their memberships.
+With `language`, only that language's members and contributors are listed, and every count (reviews included) covers that language only. `languages` still lists all their languages with their full counts, so the spread stays visible.
 
 ### Contributions
 
@@ -65,7 +65,7 @@ Each `AdminContribution` has the item (`item_text`, `item_language`, `kind`, `ca
 
 - **Sign-in.** `/data-lab/admin` shows a password form until the `data_lab_admin` cookie is set. `signInToAdmin` (Server Action) checks the password against `/translators` and stores it only if it works: httpOnly, `sameSite: strict`, `path: /data-lab/admin`, 12 hours. A wrong password says so; a refused stored password (it changed) shows the form again with "The password has changed". **Sign out** deletes the cookie.
 - **Server only.** `components/data-lab/admin/api.ts` is `server-only`; the password never reaches the browser. It calls `BACKEND_URL`, falling back to `NEXT_PUBLIC_BACKEND_URL`.
-- **Translators** (`/data-lab/admin`): language chips, totals (volunteers, written, recorded, verified, waiting, rejected), and a table of every volunteer: languages and levels, the counts, accepted (verified ÷ (verified + rejected), "—" before any review), reviews of others, last active. Each name opens their page.
+- **Translators** (`/data-lab/admin`): language chips, totals (volunteers, written, recorded, verified, waiting, rejected), and a table of every volunteer: each of their languages with how many contributions they've made in it (0 dimmed, for a language they joined but haven't started), the counts, accepted (verified ÷ (verified + rejected), "—" before any review), reviews of others, last active. Each name opens their page.
 - **A translator** (`/data-lab/admin/translators/<id>`): their figures, language and status chips, then their contributions, 25 a page. Each card shows the original (or prompt) on the left, what they entered on the right (or the recording and the text it reads), and below it the status, "Pasted in", and the review: accepted, corrected (with the corrected text) or rejected with the reason, and any note.
 - The view (language, status, page) is in the address (`lib/data-lab-admin/view.ts`), so reloads, Back and shared links keep it.
 - It's standalone (`lib/site.ts`): its own bar instead of the site's header and footer. `noindex`.
@@ -74,7 +74,7 @@ Each `AdminContribution` has the item (`item_text`, `item_language`, `kind`, `ca
 
 - `internal/transport/middleware/admin_password_test.go`: right, wrong, empty and missing passwords, `no-store`, the right password never limited, 429 after too many wrong ones (even for the right password).
 - `internal/bootstrap/bootstrap_test.go`: the 12-character minimum.
-- `internal/infrastructure/database/postgres/datalab_admin_repository_test.go` (Testcontainers): the counts per volunteer (corrections, recordings, reviews), the order, a member with no work, the language and ID filters; contributions paired with their item, review and reviewer, a recording's `read_text` from the correction, filters, total and paging.
+- `internal/infrastructure/database/postgres/datalab_admin_repository_test.go` (Testcontainers): the counts per volunteer (corrections, recordings, reviews), each language's contributions busiest first with 0 for one not started, the order, a member with no work, the language and ID filters; contributions paired with their item, review and reviewer, a recording's `read_text` from the correction, filters, total and paging.
 - `internal/usecase/datalab_admin_test.go`: the limit default and cap, negative offset, unknown status or modality, recording URLs, a missing translator.
 - `internal/transport/handlers/datalab_admin_handler_test.go`: through `RegisterRoutes`: 200s, 401, off without a password, 404, 400s for non-numeric parameters, the filter passed on.
 - `web/lib/data-lab-admin/view.test.ts`: reading the view from the address, links to a view, the acceptance rate.

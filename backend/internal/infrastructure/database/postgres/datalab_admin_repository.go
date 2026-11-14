@@ -19,6 +19,8 @@ func NewDataLabAdminRepository(db *sql.DB) usecase.DataLabAdminStore {
 
 // ListTranslators counts each volunteer's contributions by modality and
 // status, and the reviews they made, in one pass over their contributions.
+// Their languages each carry their contributions in that language, across
+// every language whatever the filter, busiest first.
 // $1 is the language (” for all), $2 the volunteer's ID (0 for all).
 func (r *dataLabAdminRepository) ListTranslators(ctx context.Context, f usecase.TranslatorFilter) ([]domain.Translator, error) {
 	const q = `
@@ -29,9 +31,15 @@ func (r *dataLabAdminRepository) ListTranslators(ctx context.Context, f usecase.
             GROUP BY rv.reviewer_id
         )
         SELECT u.id, u.name, u.email, u.created_at,
-               COALESCE((SELECT json_agg(json_build_object('language_code', m.language_code, 'level', m.level)
-                                         ORDER BY m.language_code)
-                         FROM language_members m WHERE m.user_id = u.id), '[]'),
+               COALESCE((SELECT json_agg(json_build_object('language_code', l.code, 'level', l.level, 'contributions', l.n)
+                                         ORDER BY l.n DESC, l.code)
+                         FROM (SELECT lang.code, COALESCE(m.level, '') AS level,
+                                      (SELECT count(*) FROM contributions cc
+                                       WHERE cc.contributor_id = u.id AND cc.language_code = lang.code) AS n
+                               FROM (SELECT language_code AS code FROM language_members WHERE user_id = u.id
+                                     UNION
+                                     SELECT language_code FROM contributions WHERE contributor_id = u.id) lang
+                               LEFT JOIN language_members m ON m.user_id = u.id AND m.language_code = lang.code) l), '[]'),
                count(c.id) FILTER (WHERE c.modality = 'text'),
                count(c.id) FILTER (WHERE c.modality = 'audio'),
                count(c.id) FILTER (WHERE c.status = 'pending'),

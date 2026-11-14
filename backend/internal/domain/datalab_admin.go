@@ -6,11 +6,11 @@ import "time"
 // their languages, and how much of their work stands where. With a language
 // filter, the counts cover that language only.
 type Translator struct {
-	ID        int64        `json:"id"`
-	Name      string       `json:"name"`
-	Email     string       `json:"email"`
-	Languages []Membership `json:"languages"`
-	JoinedAt  time.Time    `json:"joined_at"`
+	ID        int64                `json:"id"`
+	Name      string               `json:"name"`
+	Email     string               `json:"email"`
+	Languages []TranslatorLanguage `json:"languages"`
+	JoinedAt  time.Time            `json:"joined_at"`
 	// Their contributions: written (translations and answers) and recorded.
 	Written  int `json:"written"`
 	Recorded int `json:"recorded"`
@@ -24,6 +24,15 @@ type Translator struct {
 	Reviewed int `json:"reviewed"`
 	// LastActiveAt is their latest contribution or review; nil when none.
 	LastActiveAt *time.Time `json:"last_active_at"`
+}
+
+// TranslatorLanguage is one of a translator's languages and how much they've
+// contributed in it, whatever the filter. It covers the languages they joined
+// (Level set) and any they contributed in without being a member now (Level "").
+type TranslatorLanguage struct {
+	LanguageCode  string `json:"language_code"`
+	Level         string `json:"level"`
+	Contributions int    `json:"contributions"`
 }
 
 // AdminContribution is one contribution as the admin sees it: the item's

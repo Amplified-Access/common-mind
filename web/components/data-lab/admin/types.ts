@@ -2,13 +2,22 @@
 
 import type { ContributionStatus } from "@/lib/data-lab-admin/view";
 
-import type { Membership, Modality } from "../types";
+import type { Level, Modality } from "../types";
+
+/** One of a translator's languages and how much they've contributed in it. */
+export type TranslatorLanguage = {
+  language_code: string;
+  /** "" when they contributed in it but are no longer a member. */
+  level: Level | "";
+  contributions: number;
+};
 
 export type Translator = {
   id: number;
   name: string;
   email: string;
-  languages: Membership[];
+  /** Busiest first; the counts cover every language whatever the filter. */
+  languages: TranslatorLanguage[];
   joined_at: string;
   written: number;
   recorded: number;
