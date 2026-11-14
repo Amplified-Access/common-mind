@@ -56,6 +56,26 @@ describe("buildTimeline", () => {
     expect((grace.end - grace.start) / 5).toBeGreaterThanOrEqual(0.42);
   });
 
+  // The move into a sign: from the frame before it to its first frame.
+  const transport = (text: string, n: number) => {
+    const tl = buildTimeline(planSigns(text));
+    const i = tl.frames.findIndex((f) => f.t > tl.items[n].start);
+    const [a, b] = [tl.frames[i - 1], tl.frames[i]];
+    return { a: a.pose.r, b: b.pose.r, mid: samplePose(tl, (a.t + b.t) / 2).r };
+  };
+
+  it("arcs the hand forward, clear of the body, between signs", () => {
+    const { a, b, mid } = transport("hello friend", 1);
+    expect(mid.wrist[2]).toBeGreaterThan((a.wrist[2] + b.wrist[2]) / 2 + 0.02);
+  });
+
+  it("forms the next handshape before the hand arrives", () => {
+    const { a, b, mid } = transport("hello friend", 1);
+    const change = (p: readonly number[]) => p.reduce((sum, v, k) => sum + Math.abs(v - a.joints[k]), 0);
+    expect(change(b.joints)).toBeGreaterThan(0.5);
+    expect(change(mid.joints) / change(b.joints)).toBeGreaterThan(0.65);
+  });
+
   it("pauses, hands held, between phrases and longer between sentences", () => {
     const gap = (text: string) => {
       const [a, b] = buildTimeline(planSigns(text)).items;
