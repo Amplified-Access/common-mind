@@ -65,6 +65,26 @@ describe("planSigns", () => {
     expect(planSigns("thank you friends").items.map((i) => i.word)).toEqual(["thank you", "friends"]);
   });
 
+  it("marks a pause after each phrase and sentence", () => {
+    const pauses = planSigns("Hello, my name is Grace. Thank you!").items.map((i) => [i.gloss, i.pause]);
+    expect(pauses).toEqual([
+      ["HELLO", "phrase"],
+      ["MY", undefined],
+      ["NAME", undefined],
+      ["fs-GRACE", "sentence"],
+      ["THANK-YOU", "sentence"],
+    ]);
+  });
+
+  it("reads a decimal point as part of the number", () => {
+    expect(planSigns("pay 3.5 now").items.slice(0, -1).some((i) => i.pause)).toBe(false);
+  });
+
+  it("moves the question word to the end of its own sentence", () => {
+    expect(glosses("Hello. What is your name?")).toEqual(["HELLO", "YOUR", "NAME", "WHAT"]);
+    expect(glosses("What is your name? I am deaf.")).toEqual(["YOUR", "NAME", "WHAT", "ME", "DEAF"]);
+  });
+
   it("plans nothing for empty or wordless text", () => {
     expect(planSigns("").items).toEqual([]);
     expect(planSigns("  ?! ").items).toEqual([]);

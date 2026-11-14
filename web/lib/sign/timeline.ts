@@ -17,6 +17,8 @@ const LEAD_OUT = 0.45;
 const SETTLE = 0.25;
 const DEFAULT_DUR = 0.3;
 const DEFAULT_HOLD = 0.08;
+/** Seconds the hands hold still at a comma, and at the end of a sentence. */
+const PAUSE = { phrase: 0.3, sentence: 0.6 } as const;
 /** A yes/no question holds its last sign, brows up, a moment longer. */
 const QUESTION_HOLD = 0.25;
 /** Seconds a consonant is mouthed at 1x; a vowel a little longer. */
@@ -65,7 +67,14 @@ export function buildTimeline(plan: Plan, body: Body = DEFAULT_BODY): Timeline {
         ? { nod: 0.04, turn: 0, tilt: 0.07 }
         : NEUTRAL_HEAD;
 
-  for (const item of plan.items) {
+  plan.items.forEach((item, n) => {
+    // The hands rest where the last sign left them through a pause.
+    const before = plan.items[n - 1]?.pause;
+    if (before) {
+      t += PAUSE[before];
+      frames.push({ t, pose: frames.at(-1)!.pose, flow: false });
+    }
+
     const keyframes: Keyframe[] =
       item.kind === "sign"
         ? item.sign.frames
@@ -112,7 +121,7 @@ export function buildTimeline(plan: Plan, body: Body = DEFAULT_BODY): Timeline {
       negates: item.kind === "sign" && !!item.sign.negates,
     });
     mouth.push(...mouthWord(item.word, start + Math.max(keyframes[0]?.dur ?? DEFAULT_DUR, TRANSITION) * 0.6, t));
-  }
+  });
 
   if (plan.mood === "yn-question" && items.length > 0) {
     t += QUESTION_HOLD;

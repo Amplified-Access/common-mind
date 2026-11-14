@@ -6,9 +6,13 @@ import type { SignDef } from "./types";
 // rendering with a few of ASL's rules (no articles or "to be", wh-words
 // last, question faces). Full translation into ASL grammar is a model's job.
 
-export type PlanItem =
+/** A pause after an item: at a comma, or longer at the end of a sentence. */
+export type Pause = "phrase" | "sentence";
+
+export type PlanItem = (
   | { kind: "sign"; gloss: string; word: string; sign: SignDef }
-  | { kind: "spell"; gloss: string; word: string; chars: string[] };
+  | { kind: "spell"; gloss: string; word: string; chars: string[] }
+) & { pause?: Pause };
 
 export type Mood = "statement" | "wh-question" | "yn-question";
 
@@ -46,15 +50,37 @@ function expand(token: string): string[] {
   return [m ? m[1] : token.replace(/'/g, "")];
 }
 
-function tokenize(text: string): string[] {
-  return (
+// Punctuation that ends a phrase or a sentence. A point or comma between
+// digits belongs to the number.
+const BREAK = /[;:!?]|[.,](?![0-9])|(?<![0-9])[.,]/;
+const SENTENCE_END = new Set([".", "!", "?"]);
+
+type Sentence = { words: string[][]; question: boolean };
+
+/** The sentences of a text, each a list of phrases, each a list of words. */
+function tokenize(text: string): Sentence[] {
+  const tokens =
     text
       .normalize("NFD")
       .replace(/\p{M}/gu, "")
       .toLowerCase()
       .replace(/[‘’]/g, "'")
-      .match(/[a-z0-9]+(?:'[a-z]+)?/g) ?? []
-  ).flatMap(expand);
+      .match(new RegExp(`[a-z0-9]+(?:'[a-z]+)?|${BREAK.source}`, "g")) ?? [];
+
+  const sentences: Sentence[] = [];
+  let phrases: string[][] = [[]];
+  const endSentence = (question: boolean) => {
+    const words = phrases.filter((p) => p.length > 0);
+    if (words.length > 0) sentences.push({ words, question });
+    phrases = [[]];
+  };
+  for (const token of tokens) {
+    if (SENTENCE_END.has(token)) endSentence(token === "?");
+    else if (BREAK.test(token)) phrases.push([]);
+    else phrases.at(-1)!.push(...expand(token));
+  }
+  endSentence(false);
+  return sentences;
 }
 
 /** Endings to try removing when a word has no sign of its own. */
@@ -98,13 +124,10 @@ function spell(word: string): PlanItem | null {
   return { kind: "spell", gloss, word, chars };
 }
 
-export function planSigns(text: string, lexicon?: SignDef[]): Plan {
-  const index = lexicon ? indexLexicon(lexicon) : defaultIndex;
-  const tokens = tokenize(text);
+/** One phrase's signs, matching the longest phrase that has a sign first. */
+function planPhrase(tokens: string[], index: Index): PlanItem[] {
   const items: PlanItem[] = [];
-
   for (let i = 0; i < tokens.length; ) {
-    // The longest phrase starting here that has a sign.
     let matched = false;
     for (let n = Math.min(index.longest, tokens.length - i); n >= 2; n--) {
       const phrase = tokens.slice(i, i + n).join(" ");
@@ -128,15 +151,35 @@ export function planSigns(text: string, lexicon?: SignDef[]): Plan {
     const spelled = spell(NUMBER_WORDS[word] ?? word);
     if (spelled) items.push({ ...spelled, word });
   }
+  return items;
+}
 
-  const question = text.trim().endsWith("?");
-  const wh = question && tokens.some((t) => WH_WORDS.has(t));
-  const mood: Mood = wh ? "wh-question" : question ? "yn-question" : "statement";
+export function planSigns(text: string, lexicon?: SignDef[]): Plan {
+  const index = lexicon ? indexLexicon(lexicon) : defaultIndex;
+  const sentences = tokenize(text);
+  const items: PlanItem[] = [];
 
-  // ASL puts the question sign at the end: YOUR NAME WHAT?
-  if (wh && items.length > 1 && WH_GLOSSES.has(items[0].gloss)) {
-    items.push(items.shift()!);
+  for (const { words, question } of sentences) {
+    const signed: PlanItem[] = [];
+    for (const phrase of words) {
+      const planned = planPhrase(phrase, index);
+      if (planned.length > 0) planned[planned.length - 1].pause = "phrase";
+      signed.push(...planned);
+    }
+    if (signed.length === 0) continue;
+    // ASL puts the question sign at the end: YOUR NAME WHAT?
+    if (question && signed.length > 1 && WH_GLOSSES.has(signed[0].gloss)) {
+      const wh = signed.shift()!;
+      delete wh.pause;
+      signed.push(wh);
+    }
+    signed[signed.length - 1].pause = "sentence";
+    items.push(...signed);
   }
+
+  const last = sentences.at(-1);
+  const wh = !!last?.question && last.words.flat().some((t) => WH_WORDS.has(t));
+  const mood: Mood = wh ? "wh-question" : last?.question ? "yn-question" : "statement";
 
   return { items, mood };
 }

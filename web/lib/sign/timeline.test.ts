@@ -41,6 +41,22 @@ describe("buildTimeline", () => {
     near(samplePose(tl, t).r.wrist, first.wrist);
   });
 
+  it("pauses, hands held, between phrases and longer between sentences", () => {
+    const gap = (text: string) => {
+      const [a, b] = buildTimeline(planSigns(text)).items;
+      return b.start - a.end;
+    };
+    const run = gap("hello friend");
+    const phrase = gap("hello, friend");
+    const sentence = gap("hello. friend");
+    expect(phrase).toBeGreaterThan(run + 0.2);
+    expect(sentence).toBeGreaterThan(phrase + 0.2);
+
+    const tl = buildTimeline(planSigns("hello, friend"));
+    const [hello, friend] = tl.items;
+    near(samplePose(tl, friend.start).r.wrist, samplePose(tl, hello.end).r.wrist);
+  });
+
   it("raises the brows through a yes/no question and furrows them for wh", () => {
     const yn = buildTimeline(planSigns("Are you deaf?"));
     const wh = buildTimeline(planSigns("Where is home?"));
