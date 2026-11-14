@@ -1125,6 +1125,20 @@ const docTemplate = `{
                 }
             }
         },
+        "domain.TranslatorLanguage": {
+            "type": "object",
+            "properties": {
+                "contributions": {
+                    "type": "integer"
+                },
+                "language_code": {
+                    "type": "string"
+                },
+                "level": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.AdminContributionPageAlias": {
             "type": "object",
             "properties": {
@@ -1388,7 +1402,7 @@ const docTemplate = `{
                 "languages": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/domain.Membership"
+                        "$ref": "#/definitions/domain.TranslatorLanguage"
                     }
                 },
                 "last_active_at": {

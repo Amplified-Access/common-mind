@@ -41,7 +41,9 @@ function TranslatorDetail({
         <h1 className="text-h2">{t.name || "Unnamed"}</h1>
         <p className="font-mono text-xs text-subtle">
           {t.email} · joined {formatDate(t.joined_at)} ·{" "}
-          {t.languages.map((m) => `${nameOf(m.language_code)} (${levelLabel[m.level]})`).join(", ") || "no languages"}
+          {t.languages
+            .map((l) => `${nameOf(l.language_code)}${l.level ? ` (${levelLabel[l.level]})` : ""}: ${l.contributions}`)
+            .join(", ") || "no languages"}
         </p>
       </div>
 

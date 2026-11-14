@@ -69,12 +69,18 @@ func TestDataLabAdmin_ListTranslators_CountsEachVolunteersWork(t *testing.T) {
 		a.Verified != want.Verified || a.Corrected != want.Corrected || a.Rejected != want.Rejected {
 		t.Errorf("amina's counts = %+v, want %+v", a, want)
 	}
-	if a.LastActiveAt == nil || len(a.Languages) != 1 || a.Languages[0].LanguageCode != "sw" {
-		t.Errorf("amina = %+v, want last active set and the one language sw", a)
+	if a.LastActiveAt == nil || len(a.Languages) != 1 || a.Languages[0].LanguageCode != "sw" || a.Languages[0].Contributions != 5 {
+		t.Errorf("amina = %+v, want last active set and her 5 contributions in sw", a)
 	}
 	b := all[1]
 	if b.ID != baraka || b.Reviewed != 3 || b.Written != 1 {
 		t.Errorf("baraka = %+v, want 3 reviews and 1 written", b)
+	}
+	// Each language carries their contributions in it, busiest first; a
+	// language they joined but haven't worked in shows 0.
+	if got := b.Languages; len(got) != 2 || got[0].LanguageCode != "luo" || got[0].Contributions != 1 ||
+		got[1].LanguageCode != "sw" || got[1].Contributions != 0 || got[1].Level != domain.LevelContributor {
+		t.Errorf("baraka's languages = %+v, want luo 1, then sw 0", got)
 	}
 	if last := all[2]; last.ID != idle || last.Written != 0 || last.LastActiveAt != nil {
 		t.Errorf("idle = %+v, want no work and never active", last)
