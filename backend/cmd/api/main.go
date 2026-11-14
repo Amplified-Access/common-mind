@@ -46,6 +46,11 @@ func gracefulShutdown(apiServer *http.Server, done chan bool) {
 // @in							header
 // @name						Authorization
 // @description				Firebase ID token — prefix with "Bearer "
+//
+// @securityDefinitions.apikey	AdminPassword
+// @in							header
+// @name						Authorization
+// @description				The Data Lab admin's ADMIN_PASSWORD — prefix with "Bearer "
 func main() {
 	// Signal-aware context so SIGINT/SIGTERM cancels bootstrap probes immediately.
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)

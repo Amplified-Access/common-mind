@@ -1,11 +1,82 @@
 basePath: /
 definitions:
+  domain.AdminContribution:
+    properties:
+      audio_url:
+        type: string
+      category:
+        type: string
+      contributor_id:
+        type: integer
+      contributor_name:
+        type: string
+      id:
+        type: integer
+      item_id:
+        type: integer
+      item_language:
+        type: string
+      item_text:
+        description: ItemText is the segment translated or the prompt answered, in
+          ItemLanguage.
+        type: string
+      kind:
+        type: string
+      language_code:
+        type: string
+      modality:
+        type: string
+      pasted:
+        type: boolean
+      read_text:
+        description: ReadText is, for a recording, the verified translation it reads.
+        type: string
+      review:
+        allOf:
+        - $ref: '#/definitions/domain.AdminReview'
+        description: nil while pending
+      source_title:
+        type: string
+      status:
+        type: string
+      submitted_at:
+        type: string
+      text:
+        description: Text is what the volunteer wrote; "" for a recording.
+        type: string
+    type: object
+  domain.AdminReview:
+    properties:
+      corrected_text:
+        type: string
+      decision:
+        type: string
+      note:
+        type: string
+      reason:
+        type: string
+      reviewed_at:
+        type: string
+      reviewer_id:
+        type: integer
+      reviewer_name:
+        type: string
+    type: object
   domain.Membership:
     properties:
       language_code:
         type: string
       level:
         type: string
+    type: object
+  handlers.AdminContributionPageAlias:
+    properties:
+      contributions:
+        items:
+          $ref: '#/definitions/domain.AdminContribution'
+        type: array
+      total:
+        type: integer
     type: object
   handlers.ContributionAlias:
     properties:
@@ -165,6 +236,45 @@ definitions:
         description: language Text is written in
         type: string
     type: object
+  handlers.TranslatorAlias:
+    properties:
+      corrected:
+        type: integer
+      email:
+        type: string
+      id:
+        type: integer
+      joined_at:
+        type: string
+      languages:
+        items:
+          $ref: '#/definitions/domain.Membership'
+        type: array
+      last_active_at:
+        description: LastActiveAt is their latest contribution or review; nil when
+          none.
+        type: string
+      name:
+        type: string
+      pending:
+        description: |-
+          The same contributions by status. Corrected counts the verified ones a
+          reviewer corrected, so it is part of Verified.
+        type: integer
+      recorded:
+        type: integer
+      rejected:
+        type: integer
+      reviewed:
+        description: Reviewed counts the reviews they made of other volunteers' work.
+        type: integer
+      verified:
+        type: integer
+      written:
+        description: 'Their contributions: written (translations and answers) and
+          recorded.'
+        type: integer
+    type: object
   handlers.UserAlias:
     properties:
       created_at:
@@ -313,6 +423,134 @@ paths:
       summary: Asynq job monitoring UI
       tags:
       - observability
+  /api/v1/admin/data-lab/contributions:
+    get:
+      description: Contributions newest first, each with the item's text beside what
+        the volunteer entered, and its review. total counts every match.
+      parameters:
+      - description: Volunteer ID
+        in: query
+        name: contributor
+        type: integer
+      - description: Target language code
+        in: query
+        name: language
+        type: string
+      - description: pending, verified, or rejected
+        in: query
+        name: status
+        type: string
+      - description: text or audio
+        in: query
+        name: modality
+        type: string
+      - description: 'Page size: 50 by default, at most 200'
+        in: query
+        name: limit
+        type: integer
+      - description: Rows to skip
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.AdminContributionPageAlias'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - AdminPassword: []
+      summary: List contributions (admin)
+      tags:
+      - admin
+  /api/v1/admin/data-lab/translators:
+    get:
+      description: Every volunteer who joined a language or contributed, most contributions
+        first, with their counts by modality and status and the reviews they made.
+        language narrows the list and the counts to one language.
+      parameters:
+      - description: Target language code, e.g. sw
+        in: query
+        name: language
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.TranslatorAlias'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "429":
+          description: Too Many Requests
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - AdminPassword: []
+      summary: List translators (admin)
+      tags:
+      - admin
+  /api/v1/admin/data-lab/translators/{id}:
+    get:
+      description: One volunteer with their counts across every language.
+      parameters:
+      - description: Volunteer ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.TranslatorAlias'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - AdminPassword: []
+      summary: Get one translator (admin)
+      tags:
+      - admin
   /api/v1/data-lab/consent/voice:
     post:
       description: Extends the volunteer's current consent to voice recordings, which
@@ -828,6 +1066,11 @@ paths:
       tags:
       - websocket
 securityDefinitions:
+  AdminPassword:
+    description: The Data Lab admin's ADMIN_PASSWORD — prefix with "Bearer "
+    in: header
+    name: Authorization
+    type: apiKey
   BearerAuth:
     description: Firebase ID token — prefix with "Bearer "
     in: header
