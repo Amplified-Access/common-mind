@@ -30,12 +30,16 @@ import type { FacePose, HandPose, Pose, Vec3 } from "@/lib/sign/types";
 
 const FORWARD = new Vector3(0, 0, 1);
 const UP = new Vector3(0, 1, 0);
+const SIDE = new Vector3(1, 0, 0);
+
+const clamp = (x: number, lo: number, hi: number) => Math.min(Math.max(x, lo), hi);
 
 type Side = "L" | "R";
 type Arm = {
   side: Side;
   /** -1 mirrors the engine's frame onto the signer's right. */
   mirror: number;
+  clavicle: Bone;
   upper: Bone;
   fore: Bone;
   hand: Bone;
@@ -93,6 +97,9 @@ export class RiggedAvatar {
   private readonly rest = new Map<Bone, Quaternion>();
   private readonly eyeRest: Quaternion[];
   private readonly headRest: Quaternion;
+  /** The torso's turn and lean this frame, which the head takes back out
+   * to keep facing the viewer. */
+  private torso = { yaw: 0, pitch: 0 };
   private nextBlink = 1.2;
   private blinkAt = -10;
 
@@ -146,6 +153,7 @@ export class RiggedAvatar {
     const arm: Arm = {
       side,
       mirror: side === "L" ? 1 : -1,
+      clavicle: b("Clavicle"),
       upper: b("UpperArm"),
       fore: b("Forearm"),
       hand: b("Hand"),
@@ -154,7 +162,7 @@ export class RiggedAvatar {
       restFingers: v(),
       restPalm: v(),
     };
-    for (const x of [arm.upper, arm.fore, arm.hand, ...digits.flat()]) this.rest.set(x, x.quaternion.clone());
+    for (const x of [arm.clavicle, arm.upper, arm.fore, arm.hand, ...digits.flat()]) this.rest.set(x, x.quaternion.clone());
 
     // The hand at rest: fingers from the wrist to the middle knuckle, thumb
     // side from the little-finger knuckle to the index knuckle. The palm
@@ -286,8 +294,8 @@ export class RiggedAvatar {
 
   private applyHead(pose: Pose, gaze: Vector3 | null, idle: number, time: number) {
     // Head movement from the signing, plus a turn toward the gaze while idle.
-    let yaw = pose.head.turn + Math.sin(time * 0.23) * 0.02;
-    let pitch = pose.head.nod + Math.sin(time * 0.6) * 0.008;
+    let yaw = pose.head.turn - this.torso.yaw + Math.sin(time * 0.23) * 0.02;
+    let pitch = pose.head.nod - this.torso.pitch + Math.sin(time * 0.6) * 0.008;
     if (gaze) {
       const from = worldPos(this.head);
       const d = gaze.clone().sub(from);
@@ -361,16 +369,41 @@ export class RiggedAvatar {
     }
   }
 
+  /** The body behind the hands: breathing, the torso turning to bring the
+   * reaching hand's shoulder forward and leaning in as the hands reach out,
+   * and each shoulder lifting with a raised hand and rolling forward with
+   * a reaching one. */
+  private applyTorso(pose: Pose, time: number) {
+    const reach = Math.max(pose.r.wrist[2], pose.l.wrist[2]);
+    const yaw = clamp((pose.r.wrist[2] - pose.l.wrist[2]) * 0.35, -0.09, 0.09);
+    const pitch = clamp((reach - 0.22) * 0.12, 0, 0.02) + Math.sin(time * 1.5) * 0.006;
+    const sway = Math.sin(time * 0.37) * 0.01;
+    this.torso = { yaw, pitch };
+    const turn = new Quaternion()
+      .setFromAxisAngle(UP, yaw)
+      .multiply(new Quaternion().setFromAxisAngle(SIDE, pitch))
+      .multiply(new Quaternion().setFromAxisAngle(FORWARD, sway));
+    setWorldQuat(this.spine, turn.multiply(worldQuat(this.spine)));
+
+    const [, shoulderY] = this.body.shoulder;
+    for (const arm of this.arms) {
+      const [, y, z] = (arm.side === "L" ? pose.l : pose.r).wrist;
+      const lift = clamp((y - shoulderY + 0.12) / 0.3, 0, 1) * 0.12;
+      const roll = clamp((z - 0.2) / 0.25, 0, 1) * 0.08;
+      const shrug = new Quaternion()
+        .setFromAxisAngle(FORWARD, arm.mirror * lift)
+        .multiply(new Quaternion().setFromAxisAngle(UP, -arm.mirror * roll));
+      setWorldQuat(arm.clavicle, shrug.multiply(worldQuat(arm.clavicle)));
+    }
+  }
+
   /** Puts the avatar in a pose. `gaze` is a point to look at; `idle` (0–1)
    * is how far the head may follow it; `mouthing` shapes the words on the
    * lips. */
   update(pose: Pose, time: number, gaze: Vector3 | null = null, idle = 1, mouthing = true) {
     for (const [b, q] of this.rest) b.quaternion.copy(q);
-    // Breathing and a slight sway.
-    this.spine.quaternion.multiply(
-      new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), Math.sin(time * 0.37) * 0.01),
-    );
     this.root.updateMatrixWorld(true);
+    this.applyTorso(pose, time);
 
     for (const arm of this.arms) this.applyArm(arm, arm.side === "L" ? pose.l : pose.r);
     this.applyHead(pose, gaze, idle, time);
