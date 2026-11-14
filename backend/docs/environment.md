@@ -1,10 +1,11 @@
 ---
 topic: environment
-last_verified: 2026-10-22
+last_verified: 2026-11-14
 sources:
   - .env
   - .env.example
   - internal/bootstrap/bootstrap.go
+  - internal/transport/middleware/admin_password.go
   - internal/infrastructure/database/postgres/db.go
   - pkg/firebase/admin.go
   - .golangci.yml
@@ -50,6 +51,7 @@ This runs on package init before any env var is read — no explicit `godotenv.L
 | `R2_BUCKET` | `bootstrap.go` | — | R2 bucket name. Required when `R2_ACCOUNT_ID` is set; startup fails if omitted. |
 | `R2_PUBLIC_URL` | `bootstrap.go` | — | Public base URL for the R2 bucket (custom domain or `r2.dev` subdomain). Required when `R2_ACCOUNT_ID` is set; startup fails if omitted. |
 | `CORS_ALLOWED_ORIGINS` | `bootstrap.go` | `http://localhost:3000` | Comma-separated list of origins allowed by the CORS middleware. Parsed at startup — each entry is whitespace-trimmed. E.g. `https://app.example.com,https://staging.example.com`. |
+| `ADMIN_PASSWORD` | `bootstrap.go`, `internal/transport/middleware/admin_password.go` | — | Shared password for the Data Lab admin (`/data-lab/admin`, see `docs/data-lab-admin.md`). Whitespace-trimmed; at least 12 characters or startup fails. When omitted, the `/api/v1/admin` routes are not registered. |
 
 Variables marked **required** are validated by `bootstrap.validateConfig` at startup — the process exits before attempting a DB connection if any are missing.
 

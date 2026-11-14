@@ -69,7 +69,14 @@ type Config struct {
 	R2Bucket                   string
 	R2PublicURL                string
 	CORSAllowedOrigins         []string
+	// AdminPassword unlocks the Data Lab admin (/data-lab/admin on the web
+	// app); the admin is off when empty. See docs/data-lab-admin.md.
+	AdminPassword string
 }
+
+// minAdminPasswordLength keeps the admin password long enough that the
+// failed-attempt limit makes guessing it hopeless.
+const minAdminPasswordLength = 12
 
 // ConfigError is returned when required configuration is absent or invalid.
 type ConfigError struct {
@@ -241,6 +248,7 @@ func loadConfig() Config {
 		R2Bucket:                   os.Getenv("R2_BUCKET"),
 		R2PublicURL:                os.Getenv("R2_PUBLIC_URL"),
 		CORSAllowedOrigins:         corsOrigins,
+		AdminPassword:              strings.TrimSpace(os.Getenv("ADMIN_PASSWORD")),
 		DB: postgres.DBConfig{
 			Host:     os.Getenv("BLUEPRINT_DB_HOST"),
 			Port:     os.Getenv("BLUEPRINT_DB_PORT"),
@@ -275,6 +283,10 @@ func validateConfig(cfg Config, log *slog.Logger) error {
 		requireNonEmpty("MAILJET_API_KEY", cfg.MailjetAPIKey)
 		requireNonEmpty("MAILJET_SECRET_KEY", cfg.MailjetSecretKey)
 		requireNonEmpty("FROM_EMAIL", cfg.FromEmail)
+	}
+
+	if cfg.AdminPassword != "" && len([]rune(cfg.AdminPassword)) < minAdminPasswordLength {
+		issues = append(issues, fmt.Sprintf("ADMIN_PASSWORD must be at least %d characters", minAdminPasswordLength))
 	}
 
 	if len(issues) > 0 {

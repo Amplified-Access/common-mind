@@ -304,3 +304,27 @@ func dbConfigFull() postgres.DBConfig {
 func contains(s, substr string) bool {
 	return strings.Contains(s, substr)
 }
+
+func TestValidateConfig_AdminPasswordNeedsTwelveCharacters(t *testing.T) {
+	tests := []struct {
+		name     string
+		password string
+		wantErr  bool
+	}{
+		{"unset turns the admin off", "", false},
+		{"too short", "eleven-char", true},
+		{"twelve characters", "twelve-chars", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := Config{Port: 8080, DB: dbConfigFull(), AdminPassword: tt.password}
+			err := validateConfig(cfg, discardLogger())
+			if (err != nil) != tt.wantErr {
+				t.Errorf("validateConfig() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if err != nil && !strings.Contains(err.Error(), "ADMIN_PASSWORD") {
+				t.Errorf("error %q should name ADMIN_PASSWORD", err)
+			}
+		})
+	}
+}
