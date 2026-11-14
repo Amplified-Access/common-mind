@@ -36,9 +36,24 @@ describe("buildTimeline", () => {
     const tl = buildTimeline(planSigns("hello"));
     const hello = LEXICON.find((s) => s.gloss === "HELLO")!;
     const first = resolveHand(hello.frames[0].r as HandSpec);
-    // The first frame is reached at the item's start plus its duration.
-    const t = tl.items[0].start + (hello.frames[0].dur ?? 0) + 0.01;
+    // Just after the first frame is reached.
+    const t = tl.frames.find((f) => f.t > tl.items[0].start)!.t + 0.01;
     near(samplePose(tl, t).r.wrist, first.wrist);
+  });
+
+  it("holds the end of each sign for a beat before moving on", () => {
+    const tl = buildTimeline(planSigns("hello friend thank you grace"));
+    for (const item of tl.items) {
+      const end = samplePose(tl, item.end);
+      const before = samplePose(tl, item.end - 0.18);
+      near(before.r.wrist, end.r.wrist);
+      near(before.r.joints, end.r.joints);
+    }
+  });
+
+  it("fingerspells slowly enough to read each letter", () => {
+    const [grace] = buildTimeline(planSigns("grace")).items;
+    expect((grace.end - grace.start) / 5).toBeGreaterThanOrEqual(0.42);
   });
 
   it("pauses, hands held, between phrases and longer between sentences", () => {

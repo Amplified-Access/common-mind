@@ -11,7 +11,10 @@ import type { FacePose, HandPose, HandSpec, HeadPose, Keyframe, Pose } from "./t
 // span each sign takes for the captions to follow.
 
 /** The least time to travel from one sign into the next, at 1x. */
-const TRANSITION = 0.3;
+const TRANSITION = 0.4;
+/** The least time the end of a sign is held, so it can be read before the
+ * hands move on. */
+const SIGN_HOLD = 0.22;
 const LEAD_IN = 0.25;
 const LEAD_OUT = 0.45;
 const SETTLE = 0.25;
@@ -106,7 +109,8 @@ export function buildTimeline(plan: Plan, body: Body = DEFAULT_BODY): Timeline {
       };
       frames.push({ t, pose, flow: !!kf.flow });
 
-      const hold = kf.hold ?? DEFAULT_HOLD;
+      const last = j === keyframes.length - 1;
+      const hold = Math.max(kf.hold ?? DEFAULT_HOLD, last ? SIGN_HOLD : 0);
       if (hold > 0) {
         t += hold;
         frames.push({ t, pose, flow: false });

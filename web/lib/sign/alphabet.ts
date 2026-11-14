@@ -4,8 +4,10 @@ import type { HandSpec, Keyframe } from "./types";
 // Letters are made beside the chin, palm forward, with the hand drifting a
 // little outward through a word.
 
-const LETTER_DUR = 0.2;
-const LETTER_HOLD = 0.13;
+// About two letters a second at 1x: slower than a fluent signer, so each
+// letter can be read on an avatar.
+const LETTER_DUR = 0.24;
+const LETTER_HOLD = 0.2;
 const DRIFT = 0.007;
 
 type Letter = { shape: string; palm?: string; fingers?: string; path?: HandSpec[] };
