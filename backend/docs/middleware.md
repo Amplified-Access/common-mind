@@ -82,6 +82,10 @@ In debug mode (`ENV` not set to `staging`/`production`) Gin's built-in colorful 
 - **429 Too Many Requests** returned when the bucket is empty; body: `{"error": "rate limit exceeded"}`.
 - Configured via env vars `RATE_LIMIT_RPS` and `RATE_LIMIT_BURST` (see [environment](environment.md)).
 
+## AdminPassword
+
+`AdminPassword(password)` guards the Data Lab admin's group (`/api/v1/admin/data-lab`): it lets a request through only with `Authorization: Bearer <ADMIN_PASSWORD>`, compared in constant time, sets `Cache-Control: no-store`, and limits wrong passwords per IP (10, then one every 5 seconds; past that, 429 even for the right one). See [data-lab-admin.md](data-lab-admin.md#the-password).
+
 ## FirebaseAuth
 
 `FirebaseAuth(verifier usecase.FirebaseTokenVerifier) gin.HandlerFunc` validates a Firebase ID token on every request to the routes it guards.

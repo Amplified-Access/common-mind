@@ -80,6 +80,15 @@ func (h *Handler) RegisterRoutes(rps float64, burst int, sentryDSN string, allow
 	publicLab.GET("/progress", h.ProgressHandler)
 	publicLab.GET("/features", h.FeaturesHandler)
 
+	// The Data Lab admin: the team's view of every volunteer's work, behind
+	// the shared ADMIN_PASSWORD rather than a Firebase sign-in.
+	if h.dataLabAdmin != nil && h.adminPassword != "" {
+		admin := r.Group("/api/v1/admin/data-lab", middleware.AdminPassword(h.adminPassword))
+		admin.GET("/translators", h.AdminTranslatorsHandler)
+		admin.GET("/translators/:id", h.AdminTranslatorHandler)
+		admin.GET("/contributions", h.AdminContributionsHandler)
+	}
+
 	api := r.Group("/api/v1")
 	if h.verifier != nil {
 		api.Use(middleware.FirebaseAuth(h.verifier))

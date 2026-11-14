@@ -1,6 +1,6 @@
 ---
 topic: data-lab
-last_verified: 2026-10-25
+last_verified: 2026-11-14
 sources:
   - internal/domain/datalab.go
   - internal/usecase/datalab.go
@@ -152,6 +152,8 @@ After every successful contribution and review, the use case reloads that langua
 `NewDataLab` takes a `Broadcaster` (satisfied by `*ws.Hub`, wired in `server.go`); nil turns broadcasting off. Publishing is best-effort: the write has already succeeded, so a failure is logged and not returned. `/ws` needs a Firebase token, so live updates reach signed-in volunteers; signed-out visitors read the endpoint.
 
 ## Admin: importing items and promoting volunteers
+
+To see each volunteer's work and every translation beside its original, use the web admin at `/data-lab/admin` ([data-lab-admin.md](data-lab-admin.md)). The commands below change data.
 
 Import files for real sources are prepared by the offline pipeline in `ingest/` (see `ingest/README.md`), which ends with a person approving every segment. `cmd/datalab` runs admin tasks against the database in `.env`:
 

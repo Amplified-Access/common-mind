@@ -18,6 +18,10 @@ type Handler struct {
 	streamProducer usecase.StreamProducer // nil when REDIS_URL is not set
 	userRepo       usecase.UserRepository // nil when not wired
 	dataLab        usecase.DataLab
+	// dataLabAdmin and adminPassword enable /api/v1/admin, the Data Lab
+	// admin's reads; the routes are off unless both are set (WithDataLabAdmin).
+	dataLabAdmin  usecase.DataLabAdmin
+	adminPassword string
 }
 
 // NewHandler constructs a Handler with all required use cases.

@@ -56,6 +56,202 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/admin/data-lab/contributions": {
+            "get": {
+                "security": [
+                    {
+                        "AdminPassword": []
+                    }
+                ],
+                "description": "Contributions newest first, each with the item's text beside what the volunteer entered, and its review. total counts every match.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "List contributions (admin)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Volunteer ID",
+                        "name": "contributor",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Target language code",
+                        "name": "language",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "pending, verified, or rejected",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "text or audio",
+                        "name": "modality",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size: 50 by default, at most 200",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Rows to skip",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.AdminContributionPageAlias"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/data-lab/translators": {
+            "get": {
+                "security": [
+                    {
+                        "AdminPassword": []
+                    }
+                ],
+                "description": "Every volunteer who joined a language or contributed, most contributions first, with their counts by modality and status and the reviews they made. language narrows the list and the counts to one language.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "List translators (admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Target language code, e.g. sw",
+                        "name": "language",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/handlers.TranslatorAlias"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Too Many Requests",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/data-lab/translators/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "AdminPassword": []
+                    }
+                ],
+                "description": "One volunteer with their counts across every language.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Get one translator (admin)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Volunteer ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.TranslatorAlias"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/data-lab/consent/voice": {
             "post": {
                 "security": [
@@ -825,6 +1021,99 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "domain.AdminContribution": {
+            "type": "object",
+            "properties": {
+                "audio_url": {
+                    "type": "string"
+                },
+                "category": {
+                    "type": "string"
+                },
+                "contributor_id": {
+                    "type": "integer"
+                },
+                "contributor_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "item_id": {
+                    "type": "integer"
+                },
+                "item_language": {
+                    "type": "string"
+                },
+                "item_text": {
+                    "description": "ItemText is the segment translated or the prompt answered, in ItemLanguage.",
+                    "type": "string"
+                },
+                "kind": {
+                    "type": "string"
+                },
+                "language_code": {
+                    "type": "string"
+                },
+                "modality": {
+                    "type": "string"
+                },
+                "pasted": {
+                    "type": "boolean"
+                },
+                "read_text": {
+                    "description": "ReadText is, for a recording, the verified translation it reads.",
+                    "type": "string"
+                },
+                "review": {
+                    "description": "nil while pending",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.AdminReview"
+                        }
+                    ]
+                },
+                "source_title": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "submitted_at": {
+                    "type": "string"
+                },
+                "text": {
+                    "description": "Text is what the volunteer wrote; \"\" for a recording.",
+                    "type": "string"
+                }
+            }
+        },
+        "domain.AdminReview": {
+            "type": "object",
+            "properties": {
+                "corrected_text": {
+                    "type": "string"
+                },
+                "decision": {
+                    "type": "string"
+                },
+                "note": {
+                    "type": "string"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "reviewed_at": {
+                    "type": "string"
+                },
+                "reviewer_id": {
+                    "type": "integer"
+                },
+                "reviewer_name": {
+                    "type": "string"
+                }
+            }
+        },
         "domain.Membership": {
             "type": "object",
             "properties": {
@@ -833,6 +1122,20 @@ const docTemplate = `{
                 },
                 "level": {
                     "type": "string"
+                }
+            }
+        },
+        "handlers.AdminContributionPageAlias": {
+            "type": "object",
+            "properties": {
+                "contributions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.AdminContribution"
+                    }
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },
@@ -1067,6 +1370,57 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.TranslatorAlias": {
+            "type": "object",
+            "properties": {
+                "corrected": {
+                    "type": "integer"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "joined_at": {
+                    "type": "string"
+                },
+                "languages": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.Membership"
+                    }
+                },
+                "last_active_at": {
+                    "description": "LastActiveAt is their latest contribution or review; nil when none.",
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "pending": {
+                    "description": "The same contributions by status. Corrected counts the verified ones a\nreviewer corrected, so it is part of Verified.",
+                    "type": "integer"
+                },
+                "recorded": {
+                    "type": "integer"
+                },
+                "rejected": {
+                    "type": "integer"
+                },
+                "reviewed": {
+                    "description": "Reviewed counts the reviews they made of other volunteers' work.",
+                    "type": "integer"
+                },
+                "verified": {
+                    "type": "integer"
+                },
+                "written": {
+                    "description": "Their contributions: written (translations and answers) and recorded.",
+                    "type": "integer"
+                }
+            }
+        },
         "handlers.UserAlias": {
             "type": "object",
             "properties": {
@@ -1233,6 +1587,12 @@ const docTemplate = `{
         }
     },
     "securityDefinitions": {
+        "AdminPassword": {
+            "description": "The Data Lab admin's ADMIN_PASSWORD — prefix with \"Bearer \"",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        },
         "BearerAuth": {
             "description": "Firebase ID token — prefix with \"Bearer \"",
             "type": "apiKey",

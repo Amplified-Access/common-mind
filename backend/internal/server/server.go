@@ -54,7 +54,8 @@ func NewServer(app *bootstrap.App, hub *ws.Hub) (*http.Server, error) {
 		}
 	}
 
-	h := handlers.NewHandler(healthUC, app.Firebase, hub, app.Enqueuer, queueUI, app.EmailSender, app.StreamProducer, userRepo, dataLab)
+	h := handlers.NewHandler(healthUC, app.Firebase, hub, app.Enqueuer, queueUI, app.EmailSender, app.StreamProducer, userRepo, dataLab).
+		WithDataLabAdmin(usecase.NewDataLabAdmin(postgres.NewDataLabAdminRepository(app.DB), app.StorageService), app.Config.AdminPassword)
 
 	// Register DB pool metrics collector.
 	// AlreadyRegisteredError is silenced — only the first registration wins
