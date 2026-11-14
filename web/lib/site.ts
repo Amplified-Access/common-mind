@@ -1,14 +1,15 @@
 // Navigation and the pages that stand alone.
 
 // Pages that stand on their own, without the site header and footer: the
-// Data Lab sign-in, the signed-in Data Lab app, the logo lab and the signing
-// avatar. Each entry covers its subpaths too.
+// Data Lab sign-in, the signed-in Data Lab app, its admin, the logo lab and
+// the signing avatar. Each entry covers its subpaths too.
 export const standalonePaths = [
   "/data-lab/sign-in",
   "/data-lab/workspace",
   "/data-lab/welcome",
   "/data-lab/contribute",
   "/data-lab/review",
+  "/data-lab/admin",
   "/logo-lab",
   "/sign",
 ];
