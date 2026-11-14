@@ -15,6 +15,15 @@ describe("planSigns", () => {
     expect(glosses("I love you")).toEqual(["I-LOVE-YOU"]);
   });
 
+  it("signs everyday words and phrases that share a known sign", () => {
+    expect(glosses("You're welcome")).toEqual(["WELCOME"]);
+    expect(glosses("I would like water")).toEqual(["ME", "WANT", "WATER"]);
+    expect(glosses("We have to go")).toEqual(["WE", "NEED", "GO"]);
+    expect(glosses("My daddy came")).toEqual(["MY", "FATHER", "COME"]);
+    expect(glosses("thank u, pls help")).toEqual(["THANK-YOU", "PLEASE", "HELP"]);
+    expect(glosses("this is alright")).toEqual(["IX", "FINE"]);
+  });
+
   it("drops the words ASL leaves out", () => {
     expect(glosses("The water is good")).toEqual(["WATER", "GOOD"]);
   });
