@@ -21,6 +21,8 @@ import { ALL_EXTENSIONS, EXTTextureWebP } from "@gltf-transform/extensions";
 import { dedup, meshopt, prune } from "@gltf-transform/functions";
 import { MeshoptDecoder, MeshoptEncoder } from "meshoptimizer";
 
+import { FACE_SHAPES, VISEMES } from "./face-shapes.mjs";
+
 const here = dirname(fileURLToPath(import.meta.url));
 const out = join(here, "../../public/sign/avatars");
 const work = join(tmpdir(), "sign-avatars");
@@ -49,21 +51,6 @@ const CAST = {
   amani: { source: "Professions/Business_Male_05" },
   nakato: { source: "Professions/Business_Female_01" },
 };
-
-// The ARKit face shapes kept: brows and eyes for the grammar of questions
-// and feeling, mouth shapes for mouthing and expression.
-const KEEP = [
-  "BrowDownLeft", "BrowDownRight", "BrowInnerUp", "BrowOuterUpLeft", "BrowOuterUpRight",
-  "CheekPuff", "EyeBlinkLeft", "EyeBlinkRight", "EyeSquintLeft", "EyeSquintRight",
-  "EyeWideLeft", "EyeWideRight", "JawOpen", "MouthClose", "MouthFunnel", "MouthPucker",
-  "MouthSmileLeft", "MouthSmileRight", "MouthFrownLeft", "MouthFrownRight",
-  "MouthStretchLeft", "MouthStretchRight", "MouthRollLower", "MouthPressLeft", "MouthPressRight",
-];
-
-// The visemes, mouth shapes for speech sounds, for mouthing words while
-// signing. Kept under their Oculus names (viseme_PP, viseme_aa, …); the
-// silent one is left out.
-const VISEMES = ["PP", "FF", "TH", "DD", "KK", "CH", "SS", "nn", "RR", "aa", "E", "I", "O", "U"];
 
 const fbx2gltf = join(
   dirname(createRequire(import.meta.url).resolve("fbx2gltf/package.json")),
@@ -170,9 +157,11 @@ async function build(id, { source, skin }) {
     const keep = [];
     order.forEach((channel, i) => {
       const m = channel.match(/^AK_\d+_(.+)$/);
-      if (m && KEEP.includes(m[1])) keep.push({ i, name: m[1][0].toLowerCase() + m[1].slice(1) });
+      const shape = m && m[1][0].toLowerCase() + m[1].slice(1);
+      if (shape && FACE_SHAPES.includes(shape)) keep.push({ i, name: shape });
       const v = channel.match(/^AA_VI_\d+_(.+)$/);
-      if (v && VISEMES.includes(v[1])) keep.push({ i, name: `viseme_${v[1] === "KK" ? "kk" : v[1]}` });
+      const viseme = v && `viseme_${v[1] === "KK" ? "kk" : v[1]}`;
+      if (viseme && VISEMES.includes(viseme)) keep.push({ i, name: viseme });
     });
     for (const prim of mesh.listPrimitives()) {
       const targets = prim.listTargets();
