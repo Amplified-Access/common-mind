@@ -14,8 +14,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { FramedCard } from "@/components/system/framed-card";
 import { Segmented } from "@/components/system/segmented";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { CHARACTERS, type Character } from "@/lib/sign/characters";
-import { LEXICON } from "@/lib/sign/lexicon";
 import { type Plan, planSigns } from "@/lib/sign/plan";
 import { type Body, DEFAULT_BODY } from "@/lib/sign/body";
 import { type Timeline, activeItem, buildTimeline } from "@/lib/sign/timeline";
@@ -55,8 +55,6 @@ function store(key: string, value: unknown) {
 }
 
 type Current = { text: string; plan: Plan };
-
-const GLOSSES = [...new Set(LEXICON.map((s) => s.gloss))].sort();
 
 function SignStudio() {
   const [text, setText] = useState("");
@@ -197,83 +195,63 @@ function SignStudio() {
       </header>
 
       <div className="grid min-h-0 flex-1 gap-4 p-4 md:p-6 lg:grid-cols-[17rem_minmax(0,1fr)]">
-        <aside className="order-2 flex min-h-0 flex-col gap-4 lg:order-1 lg:overflow-y-auto">
-          <FramedCard panelsClassName="bg-[#0b0a07] p-3">
-            <h2 className="mb-3 font-mono text-xs text-signal uppercase">Signer</h2>
-            <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-1">
-              {CHARACTERS.map((c) => {
-                const selected = c.id === signer.id;
-                return (
-                  <li key={c.id}>
-                    <button
-                      type="button"
-                      onClick={() => chooseSigner(c)}
-                      aria-pressed={selected}
-                      className={cn(
-                        "flex w-full items-center gap-3 rounded-inset border p-2 text-left transition-colors",
-                        selected ? "border-signal bg-signal/10" : "border-line hover:border-line-strong hover:bg-white/4",
-                      )}
-                    >
-                      <span className="relative size-12 shrink-0 overflow-hidden rounded-full border border-line bg-[radial-gradient(circle_at_50%_40%,#3a3833,#121110)]">
-                        <Image src={c.portrait} alt="" width={48} height={48} className="size-full object-cover" />
-                      </span>
-                      <span className="min-w-0">
-                        <span className={cn("block text-sm", selected ? "text-signal" : "text-foreground")}>{c.name}</span>
-                        <span className="block truncate font-mono text-[0.6875rem] text-subtle">
-                          {selected ? "Signing" : c.look}
-                        </span>
-                      </span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </FramedCard>
-
-          <FramedCard panelsClassName="bg-[#0b0a07] p-3">
-            <h2 className="mb-1 font-mono text-xs text-signal uppercase">Signs it knows</h2>
-            <p className="mb-3 text-xs text-subtle">Other words are fingerspelled.</p>
-            <ul className="flex flex-wrap gap-1.5">
-              {GLOSSES.map((g) => (
-                <li key={g}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const word = LEXICON.find((s) => s.gloss === g)?.words[0] ?? g.toLowerCase();
-                      setText(word);
-                      sign(word);
-                    }}
-                    className="inline-flex h-6 items-center rounded-full border border-line px-2 font-mono text-[0.6875rem] leading-none text-foreground/85 transition-colors hover:border-signal hover:text-signal"
-                  >
-                    {g}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </FramedCard>
-
-          {history.length > 0 && (
+        <ScrollArea className="order-2 min-h-0 lg:order-1">
+          <aside className="flex flex-col gap-4 lg:pr-3.5">
             <FramedCard panelsClassName="bg-[#0b0a07] p-3">
-              <h2 className="mb-2 font-mono text-xs text-signal uppercase">Recent</h2>
-              <ul className="flex flex-col">
-                {history.map((h) => (
-                  <li key={h}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setText(h);
-                        sign(h);
-                      }}
-                      className="w-full truncate py-1.5 text-left text-sm text-foreground/85 transition-colors hover:text-signal"
-                    >
-                      {h}
-                    </button>
-                  </li>
-                ))}
+              <h2 className="mb-3 font-mono text-xs text-signal uppercase">Signer</h2>
+              <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-1">
+                {CHARACTERS.map((c) => {
+                  const selected = c.id === signer.id;
+                  return (
+                    <li key={c.id}>
+                      <button
+                        type="button"
+                        onClick={() => chooseSigner(c)}
+                        aria-pressed={selected}
+                        className={cn(
+                          "flex w-full items-center gap-3 rounded-inset border p-2 text-left transition-colors",
+                          selected ? "border-signal bg-signal/10" : "border-line hover:border-line-strong hover:bg-white/4",
+                        )}
+                      >
+                        <span className="relative size-12 shrink-0 overflow-hidden rounded-full border border-line bg-[radial-gradient(circle_at_50%_40%,#3a3833,#121110)]">
+                          <Image src={c.portrait} alt="" width={48} height={48} className="size-full object-cover" />
+                        </span>
+                        <span className="min-w-0">
+                          <span className={cn("block text-sm", selected ? "text-signal" : "text-foreground")}>{c.name}</span>
+                          <span className="block truncate font-mono text-[0.6875rem] text-subtle">
+                            {selected ? "Signing" : c.look}
+                          </span>
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
               </ul>
             </FramedCard>
-          )}
-        </aside>
+
+            {history.length > 0 && (
+              <FramedCard panelsClassName="bg-[#0b0a07] p-3">
+                <h2 className="mb-2 font-mono text-xs text-signal uppercase">Recent</h2>
+                <ul className="flex flex-col">
+                  {history.map((h) => (
+                    <li key={h}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setText(h);
+                          sign(h);
+                        }}
+                        className="w-full truncate py-1.5 text-left text-sm text-foreground/85 transition-colors hover:text-signal"
+                      >
+                        {h}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </FramedCard>
+            )}
+          </aside>
+        </ScrollArea>
 
         <main className="order-1 flex min-h-0 flex-col gap-3 lg:order-2">
           <FramedCard className="min-h-112 flex-1 lg:min-h-0" panelsClassName="relative bg-[radial-gradient(ellipse_at_50%_30%,#3b3934_0%,#1a1915_50%,#0b0a07_100%)]">

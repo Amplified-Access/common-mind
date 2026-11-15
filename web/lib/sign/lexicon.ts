@@ -80,11 +80,11 @@ export const LEXICON: SignDef[] = [
       { r: { shape: "B" }, dur: 0.15, hold: 0 },
     ], 2),
   ]),
-  sign("THANK-YOU", ["thank you", "thanks", "thank"], [
+  sign("THANK-YOU", ["thank you", "thanks", "thank", "thx", "thank u"], [
     { r: { shape: "B", at: "chin", off: [0, 0.005, 0.008], contact: "tips", palm: "back", fingers: "up" }, dur: 0.34, hold: 0.1, mouth: "smile" },
     { r: { off: [0.03, -0.13, 0.2], palm: "up-back", fingers: "fwd-up" }, dur: 0.42, hold: 0.15, mouth: "smile" },
   ]),
-  sign("PLEASE", ["please"], [
+  sign("PLEASE", ["please", "pls", "plz"], [
     { r: { shape: "B", at: "chest", off: [0.02, 0, 0], contact: "palm", palm: "back", fingers: "up-in" }, dur: 0.34, hold: 0 },
     ...circling([0.02, 0, 0], circle(0.035, "front")),
   ]),
@@ -92,7 +92,7 @@ export const LEXICON: SignDef[] = [
     { r: { shape: "A", at: "chest", off: [0.02, 0, 0], contact: "palm", palm: "back", fingers: "up-in" }, dur: 0.34, hold: 0, brows: 0.3 },
     ...circling([0.02, 0, 0], circle(0.035, "front")),
   ]),
-  sign("WELCOME", ["welcome"], [
+  sign("WELCOME", ["welcome", "you welcome"], [
     { r: { shape: "B", at: "space-side", contact: "palm", palm: "up", fingers: "fwd-out" }, dur: 0.36, hold: 0.06, mouth: "smile" },
     { r: { at: "stomach", off: [0.03, 0.05, 0.12], fingers: "fwd-in" }, dur: 0.4, hold: 0.12, mouth: "smile" },
   ]),
@@ -101,7 +101,7 @@ export const LEXICON: SignDef[] = [
   ]),
 
   // Answers
-  sign("YES", ["yes", "yeah", "yep"], [
+  sign("YES", ["yes", "yeah", "yep", "yup"], [
     ...repeat([
       { r: { shape: "S", at: "space", off: [0.03, 0.12, 0], contact: "wrist", palm: "fwd", fingers: "up" }, dur: 0.2, hold: 0.02, head: { nod: 0 } },
       { r: { palm: "down-fwd", fingers: "fwd-up" }, dur: 0.16, hold: 0.02, head: { nod: 0.16 } },
@@ -117,7 +117,7 @@ export const LEXICON: SignDef[] = [
     { r: { shape: "A-thumb", at: "chin", off: [0, -0.012, 0.004], contact: "thumb", palm: "in", fingers: "fwd" }, dur: 0.34, hold: 0.06 },
     { r: { off: [0.02, -0.04, 0.15] }, dur: 0.24, hold: 0.12 },
   ], { negates: true }),
-  sign("FINE", ["fine", "ok", "okay"], [
+  sign("FINE", ["fine", "ok", "okay", "alright", "all right"], [
     ...repeat([
       { r: { shape: "5", at: "chest", off: [0, 0, 0.04], contact: "thumb", palm: "in", fingers: "up" }, dur: 0.22, hold: 0 },
       { r: { off: [0, 0, 0] }, dur: 0.12, hold: 0.04 },
@@ -141,7 +141,7 @@ export const LEXICON: SignDef[] = [
     { r: { shape: "B", at: "chest", off: [0.02, 0, 0.06], contact: "palm", palm: "back", fingers: "up-in" }, dur: 0.3, hold: 0 },
     { r: { off: [0.02, 0, 0] }, dur: 0.14, hold: 0.12 },
   ]),
-  sign("YOU", ["you"], [
+  sign("YOU", ["you", "u", "yourself"], [
     { r: { shape: "1", at: "space", off: [0.02, 0.05, 0], contact: "index", palm: "down", fingers: "fwd" }, dur: 0.3, hold: 0 },
     { r: { off: [0.02, 0.05, 0.1] }, dur: 0.16, hold: 0.12 },
   ]),
@@ -149,14 +149,14 @@ export const LEXICON: SignDef[] = [
     { r: { shape: "B", at: "space", off: [0.02, 0.05, 0], contact: "palm", palm: "fwd", fingers: "up" }, dur: 0.3, hold: 0 },
     { r: { off: [0.02, 0.05, 0.1] }, dur: 0.16, hold: 0.12 },
   ]),
-  sign("WE", ["we", "us", "our"], [
+  sign("WE", ["we", "us", "our", "ours", "ourselves"], [
     { r: { shape: "1", at: "chest-side", contact: "index", palm: "in", fingers: "back" }, dur: 0.3, hold: 0.04 },
     { r: { at: [-0.075, 0.41, 0.118] }, dur: 0.32, hold: 0.1 },
   ]),
-  sign("IX", ["he", "she", "him", "her", "they", "them", "it", "there", "that"], [
+  sign("IX", ["he", "she", "him", "her", "they", "them", "it", "there", "that", "this", "these", "those"], [
     { r: { shape: "1", at: "space-side", off: [0, 0.04, 0.02], contact: "index", palm: "down", fingers: "fwd-out" }, dur: 0.3, hold: 0.14 },
   ]),
-  sign("FRIEND", ["friend"], [
+  sign("FRIEND", ["friend", "buddy", "pal"], [
     { r: { shape: "X", at: [-0.005, 0.36, 0.3], contact: "index", palm: "down", fingers: "in" }, l: { shape: "X", at: [0.005, 0.34, 0.3], contact: "index", palm: "up", fingers: "in" }, dur: 0.38, hold: 0.08 },
     { r: { at: [0.005, 0.34, 0.3], palm: "up" }, l: { at: [-0.005, 0.36, 0.3], palm: "down" }, dur: 0.34, hold: 0.1 },
   ]),
@@ -165,13 +165,13 @@ export const LEXICON: SignDef[] = [
     { r: { at: [0.14, 0.33, 0.25], palm: "fwd-in" }, l: { at: [0.14, 0.33, 0.25], palm: "fwd-in" }, dur: 0.24, hold: 0, flow: true },
     { r: { at: [0.02, 0.33, 0.18], contact: "pinky", palm: "back" }, l: { at: [0.02, 0.33, 0.18], contact: "pinky", palm: "back" }, dur: 0.24, hold: 0.1 },
   ]),
-  sign("MOTHER", ["mother", "mom", "mum"], [
+  sign("MOTHER", ["mother", "mom", "mum", "mommy", "mummy", "mama"], [
     ...repeat([
       { r: { shape: "5", at: "chin", off: [0, 0, 0.04], contact: "thumb", palm: "in", fingers: "up" }, dur: 0.24, hold: 0 },
       { r: { off: [0, 0, 0] }, dur: 0.12, hold: 0.04 },
     ], 2),
   ]),
-  sign("FATHER", ["father", "dad"], [
+  sign("FATHER", ["father", "dad", "daddy", "papa"], [
     ...repeat([
       { r: { shape: "5", at: "forehead", off: [0, 0, 0.04], contact: "thumb", palm: "in", fingers: "up" }, dur: 0.24, hold: 0 },
       { r: { off: [0, 0, 0] }, dur: 0.12, hold: 0.04 },
@@ -241,7 +241,7 @@ export const LEXICON: SignDef[] = [
   ]),
 
   // Doing
-  sign("HELP", ["help"], [
+  sign("HELP", ["help", "assist"], [
     { r: { shape: "A-thumb", at: add(ON_BASE, [0, 0.005, 0]), contact: "edge", palm: "in", fingers: "fwd" }, l: { ...BASE_PALM_UP, at: [0.03, 0.22, 0.28] }, dur: 0.4, hold: 0.06 },
     { r: { at: add(ON_BASE, [0, 0.105, 0]) }, l: { at: [0.03, 0.32, 0.28] }, dur: 0.32, hold: 0.12 },
   ]),
@@ -275,7 +275,7 @@ export const LEXICON: SignDef[] = [
     { r: { shape: "V", at: "eye", off: [-0.032, -0.005, 0.03], contact: "tips", palm: "down", fingers: "back" }, dur: 0.34, hold: 0.04 },
     { r: { off: [-0.02, -0.02, 0.2], palm: "down", fingers: "fwd" }, dur: 0.3, hold: 0.12 },
   ]),
-  sign("WANT", ["want"], [
+  sign("WANT", ["want", "would like"], [
     { r: { shape: "claw", at: "space", off: [0.08, 0, 0.06], contact: "palm", palm: "up", fingers: "fwd" }, l: { shape: "claw", at: "space", off: [0.08, 0, 0.06], contact: "palm", palm: "up", fingers: "fwd" }, dur: 0.38, hold: 0.04 },
     { r: { off: [0.08, 0.01, -0.06] }, l: { off: [0.08, 0.01, -0.06] }, dur: 0.3, hold: 0.12 },
   ]),
@@ -287,19 +287,19 @@ export const LEXICON: SignDef[] = [
     { r: { shape: "S", at: [-0.03, 0.4, 0.2], contact: "palm", palm: "back", fingers: "up-in" }, l: { shape: "S", at: [-0.03, 0.42, 0.21], contact: "palm", palm: "back", fingers: "up-in" }, dur: 0.3, hold: 0 },
     { r: { at: [-0.03, 0.4, 0.15] }, l: { at: [-0.03, 0.42, 0.16] }, dur: 0.24, hold: 0.24, mouth: "smile" },
   ]),
-  sign("NEED", ["need", "must", "should"], [
+  sign("NEED", ["need", "must", "should", "have to", "has to", "had to", "got to", "gotta"], [
     ...repeat([
       { r: { shape: "X", at: "space", off: [0.04, 0.04, 0], contact: "wrist", palm: "down", fingers: "fwd" }, dur: 0.2, hold: 0 },
       { r: { palm: "down-back", fingers: "fwd-down" }, dur: 0.14, hold: 0.04 },
     ], 2),
   ]),
-  sign("EAT", ["eat", "food", "ate"], [
+  sign("EAT", ["eat", "food", "ate", "eaten"], [
     ...repeat([
       { r: { shape: "flat-O", at: "mouth", off: [0, -0.005, 0.05], contact: "tips", palm: "back-down", fingers: "up-back" }, dur: 0.22, hold: 0 },
       { r: { off: [0, 0, 0.01] }, dur: 0.12, hold: 0.04, mouth: "open" },
     ], 2),
   ]),
-  sign("DRINK", ["drink"], [
+  sign("DRINK", ["drink", "drank"], [
     { r: { shape: "C", at: "chin", off: [0, -0.01, 0.04], contact: "thumb", palm: "in", fingers: "up" }, dur: 0.34, hold: 0.04 },
     { r: { off: [0, 0.015, 0.05], fingers: "up-back" }, dur: 0.3, hold: 0.12 },
   ]),
@@ -326,11 +326,11 @@ export const LEXICON: SignDef[] = [
       { r: { shape: "5" }, l: { shape: "5" }, dur: 0.1, hold: 0 },
     ], 2),
   ]),
-  sign("GO", ["go", "going", "went"], [
+  sign("GO", ["go", "going", "went", "gone"], [
     { r: { shape: "1", at: "space", off: [0.06, 0.08, -0.06], contact: "index", palm: "back", fingers: "up" }, l: { shape: "1", at: "space", off: [0.06, 0.08, -0.06], contact: "index", palm: "back", fingers: "up" }, dur: 0.36, hold: 0.04 },
     { r: { off: [0.09, 0, 0.14], palm: "down", fingers: "fwd" }, l: { off: [0.09, 0, 0.14], palm: "down", fingers: "fwd" }, dur: 0.3, hold: 0.12 },
   ]),
-  sign("COME", ["come"], [
+  sign("COME", ["come", "came"], [
     { r: { shape: "1", at: "space", off: [0.09, 0, 0.14], contact: "index", palm: "up", fingers: "fwd" }, l: { shape: "1", at: "space", off: [0.09, 0, 0.14], contact: "index", palm: "up", fingers: "fwd" }, dur: 0.36, hold: 0.04 },
     { r: { off: [0.06, 0.08, -0.04], palm: "back", fingers: "up" }, l: { off: [0.06, 0.08, -0.04], palm: "back", fingers: "up" }, dur: 0.3, hold: 0.12 },
   ]),
@@ -413,7 +413,7 @@ export const LEXICON: SignDef[] = [
   ]),
 
   // Feelings
-  sign("HAPPY", ["happy", "glad", "excited"], [
+  sign("HAPPY", ["happy", "glad", "excited", "joyful", "cheerful"], [
     { r: { shape: "B", at: "chest", off: [0.02, -0.04, 0], contact: "palm", palm: "back", fingers: "up-in" }, dur: 0.34, hold: 0, mouth: "smile" },
     ...repeat([
       { r: { off: [0.02, 0.05, 0.03] }, dur: 0.16, hold: 0, flow: true, mouth: "smile" },

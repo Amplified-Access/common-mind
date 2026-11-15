@@ -36,9 +36,60 @@ describe("buildTimeline", () => {
     const tl = buildTimeline(planSigns("hello"));
     const hello = LEXICON.find((s) => s.gloss === "HELLO")!;
     const first = resolveHand(hello.frames[0].r as HandSpec);
-    // The first frame is reached at the item's start plus its duration.
-    const t = tl.items[0].start + (hello.frames[0].dur ?? 0) + 0.01;
+    // Just after the first frame is reached.
+    const t = tl.frames.find((f) => f.t > tl.items[0].start)!.t + 0.01;
     near(samplePose(tl, t).r.wrist, first.wrist);
+  });
+
+  it("holds the end of each sign for a beat before moving on", () => {
+    const tl = buildTimeline(planSigns("hello friend thank you grace"));
+    for (const item of tl.items) {
+      const end = samplePose(tl, item.end);
+      const before = samplePose(tl, item.end - 0.18);
+      near(before.r.wrist, end.r.wrist);
+      near(before.r.joints, end.r.joints);
+    }
+  });
+
+  it("fingerspells slowly enough to read each letter", () => {
+    const [grace] = buildTimeline(planSigns("grace")).items;
+    expect((grace.end - grace.start) / 5).toBeGreaterThanOrEqual(0.42);
+  });
+
+  // The move into a sign: from the frame before it to its first frame.
+  const transport = (text: string, n: number) => {
+    const tl = buildTimeline(planSigns(text));
+    const i = tl.frames.findIndex((f) => f.t > tl.items[n].start);
+    const [a, b] = [tl.frames[i - 1], tl.frames[i]];
+    return { a: a.pose.r, b: b.pose.r, mid: samplePose(tl, (a.t + b.t) / 2).r };
+  };
+
+  it("arcs the hand forward, clear of the body, between signs", () => {
+    const { a, b, mid } = transport("hello friend", 1);
+    expect(mid.wrist[2]).toBeGreaterThan((a.wrist[2] + b.wrist[2]) / 2 + 0.02);
+  });
+
+  it("forms the next handshape before the hand arrives", () => {
+    const { a, b, mid } = transport("hello friend", 1);
+    const change = (p: readonly number[]) => p.reduce((sum, v, k) => sum + Math.abs(v - a.joints[k]), 0);
+    expect(change(b.joints)).toBeGreaterThan(0.5);
+    expect(change(mid.joints) / change(b.joints)).toBeGreaterThan(0.65);
+  });
+
+  it("pauses, hands held, between phrases and longer between sentences", () => {
+    const gap = (text: string) => {
+      const [a, b] = buildTimeline(planSigns(text)).items;
+      return b.start - a.end;
+    };
+    const run = gap("hello friend");
+    const phrase = gap("hello, friend");
+    const sentence = gap("hello. friend");
+    expect(phrase).toBeGreaterThan(run + 0.2);
+    expect(sentence).toBeGreaterThan(phrase + 0.2);
+
+    const tl = buildTimeline(planSigns("hello, friend"));
+    const [hello, friend] = tl.items;
+    near(samplePose(tl, friend.start).r.wrist, samplePose(tl, hello.end).r.wrist);
   });
 
   it("raises the brows through a yes/no question and furrows them for wh", () => {

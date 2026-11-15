@@ -136,8 +136,10 @@ function SignStage({ character, timeline, run, speed, paused, mouthing, onFrame,
       }
 
       if (avatar) {
-        // The gaze eases toward the pointer, or back to the viewer.
-        if (now / 1000 - pointer.at < GAZE_TIMEOUT) {
+        // The gaze eases toward the pointer, or back to the viewer. While
+        // signing the signer looks at the viewer, as a signer keeps eye
+        // contact.
+        if (!pb.playing && now / 1000 - pointer.at < GAZE_TIMEOUT) {
           ray.setFromCamera(pointer.ndc, camera);
           if (!ray.ray.intersectPlane(pane, gazeTarget)) gazeTarget.copy(camera.position);
         } else {

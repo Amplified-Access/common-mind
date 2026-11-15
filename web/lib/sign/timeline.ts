@@ -11,17 +11,28 @@ import type { FacePose, HandPose, HandSpec, HeadPose, Keyframe, Pose } from "./t
 // span each sign takes for the captions to follow.
 
 /** The least time to travel from one sign into the next, at 1x. */
-const TRANSITION = 0.3;
+const TRANSITION = 0.4;
+/** The least time the end of a sign is held, so it can be read before the
+ * hands move on. */
+const SIGN_HOLD = 0.22;
 const LEAD_IN = 0.25;
 const LEAD_OUT = 0.45;
 const SETTLE = 0.25;
 const DEFAULT_DUR = 0.3;
 const DEFAULT_HOLD = 0.08;
+/** Seconds the hands hold still at a comma, and at the end of a sentence. */
+const PAUSE = { phrase: 0.3, sentence: 0.6 } as const;
 /** A yes/no question holds its last sign, brows up, a moment longer. */
 const QUESTION_HOLD = 0.25;
 /** Seconds a consonant is mouthed at 1x; a vowel a little longer. */
 const SOUND = 0.075;
 const VOWEL = 1.6;
+/** How far a hand bows forward moving between signs, for each metre it
+ * travels, and at most. */
+const ARC = 0.25;
+const ARC_MAX = 0.06;
+/** How far through the move between signs the next handshape is formed. */
+const PRESHAPE = 0.7;
 
 export type TimelineItem = {
   gloss: string;
@@ -31,7 +42,9 @@ export type TimelineItem = {
   negates: boolean;
 };
 
-type Frame = { t: number; pose: Pose; flow: boolean };
+/** A pose at a time. `enter` marks the first pose of a sign, or the rest
+ * after the last: the hands travel there between signs. */
+type Frame = { t: number; pose: Pose; flow: boolean; enter?: boolean };
 
 /** A mouth shape starting at a time; null closes the mouth. */
 type Sound = { t: number; viseme: Viseme | null };
@@ -65,7 +78,14 @@ export function buildTimeline(plan: Plan, body: Body = DEFAULT_BODY): Timeline {
         ? { nod: 0.04, turn: 0, tilt: 0.07 }
         : NEUTRAL_HEAD;
 
-  for (const item of plan.items) {
+  plan.items.forEach((item, n) => {
+    // The hands rest where the last sign left them through a pause.
+    const before = plan.items[n - 1]?.pause;
+    if (before) {
+      t += PAUSE[before];
+      frames.push({ t, pose: frames.at(-1)!.pose, flow: false });
+    }
+
     const keyframes: Keyframe[] =
       item.kind === "sign"
         ? item.sign.frames
@@ -95,9 +115,10 @@ export function buildTimeline(plan: Plan, body: Body = DEFAULT_BODY): Timeline {
           tilt: (kf.head?.tilt ?? 0) + lean.tilt,
         },
       };
-      frames.push({ t, pose, flow: !!kf.flow });
+      frames.push({ t, pose, flow: !!kf.flow, enter: j === 0 });
 
-      const hold = kf.hold ?? DEFAULT_HOLD;
+      const last = j === keyframes.length - 1;
+      const hold = Math.max(kf.hold ?? DEFAULT_HOLD, last ? SIGN_HOLD : 0);
       if (hold > 0) {
         t += hold;
         frames.push({ t, pose, flow: false });
@@ -112,7 +133,7 @@ export function buildTimeline(plan: Plan, body: Body = DEFAULT_BODY): Timeline {
       negates: item.kind === "sign" && !!item.sign.negates,
     });
     mouth.push(...mouthWord(item.word, start + Math.max(keyframes[0]?.dur ?? DEFAULT_DUR, TRANSITION) * 0.6, t));
-  }
+  });
 
   if (plan.mood === "yn-question" && items.length > 0) {
     t += QUESTION_HOLD;
@@ -121,7 +142,7 @@ export function buildTimeline(plan: Plan, body: Body = DEFAULT_BODY): Timeline {
 
   if (items.length > 0) {
     t += LEAD_OUT;
-    frames.push({ t, pose: REST, flow: false });
+    frames.push({ t, pose: REST, flow: false, enter: true });
     t += SETTLE;
     frames.push({ t, pose: REST, flow: false });
   }
@@ -195,12 +216,31 @@ const lerpFace = (a: FacePose, b: FacePose, u: number): FacePose => ({
 });
 
 /** How far along a move is, eased: to a stop and from a standstill, unless a
- * frame is one the hand flows through. */
+ * frame is one the hand flows through. A move from rest to rest follows the
+ * minimum-jerk profile of a human reach. */
 function ease(u: number, fromFlow: boolean, toFlow: boolean): number {
   if (fromFlow && toFlow) return u;
   if (fromFlow) return 1 - (1 - u) * (1 - u);
   if (toFlow) return u * u;
-  return u * u * (3 - 2 * u);
+  return u * u * u * (10 - 15 * u + 6 * u * u);
+}
+
+/** A hand travelling between signs: bowing forward, clear of the body, on
+ * the way, and shaping and turning for the next sign before it arrives. */
+function travel(a: HandPose, b: HandPose, raw: number, u: number): HandPose {
+  const ahead = ease(Math.min(raw / PRESHAPE, 1), false, false);
+  const wrist = lerpAll(a.wrist, b.wrist, u);
+  const distance = Math.hypot(...b.wrist.map((v, i) => v - a.wrist[i]));
+  const bow = Math.min(distance * ARC, ARC_MAX) * Math.sin(Math.PI * u);
+  qa.set(...a.quat);
+  qb.set(...b.quat);
+  qa.slerp(qb, ahead);
+  return {
+    wrist: [wrist[0], wrist[1], wrist[2] + bow],
+    quat: [qa.x, qa.y, qa.z, qa.w],
+    joints: lerpAll(a.joints, b.joints, ahead),
+    elbow: lerpAll(a.elbow, b.elbow, u),
+  };
 }
 
 export function samplePose(tl: Timeline, time: number): Pose {
@@ -218,7 +258,8 @@ export function samplePose(tl: Timeline, time: number): Pose {
   const a = frames[lo];
   const b = frames[Math.min(lo + 1, frames.length - 1)];
   const span = b.t - a.t;
-  const u = span > 0 ? ease((t - a.t) / span, a.flow, b.flow) : 0;
+  const raw = span > 0 ? (t - a.t) / span : 0;
+  const u = ease(raw, a.flow, b.flow);
 
   const head = {
     nod: lerp(a.pose.head.nod, b.pose.head.nod, u),
@@ -235,8 +276,8 @@ export function samplePose(tl: Timeline, time: number): Pose {
   }
 
   return {
-    r: lerpHand(a.pose.r, b.pose.r, u),
-    l: lerpHand(a.pose.l, b.pose.l, u),
+    r: b.enter ? travel(a.pose.r, b.pose.r, raw, u) : lerpHand(a.pose.r, b.pose.r, u),
+    l: b.enter ? travel(a.pose.l, b.pose.l, raw, u) : lerpHand(a.pose.l, b.pose.l, u),
     face: { ...lerpFace(a.pose.face, b.pose.face, u), visemes: sampleMouth(tl.mouth, t) },
     head,
   };

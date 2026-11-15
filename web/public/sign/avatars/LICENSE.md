@@ -1,3 +1,9 @@
+# Signing avatars
+
+- okello, achieng, amani, nakato: built from the Microsoft Rocketbox avatar library, under the MIT License below.
+
+## Microsoft Rocketbox
+
 MIT License
 
 Copyright (c) 2020 Microsoft
