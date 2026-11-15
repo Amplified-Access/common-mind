@@ -5,6 +5,7 @@ import {
   Matrix4,
   Mesh,
   type Object3D,
+  PropertyBinding,
   Quaternion,
   Raycaster,
   SkinnedMesh,
@@ -20,8 +21,8 @@ import { solveArm } from "@/lib/sign/ik";
 import { VISEMES } from "@/lib/sign/mouthing";
 import type { FacePose, HandPose, Pose, Vec3 } from "@/lib/sign/types";
 
-// A rigged avatar (3ds Max Biped skeleton, ARKit face shapes) driven by the
-// sign engine's poses. On load it is turned to face the viewer, placed so
+// A rigged avatar (a 3ds Max Biped or MakeHuman skeleton, ARKit face shapes)
+// driven by the sign engine's poses. On load it is turned to face the viewer, placed so
 // its shoulders and chest line up with the engine's default body, and
 // measured: shoulders, arm lengths, hand size and the places on the face a
 // hand goes. Each frame the arms are solved for the elbow, the hands turned,
@@ -52,12 +53,62 @@ type Arm = {
   restPalm: Vector3;
 };
 
-// Bone names as the glTF loader sanitises them ("Bip01 R Hand" → "Bip01_R_Hand").
+/** The bones the engine turns, named for one kind of skeleton. */
+type Rig = {
+  clavicle: (side: Side) => string;
+  upperArm: (side: Side) => string;
+  forearm: (side: Side) => string;
+  hand: (side: Side) => string;
+  /** Index, middle, ring, pinky, thumb: three bones each, base to tip. */
+  digits: (side: Side) => string[][];
+  spine: string;
+  neck: string;
+  head: string;
+  eyes: [left: string, right: string];
+  upperLip: string;
+  lowerLip: string;
+};
+
+// Microsoft Rocketbox avatars: a 3ds Max Biped.
+const BIPED: Rig = {
+  clavicle: (s) => `Bip01 ${s} Clavicle`,
+  upperArm: (s) => `Bip01 ${s} UpperArm`,
+  forearm: (s) => `Bip01 ${s} Forearm`,
+  hand: (s) => `Bip01 ${s} Hand`,
+  digits: (s) => ["1", "2", "3", "4", "0"].map((n) => [`Bip01 ${s} Finger${n}`, `Bip01 ${s} Finger${n}1`, `Bip01 ${s} Finger${n}2`]),
+  spine: "Bip01 Spine2",
+  neck: "Bip01 Neck",
+  head: "Bip01 Head",
+  eyes: ["Bip01 LEye", "Bip01 REye"],
+  upperLip: "Bip01 MUpperLip",
+  lowerLip: "Bip01 MBottomLip",
+};
+
+// MakeHuman avatars (MPFB's "default" rig). Each arm bone is split in two,
+// the second half taking its share of the twist; finger1 is the thumb.
+const MAKEHUMAN: Rig = {
+  clavicle: (s) => `clavicle.${s}`,
+  upperArm: (s) => `upperarm01.${s}`,
+  forearm: (s) => `lowerarm01.${s}`,
+  hand: (s) => `wrist.${s}`,
+  digits: (s) => [2, 3, 4, 5, 1].map((n) => [1, 2, 3].map((j) => `finger${n}-${j}.${s}`)),
+  spine: "spine02",
+  neck: "neck01",
+  head: "head",
+  eyes: ["eye.L", "eye.R"],
+  upperLip: "oris05",
+  lowerLip: "oris01",
+};
+
+// Bone names as the glTF loader sanitises them ("Bip01 R Hand" → "Bip01_R_Hand",
+// "wrist.L" → "wristL").
 const bone = (root: Object3D, name: string) => {
-  const found = root.getObjectByName(name.replace(/\s/g, "_"));
+  const found = root.getObjectByName(PropertyBinding.sanitizeNodeName(name));
   if (!found) throw new Error(`The avatar has no bone "${name}"`);
   return found as Bone;
 };
+
+const rigOf = (model: Object3D): Rig => (model.getObjectByName("wristL") ? MAKEHUMAN : BIPED);
 
 const v = () => new Vector3();
 const worldPos = (o: Object3D, out = v()) => o.getWorldPosition(out);
@@ -86,6 +137,7 @@ export class RiggedAvatar {
   readonly root = new Group();
   readonly body: Body;
   private readonly model: Object3D;
+  private readonly rig: Rig;
   private readonly arms: Arm[];
   private readonly spine: Bone;
   private readonly neck: Bone;
@@ -110,6 +162,7 @@ export class RiggedAvatar {
 
   private constructor(model: Object3D) {
     this.model = model;
+    this.rig = rigOf(model);
     this.root.add(model);
     model.traverse((o) => {
       if (o instanceof Mesh) {
@@ -121,19 +174,20 @@ export class RiggedAvatar {
     this.root.updateMatrixWorld(true);
 
     // Face the viewer: the signer's left shoulder at +x, looking down +z.
-    const left = worldPos(bone(model, "Bip01 L UpperArm"));
-    const right = worldPos(bone(model, "Bip01 R UpperArm"));
+    const rig = this.rig;
+    const left = worldPos(bone(model, rig.upperArm("L")));
+    const right = worldPos(bone(model, rig.upperArm("R")));
     const facing = new Vector3().crossVectors(left.clone().sub(right), UP).setY(0).normalize();
     this.root.rotation.y = -Math.atan2(facing.x, facing.z);
     this.root.updateMatrixWorld(true);
 
-    this.spine = bone(model, "Bip01 Spine2");
-    this.neck = bone(model, "Bip01 Neck");
-    this.head = bone(model, "Bip01 Head");
-    this.eyes = [bone(model, "Bip01 LEye"), bone(model, "Bip01 REye")];
+    this.spine = bone(model, rig.spine);
+    this.neck = bone(model, rig.neck);
+    this.head = bone(model, rig.head);
+    this.eyes = rig.eyes.map((name) => bone(model, name));
 
     // Line the shoulders and chest up with the engine's default body.
-    const shoulders = worldPos(bone(model, "Bip01 L UpperArm")).add(worldPos(bone(model, "Bip01 R UpperArm"))).multiplyScalar(0.5);
+    const shoulders = worldPos(bone(model, rig.upperArm("L"))).add(worldPos(bone(model, rig.upperArm("R")))).multiplyScalar(0.5);
     this.root.position.set(-shoulders.x, 0.5 - shoulders.y, 0);
     this.root.updateMatrixWorld(true);
     const chestFront = this.frontAt(0, 0.4) ?? 0.12;
@@ -148,21 +202,22 @@ export class RiggedAvatar {
   }
 
   private buildArm(side: Side): Arm {
-    const b = (part: string) => bone(this.model, `Bip01 ${side} ${part}`);
-    const digits = ["1", "2", "3", "4", "0"].map((n) => [b(`Finger${n}`), b(`Finger${n}1`), b(`Finger${n}2`)]);
+    const b = (name: string) => bone(this.model, name);
+    const digits = this.rig.digits(side).map((chain) => chain.map(b));
     const arm: Arm = {
       side,
       mirror: side === "L" ? 1 : -1,
-      clavicle: b("Clavicle"),
-      upper: b("UpperArm"),
-      fore: b("Forearm"),
-      hand: b("Hand"),
+      clavicle: b(this.rig.clavicle(side)),
+      upper: b(this.rig.upperArm(side)),
+      fore: b(this.rig.forearm(side)),
+      hand: b(this.rig.hand(side)),
       digits,
       handRest: new Quaternion(),
       restFingers: v(),
       restPalm: v(),
     };
-    for (const x of [arm.clavicle, arm.upper, arm.fore, arm.hand, ...digits.flat()]) this.rest.set(x, x.quaternion.clone());
+    const twist = arm.hand.parent as Bone;
+    for (const x of [arm.clavicle, arm.upper, arm.fore, twist, arm.hand, ...digits.flat()]) this.rest.set(x, x.quaternion.clone());
 
     // The hand at rest: fingers from the wrist to the middle knuckle, thumb
     // side from the little-finger knuckle to the index knuckle. The palm
@@ -189,24 +244,29 @@ export class RiggedAvatar {
 
   private hit(from: Vector3, dir: Vector3): Vector3 | null {
     const ray = new Raycaster(from, dir);
-    // Skin and clothes only: hair and lashes are drawn with see-through cards.
-    const solid = this.meshes.filter((m) => !(m.material as Material).name.endsWith("_opacity"));
+    // Skin and clothes only: hair, brows and lashes are see-through cards.
+    const solid = this.meshes.filter((m) => {
+      const mat = m.material as Material;
+      return !mat.name.endsWith("_opacity") && !mat.transparent && mat.alphaTest === 0;
+    });
     return ray.intersectObjects(solid, false)[0]?.point ?? null;
   }
 
   private measure(): Landmarks {
     const p = (name: string) => worldPos(bone(this.model, name));
-    const shoulder = p("Bip01 L UpperArm");
-    const elbow = p("Bip01 L Forearm");
-    const wrist = p("Bip01 L Hand");
-    const tipBase = p("Bip01 L Finger21");
-    const tipJoint = p("Bip01 L Finger22");
+    const rig = this.rig;
+    const shoulder = p(rig.upperArm("L"));
+    const elbow = p(rig.forearm("L"));
+    const wrist = p(rig.hand("L"));
+    const [, tipBaseName, tipJointName] = rig.digits("L")[1];
+    const tipBase = p(tipBaseName);
+    const tipJoint = p(tipJointName);
     const tip = tipJoint.clone().add(tipJoint.clone().sub(tipBase).multiplyScalar(0.9));
     const handScale = tip.distanceTo(wrist) / contactPoint("tips", jointsFor("B")).length();
 
-    const eye = p("Bip01 LEye");
-    const mouthY = (p("Bip01 MUpperLip").y + p("Bip01 MBottomLip").y) / 2;
-    const neckY = (p("Bip01 Neck").y + p("Bip01 Head").y) / 2;
+    const eye = p(rig.eyes[0]);
+    const mouthY = (p(rig.upperLip).y + p(rig.lowerLip).y) / 2;
+    const neckY = (p(rig.neck).y + p(rig.head).y) / 2;
     const ex = Math.abs(eye.x);
     const front = (x: number, y: number, gap: number, fallback: number): Vec3 => [x, y, (this.frontAt(x, y) ?? fallback) + gap];
     const side = (y: number, z: number, gap: number, fallback: number): Vec3 => [(this.sideAt(y, z) ?? fallback) + gap, y, z];
@@ -262,15 +322,17 @@ export class RiggedAvatar {
     const handWorld = frameRotation(arm.restFingers, arm.restPalm, fingers, palm).multiply(arm.handRest);
 
     // Share the wrist's twist with the forearm, as the two forearm bones do,
-    // so the wrist doesn't wring.
+    // so the wrist doesn't wring: with the forearm itself on a Biped, with
+    // its twist bone where the rig has one.
+    const twistBone = arm.hand.parent as Bone;
     const axis = arm.hand.position.clone().normalize();
-    const local = worldQuat(arm.fore).invert().multiply(handWorld);
+    const local = worldQuat(twistBone).invert().multiply(handWorld);
     const along = new Vector3(local.x, local.y, local.z).dot(axis);
     const twist = new Quaternion(axis.x * along, axis.y * along, axis.z * along, local.w).normalize();
     // The short way round.
     if (twist.w < 0) twist.set(-twist.x, -twist.y, -twist.z, -twist.w);
     const half = new Quaternion().slerp(twist, 0.6);
-    setWorldQuat(arm.fore, worldQuat(arm.fore).multiply(half));
+    setWorldQuat(twistBone, worldQuat(twistBone).multiply(half));
     setWorldQuat(arm.hand, handWorld);
 
     // Fingers: each joint aimed along the engine's hand model.
