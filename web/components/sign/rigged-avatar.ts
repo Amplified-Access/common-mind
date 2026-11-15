@@ -353,10 +353,12 @@ export class RiggedAvatar {
     const handWorld = frameRotation(arm.restFingers, arm.restPalm, fingers, palm).multiply(arm.handRest);
 
     // The wrist's twist, about the forearm, turned on the forearm's twist
-    // bone as the two forearm bones turn, so the sleeve doesn't wring.
+    // bone as the two forearm bones turn, so the sleeve doesn't wring. It
+    // is measured from the hand's rest pose: a hand bone is rolled against
+    // its forearm even at rest, and that roll is no twist.
     const parent = arm.hand.parent as Bone;
     const axis = arm.hand.position.clone().normalize();
-    const local = worldQuat(parent).invert().multiply(handWorld);
+    const local = worldQuat(parent).invert().multiply(handWorld).multiply(this.rest.get(arm.hand)!.clone().invert());
     const along = new Vector3(local.x, local.y, local.z).dot(axis);
     const twist = new Quaternion(axis.x * along, axis.y * along, axis.z * along, local.w).normalize();
     // The short way round.
