@@ -16,7 +16,6 @@ import { FramedCard } from "@/components/system/framed-card";
 import { Segmented } from "@/components/system/segmented";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CHARACTERS, type Character } from "@/lib/sign/characters";
-import { LEXICON } from "@/lib/sign/lexicon";
 import { type Plan, planSigns } from "@/lib/sign/plan";
 import { type Body, DEFAULT_BODY } from "@/lib/sign/body";
 import { type Timeline, activeItem, buildTimeline } from "@/lib/sign/timeline";
@@ -56,8 +55,6 @@ function store(key: string, value: unknown) {
 }
 
 type Current = { text: string; plan: Plan };
-
-const GLOSSES = [...new Set(LEXICON.map((s) => s.gloss))].sort();
 
 function SignStudio() {
   const [text, setText] = useState("");
@@ -229,28 +226,6 @@ function SignStudio() {
                     </li>
                   );
                 })}
-              </ul>
-            </FramedCard>
-
-            <FramedCard panelsClassName="bg-[#0b0a07] p-3">
-              <h2 className="mb-1 font-mono text-xs text-signal uppercase">Signs it knows</h2>
-              <p className="mb-3 text-xs text-subtle">Other words are fingerspelled.</p>
-              <ul className="flex flex-wrap gap-1.5">
-                {GLOSSES.map((g) => (
-                  <li key={g}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const word = LEXICON.find((s) => s.gloss === g)?.words[0] ?? g.toLowerCase();
-                        setText(word);
-                        sign(word);
-                      }}
-                      className="inline-flex h-6 items-center rounded-full border border-line px-2 font-mono text-[0.6875rem] leading-none text-foreground/85 transition-colors hover:border-signal hover:text-signal"
-                    >
-                      {g}
-                    </button>
-                  </li>
-                ))}
               </ul>
             </FramedCard>
 
