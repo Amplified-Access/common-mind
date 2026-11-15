@@ -1,6 +1,6 @@
-// The signers a viewer can choose between. Each is a rigged avatar from the
-// Microsoft Rocketbox library (MIT), built into public/sign/avatars by
-// scripts/sign-avatars. Their clothes are plain, as an interpreter's would
+// The signers a viewer can choose between. Each is a rigged avatar, built
+// into public/sign/avatars by scripts/sign-avatars: from the Microsoft
+// Rocketbox library (MIT), or from MakeHuman (CC0). Their clothes are plain, as an interpreter's would
 // be, so the hands read clearly against them.
 
 export type Character = {
@@ -28,4 +28,5 @@ export const CHARACTERS: Character[] = [
   avatar("achieng", "Achieng", "Afro, print top"),
   avatar("amani", "Amani", "Suit and tie"),
   avatar("nakato", "Nakato", "Dark blazer"),
+  avatar("kato", "Kato", "Casual suit"),
 ];

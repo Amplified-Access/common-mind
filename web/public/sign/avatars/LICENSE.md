@@ -1,3 +1,10 @@
+# Signing avatars
+
+- okello, achieng, amani, nakato: built from the Microsoft Rocketbox avatar library, under the MIT License below.
+- kato: built from the MakeHuman system assets, faceunits01 and visemes02 packs, released under CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/).
+
+## Microsoft Rocketbox
+
 MIT License
 
 Copyright (c) 2020 Microsoft

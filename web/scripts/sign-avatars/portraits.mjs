@@ -3,7 +3,7 @@
 // signer in headless Chromium and the head is cropped from the stage.
 //
 //   pnpm dev            (in web/, so the page is served)
-//   node portraits.mjs [http://localhost:3000]
+//   node portraits.mjs [http://localhost:3000] [signer ids…]
 //
 // Needs Chromium (or Chrome: set CHROME) and ImageMagick 7.
 
@@ -16,7 +16,8 @@ import { fileURLToPath } from "node:url";
 const here = dirname(fileURLToPath(import.meta.url));
 const out = join(here, "../../public/sign/avatars");
 const site = process.argv[2] ?? "http://localhost:3000";
-const IDS = ["okello", "achieng", "amani", "nakato"];
+const ALL = ["okello", "achieng", "amani", "nakato", "kato"];
+const IDS = process.argv.length > 3 ? process.argv.slice(3) : ALL;
 const PORT = 9333;
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
