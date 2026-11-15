@@ -1,5 +1,5 @@
-// Builds MakeHuman signers into public/sign/avatars with Blender and MPFB
-// (MakeHuman for Blender). MakeHuman's core assets are CC0. For each
+// Builds MakeHuman signers with Blender and MPFB (MakeHuman for Blender),
+// into a temporary folder for comparison: none is in the app's cast. MakeHuman's core assets are CC0. For each
 // character makehuman.py builds and exports the human, then the textures
 // become WebP, only the face shapes and visemes signing uses are kept, the
 // materials are set for the web, and the file is compressed with meshopt.
@@ -14,7 +14,7 @@
 // Needs `blender` (with MPFB) and ImageMagick 7 (`magick`) on the PATH.
 
 import { execFileSync } from "node:child_process";
-import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -27,7 +27,9 @@ import { MeshoptDecoder, MeshoptEncoder } from "meshoptimizer";
 import { FACE_SHAPES, VISEMES } from "./face-shapes.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const out = join(here, "../../public/sign/avatars");
+// Not in the app's cast: the Rocketbox signers, with twist bones added, were
+// kept for their look. Built here for comparison only.
+const out = join(tmpdir(), "sign-avatars", "makehuman-out");
 const work = join(tmpdir(), "sign-avatars", "makehuman");
 
 /** An MPFB human: a body from MakeHuman's macro sliders (each 0–1), and
@@ -146,4 +148,3 @@ await MeshoptEncoder.ready;
 await MeshoptDecoder.ready;
 mkdirSync(out, { recursive: true });
 for (const [id, preset] of Object.entries(CAST)) await build(id, preset);
-copyFileSync(join(here, "LICENSE.md"), join(out, "LICENSE.md"));

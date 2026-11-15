@@ -16,7 +16,7 @@ import { fileURLToPath } from "node:url";
 const here = dirname(fileURLToPath(import.meta.url));
 const out = join(here, "../../public/sign/avatars");
 const site = process.argv[2] ?? "http://localhost:3000";
-const ALL = ["okello", "achieng", "amani", "nakato", "kato"];
+const ALL = ["okello", "achieng", "amani", "nakato"];
 const IDS = process.argv.length > 3 ? process.argv.slice(3) : ALL;
 const PORT = 9333;
 
