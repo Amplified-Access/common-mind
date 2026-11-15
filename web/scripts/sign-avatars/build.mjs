@@ -22,6 +22,7 @@ import { dedup, meshopt, prune } from "@gltf-transform/functions";
 import { MeshoptDecoder, MeshoptEncoder } from "meshoptimizer";
 
 import { FACE_SHAPES, VISEMES } from "./face-shapes.mjs";
+import { addTwistBones } from "./twist-bones.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const out = join(here, "../../public/sign/avatars");
@@ -176,6 +177,7 @@ async function build(id, { source, skin }) {
     console.log(`  ${keep.length} face shapes and visemes`);
   }
   for (const animation of root.listAnimations()) animation.dispose();
+  addTwistBones(doc);
 
   const texture = (key) =>
     doc.createTexture(key).setImage(textures[key]).setMimeType("image/webp");

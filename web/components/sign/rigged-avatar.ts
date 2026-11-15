@@ -33,6 +33,10 @@ const FORWARD = new Vector3(0, 0, 1);
 const UP = new Vector3(0, 1, 0);
 const SIDE = new Vector3(1, 0, 0);
 
+/** The share of the wrist's twist the whole forearm takes, where twist
+ * bones take the rest. */
+const FOREARM_TWIST = 0.4;
+
 const clamp = (x: number, lo: number, hi: number) => Math.min(Math.max(x, lo), hi);
 
 type Side = "L" | "R";
@@ -44,6 +48,9 @@ type Arm = {
   upper: Bone;
   fore: Bone;
   hand: Bone;
+  /** The bones the wrist's twist is turned on, in order, each by its share
+   * of it on top of the bones before. */
+  twists: { bone: Bone; share: number }[];
   /** Index, middle, ring, pinky, thumb: three bones each, base to tip. */
   digits: Bone[][];
   /** The hand's rest orientation and, in that pose, which way its fingers
@@ -59,6 +66,9 @@ type Rig = {
   upperArm: (side: Side) => string;
   forearm: (side: Side) => string;
   hand: (side: Side) => string;
+  /** The forearm's twist bones, elbow to wrist, where the skeleton has
+   * them. */
+  forearmTwists: (side: Side) => string[];
   /** Index, middle, ring, pinky, thumb: three bones each, base to tip. */
   digits: (side: Side) => string[][];
   spine: string;
@@ -75,6 +85,8 @@ const BIPED: Rig = {
   upperArm: (s) => `Bip01 ${s} UpperArm`,
   forearm: (s) => `Bip01 ${s} Forearm`,
   hand: (s) => `Bip01 ${s} Hand`,
+  // Added by scripts/sign-avatars/twist-bones.mjs: Rocketbox has none.
+  forearmTwists: (s) => [1, 2, 3].map((n) => `Bip01 ${s} ForeTwist${n}`),
   digits: (s) => ["1", "2", "3", "4", "0"].map((n) => [`Bip01 ${s} Finger${n}`, `Bip01 ${s} Finger${n}1`, `Bip01 ${s} Finger${n}2`]),
   spine: "Bip01 Spine2",
   neck: "Bip01 Neck",
@@ -91,6 +103,7 @@ const MAKEHUMAN: Rig = {
   upperArm: (s) => `upperarm01.${s}`,
   forearm: (s) => `lowerarm01.${s}`,
   hand: (s) => `wrist.${s}`,
+  forearmTwists: (s) => [`lowerarm02.${s}`],
   digits: (s) => [2, 3, 4, 5, 1].map((n) => [1, 2, 3].map((j) => `finger${n}-${j}.${s}`)),
   spine: "spine02",
   neck: "neck01",
@@ -203,21 +216,39 @@ export class RiggedAvatar {
 
   private buildArm(side: Side): Arm {
     const b = (name: string) => bone(this.model, name);
+    const hand = b(this.rig.hand(side));
+    // A twist bone the hand hangs from takes part of the twist, as does the
+    // forearm on a model without twist bones. Twist bones beside the hand
+    // share it with the forearm: the whole forearm turns by part of it, so
+    // the steps between them stay small enough not to pinch the sleeve, and
+    // the rest grows in steps toward the wrist.
+    const found = this.rig
+      .forearmTwists(side)
+      .map((name) => this.model.getObjectByName(PropertyBinding.sanitizeNodeName(name)) as Bone | undefined)
+      .filter((x): x is Bone => !!x);
+    const fore = b(this.rig.forearm(side));
+    const twists =
+      found.length === 0 || found[0] === hand.parent
+        ? [{ bone: found[0] ?? (hand.parent as Bone), share: 0.6 }]
+        : [
+            { bone: fore, share: FOREARM_TWIST },
+            ...found.map((bone, n) => ({ bone, share: ((n + 1) / found.length) * (1 - FOREARM_TWIST) })),
+          ];
     const digits = this.rig.digits(side).map((chain) => chain.map(b));
     const arm: Arm = {
       side,
       mirror: side === "L" ? 1 : -1,
       clavicle: b(this.rig.clavicle(side)),
       upper: b(this.rig.upperArm(side)),
-      fore: b(this.rig.forearm(side)),
-      hand: b(this.rig.hand(side)),
+      fore,
+      hand,
+      twists,
       digits,
       handRest: new Quaternion(),
       restFingers: v(),
       restPalm: v(),
     };
-    const twist = arm.hand.parent as Bone;
-    for (const x of [arm.clavicle, arm.upper, arm.fore, twist, arm.hand, ...digits.flat()]) this.rest.set(x, x.quaternion.clone());
+    for (const x of [arm.clavicle, arm.upper, arm.fore, ...twists.map((t) => t.bone), arm.hand, ...digits.flat()]) this.rest.set(x, x.quaternion.clone());
 
     // The hand at rest: fingers from the wrist to the middle knuckle, thumb
     // side from the little-finger knuckle to the index knuckle. The palm
@@ -321,18 +352,18 @@ export class RiggedAvatar {
     const palm = mirror(new Vector3(0, 0, 1).applyQuaternion(q).toArray());
     const handWorld = frameRotation(arm.restFingers, arm.restPalm, fingers, palm).multiply(arm.handRest);
 
-    // Share the wrist's twist with the forearm, as the two forearm bones do,
-    // so the wrist doesn't wring: with the forearm itself on a Biped, with
-    // its twist bone where the rig has one.
-    const twistBone = arm.hand.parent as Bone;
+    // The wrist's twist, about the forearm, turned on the forearm's twist
+    // bone as the two forearm bones turn, so the sleeve doesn't wring.
+    const parent = arm.hand.parent as Bone;
     const axis = arm.hand.position.clone().normalize();
-    const local = worldQuat(twistBone).invert().multiply(handWorld);
+    const local = worldQuat(parent).invert().multiply(handWorld);
     const along = new Vector3(local.x, local.y, local.z).dot(axis);
     const twist = new Quaternion(axis.x * along, axis.y * along, axis.z * along, local.w).normalize();
     // The short way round.
     if (twist.w < 0) twist.set(-twist.x, -twist.y, -twist.z, -twist.w);
-    const half = new Quaternion().slerp(twist, 0.6);
-    setWorldQuat(twistBone, worldQuat(twistBone).multiply(half));
+    for (const { bone: b, share } of arm.twists) {
+      setWorldQuat(b, worldQuat(b).multiply(new Quaternion().slerp(twist, share)));
+    }
     setWorldQuat(arm.hand, handWorld);
 
     // Fingers: each joint aimed along the engine's hand model.
