@@ -16,6 +16,7 @@ import { FramedCard } from "@/components/system/framed-card";
 import { Segmented } from "@/components/system/segmented";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CHARACTERS, type Character } from "@/lib/sign/characters";
+import { SIGN_LANGUAGES, type SignLanguage } from "@/lib/sign/languages";
 import { type Plan, planSigns } from "@/lib/sign/plan";
 import { type Body, DEFAULT_BODY } from "@/lib/sign/body";
 import { type Timeline, activeItem, buildTimeline } from "@/lib/sign/timeline";
@@ -36,8 +37,14 @@ const EXAMPLES = ["Hello, my name is Grace", "Thank you, friend", "What is your 
 const HISTORY_KEY = "sign:recent";
 const SIGNER_KEY = "sign:signer";
 const MOUTHING_KEY = "sign:mouthing";
+const LANGUAGE_KEY = "sign:language";
 
-// Per-viewer conveniences: the signer they chose and what they signed lately.
+/** A sign language by its code or short name (ase, asl). */
+const findLanguage = (key: string | null) =>
+  SIGN_LANGUAGES.find((l) => l.id === key?.toLowerCase() || l.abbr.toLowerCase() === key?.toLowerCase());
+
+// Per-viewer conveniences: the signer and sign language they chose and what
+// they signed lately.
 function readStored<T>(key: string, fallback: T): T {
   try {
     const raw = window.localStorage.getItem(key);
@@ -68,6 +75,9 @@ function SignStudio() {
   // viewer who lip-reads. On unless the viewer turned it off.
   const [mouthing, setMouthing] = useState(true);
   const [signer, setSigner] = useState<Character>(CHARACTERS[0]);
+  const [language, setLanguage] = useState<SignLanguage>(SIGN_LANGUAGES[0]);
+  // Read when signing, so changing language keeps sign() the same function.
+  const languageRef = useRef(language);
   // The loaded avatar's measurements: each sign is placed on its body.
   const [body, setBody] = useState<Body>(DEFAULT_BODY);
   const [history, setHistory] = useState<string[]>([]);
@@ -78,7 +88,7 @@ function SignStudio() {
   const sign = useCallback((input: string) => {
     const clean = input.trim();
     if (!clean) return;
-    const plan = planSigns(clean);
+    const plan = planSigns(clean, languageRef.current);
     if (plan.items.length === 0) return;
     setCurrent({ text: clean, plan });
     setRun((r) => r + 1);
@@ -98,9 +108,12 @@ function SignStudio() {
     const params = new URLSearchParams(window.location.search);
     const id = params.get("signer") ?? readStored<string | null>(SIGNER_KEY, null);
     const saved = CHARACTERS.find((c) => c.id === id);
+    const savedLanguage = findLanguage(params.get("lang") ?? readStored<string | null>(LANGUAGE_KEY, null));
+    if (savedLanguage) languageRef.current = savedLanguage;
     const initial = params.get("text");
     queueMicrotask(() => {
       if (saved) setSigner(saved);
+      if (savedLanguage) setLanguage(savedLanguage);
       setMouthing(readStored<boolean>(MOUTHING_KEY, true));
       setHistory(readStored<string[]>(HISTORY_KEY, []));
       if (initial) {
@@ -136,6 +149,16 @@ function SignStudio() {
     setActive(-1);
   }, []);
 
+  const chooseLanguage = (id: string) => {
+    const next = findLanguage(id);
+    if (!next) return;
+    setLanguage(next);
+    languageRef.current = next;
+    store(LANGUAGE_KEY, next.id);
+    // Sign what is on screen again, in the new language.
+    if (current) sign(current.text);
+  };
+
   const chooseSigner = (c: Character) => {
     setSigner(c);
     store(SIGNER_KEY, c.id);
@@ -156,12 +179,21 @@ function SignStudio() {
           <span className="hidden font-mono text-xs text-subtle uppercase sm:block">Sign</span>
         </div>
         <div className="flex items-center gap-2">
-          <span
-            title="American Sign Language"
-            className="inline-flex h-7 items-center rounded-full border border-signal-deep/60 px-3 font-mono text-xs leading-none text-signal"
-          >
-            ASL
-          </span>
+          {SIGN_LANGUAGES.length > 1 ? (
+            <Segmented
+              items={SIGN_LANGUAGES.map((l) => ({ id: l.id, label: <span title={l.name}>{l.abbr}</span> }))}
+              value={language.id}
+              onChange={chooseLanguage}
+              label="Sign language"
+            />
+          ) : (
+            <span
+              title={language.name}
+              className="inline-flex h-7 items-center rounded-full border border-signal-deep/60 px-3 font-mono text-xs leading-none text-signal"
+            >
+              {language.abbr}
+            </span>
+          )}
           <button
             type="button"
             onClick={() => setCaptions((c) => !c)}

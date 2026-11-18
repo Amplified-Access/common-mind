@@ -89,7 +89,7 @@ export function buildTimeline(plan: Plan, body: Body = DEFAULT_BODY): Timeline {
     const keyframes: Keyframe[] =
       item.kind === "sign"
         ? item.sign.frames
-        : item.chars.flatMap((c, i) => spellFrames(c, i, item.chars[i - 1]));
+        : item.chars.flatMap((c, i) => spellFrames(c, i, item.chars[i - 1], plan.language.alphabet));
     const start = t;
     let rSpec: HandSpec = {};
     let lSpec: HandSpec = {};

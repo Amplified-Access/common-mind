@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import type { SignLanguage } from "./languages";
+import { LEXICON } from "./lexicon";
 import { planSigns } from "./plan";
 
 const glosses = (text: string) => planSigns(text).items.map((i) => i.gloss);
@@ -97,5 +99,40 @@ describe("planSigns", () => {
   it("plans nothing for empty or wordless text", () => {
     expect(planSigns("").items).toEqual([]);
     expect(planSigns("  ?! ").items).toEqual([]);
+  });
+
+  describe("in another sign language", () => {
+    const other: SignLanguage = {
+      id: "xxx",
+      abbr: "XSL",
+      name: "Test Sign Language",
+      lexicon: [{ gloss: "FRIEND-X", words: ["friend"], frames: [{ r: { shape: "B" } }] }],
+      alphabet: { A: { shape: "A" }, B: { shape: "B" } },
+      finalWh: new Set(),
+    };
+    const plan = (text: string) => planSigns(text, other).items;
+
+    it("signs with that language's signs", () => {
+      expect(plan("friend").map((i) => i.gloss)).toEqual(["FRIEND-X"]);
+    });
+
+    it("spells with that language's alphabet, leaving out letters it has none for", () => {
+      expect(plan("hello")).toEqual([]);
+      const [spelled] = plan("abc");
+      expect(spelled.kind === "spell" && spelled.chars).toEqual(["A", "B"]);
+    });
+
+    it("moves the question sign to the end only where the language does", () => {
+      const what = LEXICON.find((s) => s.gloss === "WHAT")!;
+      const lexicon = [...other.lexicon, what];
+      const glossesIn = (finalWh: Set<string>) =>
+        planSigns("What friend?", { ...other, lexicon, finalWh }).items.map((i) => i.gloss);
+      expect(glossesIn(new Set())).toEqual(["WHAT", "FRIEND-X"]);
+      expect(glossesIn(new Set(["WHAT"]))).toEqual(["FRIEND-X", "WHAT"]);
+    });
+
+    it("carries the language for the timeline to spell with", () => {
+      expect(planSigns("abc", other).language).toBe(other);
+    });
   });
 });

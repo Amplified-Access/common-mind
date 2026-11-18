@@ -10,9 +10,12 @@ const LETTER_DUR = 0.24;
 const LETTER_HOLD = 0.2;
 const DRIFT = 0.007;
 
-type Letter = { shape: string; palm?: string; fingers?: string; path?: HandSpec[] };
+export type Letter = { shape: string; palm?: string; fingers?: string; path?: HandSpec[] };
 
-const LETTERS: Record<string, Letter> = {
+/** A manual alphabet: the handshape for each letter and digit it spells. */
+export type ManualAlphabet = Readonly<Record<string, Letter>>;
+
+export const ASL_ALPHABET: ManualAlphabet = {
   A: { shape: "A" },
   B: { shape: "B" },
   C: { shape: "C", palm: "in-fwd" },
@@ -68,11 +71,17 @@ const LETTERS: Record<string, Letter> = {
   "9": { shape: "9", palm: "fwd-in" },
 };
 
-export const canSpell = (ch: string) => ch.toUpperCase() in LETTERS;
+export const canSpell = (ch: string, alphabet: ManualAlphabet = ASL_ALPHABET) =>
+  ch.toUpperCase() in alphabet;
 
 /** Keyframes for one character of a fingerspelled word. */
-export function spellFrames(ch: string, index: number, previous?: string): Keyframe[] {
-  const letter = LETTERS[ch.toUpperCase()];
+export function spellFrames(
+  ch: string,
+  index: number,
+  previous?: string,
+  alphabet: ManualAlphabet = ASL_ALPHABET,
+): Keyframe[] {
+  const letter = alphabet[ch.toUpperCase()];
   if (!letter) return [];
   // A repeated letter slides outward so the two read as two.
   const slide = previous?.toUpperCase() === ch.toUpperCase() ? 0.03 : 0;
