@@ -173,7 +173,9 @@ function SignStudio() {
       <header className="flex h-14 shrink-0 items-center justify-between gap-4 border-b border-line px-4 md:px-6">
         <div className="flex items-center gap-4">
           <Link href="/" aria-label="CommonMind home" className="shrink-0">
-            <Image src="/logo-white.svg" alt="CommonMind" width={225} height={37} priority className="h-6 w-auto" />
+            {/* The mark alone on phones, leaving room for the controls. */}
+            <span aria-hidden className="block h-6 w-7 bg-signal mask-[url(/icon-white.svg)] mask-contain mask-center mask-no-repeat sm:hidden" />
+            <Image src="/logo-white.svg" alt="CommonMind" width={225} height={37} priority className="hidden h-6 w-auto sm:block" />
           </Link>
           <span className="hidden h-5 w-px bg-line sm:block" />
           <span className="hidden font-mono text-xs text-subtle uppercase sm:block">Sign</span>
