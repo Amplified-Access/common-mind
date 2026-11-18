@@ -11,7 +11,14 @@ import type { SignDef } from "./types";
 export type Pause = "phrase" | "sentence";
 
 export type PlanItem = (
-  | { kind: "sign"; gloss: string; word: string; sign: SignDef }
+  | {
+      kind: "sign";
+      gloss: string;
+      word: string;
+      sign: SignDef;
+      /** The short name of the language the sign was borrowed from. */
+      borrowed?: string;
+    }
   | { kind: "spell"; gloss: string; word: string; chars: string[] }
 ) & { pause?: Pause };
 
@@ -134,16 +141,44 @@ function spell(word: string, alphabet: ManualAlphabet): PlanItem | null {
   return { kind: "spell", gloss, word, chars };
 }
 
+type Found = { sign: SignDef; borrowed?: string };
+
+/** Looks a word or phrase up in the language's own signs, then in the signs
+ * of the language it borrows from. */
+function finder(language: SignLanguage) {
+  const own = indexFor(language.lexicon);
+  const lender = language.borrowsFrom;
+  const lent = lender && indexFor(lender.lexicon);
+  const longest = Math.max(own.longest, lent?.longest ?? 1);
+  const find = (key: string): Found | undefined => {
+    const sign = own.words.get(key);
+    if (sign) return { sign };
+    const borrowed = lent?.words.get(key);
+    return borrowed && lender && { sign: borrowed, borrowed: lender.abbr };
+  };
+  return { find, longest };
+}
+
+type Finder = ReturnType<typeof finder>;
+
+const signItem = ({ sign, borrowed }: Found, word: string): PlanItem => ({
+  kind: "sign",
+  gloss: sign.gloss,
+  word,
+  sign,
+  ...(borrowed && { borrowed }),
+});
+
 /** One phrase's signs, matching the longest phrase that has a sign first. */
-function planPhrase(tokens: string[], index: Index, alphabet: ManualAlphabet): PlanItem[] {
+function planPhrase(tokens: string[], { find, longest }: Finder, alphabet: ManualAlphabet): PlanItem[] {
   const items: PlanItem[] = [];
   for (let i = 0; i < tokens.length; ) {
     let matched = false;
-    for (let n = Math.min(index.longest, tokens.length - i); n >= 2; n--) {
+    for (let n = Math.min(longest, tokens.length - i); n >= 2; n--) {
       const phrase = tokens.slice(i, i + n).join(" ");
-      const sign = index.words.get(phrase);
-      if (sign) {
-        items.push({ kind: "sign", gloss: sign.gloss, word: phrase, sign });
+      const found = find(phrase);
+      if (found) {
+        items.push(signItem(found, phrase));
         i += n;
         matched = true;
         break;
@@ -153,9 +188,9 @@ function planPhrase(tokens: string[], index: Index, alphabet: ManualAlphabet): P
 
     const word = tokens[i++];
     if (DROPPED.has(word)) continue;
-    const sign = index.words.get(word) ?? stems(word).map((s) => index.words.get(s)).find(Boolean);
-    if (sign) {
-      items.push({ kind: "sign", gloss: sign.gloss, word, sign });
+    const found = find(word) ?? stems(word).map(find).find(Boolean);
+    if (found) {
+      items.push(signItem(found, word));
       continue;
     }
     const spelled = spell(NUMBER_WORDS[word] ?? word, alphabet);
@@ -165,14 +200,14 @@ function planPhrase(tokens: string[], index: Index, alphabet: ManualAlphabet): P
 }
 
 export function planSigns(text: string, language: SignLanguage = ASL): Plan {
-  const index = indexFor(language.lexicon);
+  const lookup = finder(language);
   const sentences = tokenize(text);
   const items: PlanItem[] = [];
 
   for (const { words, question } of sentences) {
     const signed: PlanItem[] = [];
     for (const phrase of words) {
-      const planned = planPhrase(phrase, index, language.alphabet);
+      const planned = planPhrase(phrase, lookup, language.alphabet);
       if (planned.length > 0) planned[planned.length - 1].pause = "phrase";
       signed.push(...planned);
     }

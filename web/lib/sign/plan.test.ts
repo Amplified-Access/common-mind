@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { SignLanguage } from "./languages";
+import { ASL, type SignLanguage } from "./languages";
 import { LEXICON } from "./lexicon";
 import { planSigns } from "./plan";
 
@@ -129,6 +129,14 @@ describe("planSigns", () => {
         planSigns("What friend?", { ...other, lexicon, finalWh }).items.map((i) => i.gloss);
       expect(glossesIn(new Set())).toEqual(["WHAT", "FRIEND-X"]);
       expect(glossesIn(new Set(["WHAT"]))).toEqual(["FRIEND-X", "WHAT"]);
+    });
+
+    it("borrows a sign from another language for a word it has none for, and says so", () => {
+      const items = planSigns("friend thank you", { ...other, borrowsFrom: ASL }).items;
+      expect(items.map((i) => [i.gloss, i.kind === "sign" ? i.borrowed : undefined])).toEqual([
+        ["FRIEND-X", undefined],
+        ["THANK-YOU", "ASL"],
+      ]);
     });
 
     it("carries the language for the timeline to spell with", () => {
