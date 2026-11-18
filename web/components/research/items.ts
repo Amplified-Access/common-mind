@@ -98,5 +98,5 @@ export function researchItems({
   const dated = [...reports, ...releaseItems].sort((a, b) =>
     (b.date ?? "").localeCompare(a.date ?? ""),
   );
-  return [corpus, ...dated, signing, datasetIndex];
+  return [signing, corpus, ...dated, datasetIndex];
 }
