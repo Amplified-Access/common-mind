@@ -83,8 +83,21 @@ export function researchItems({
     cta: "Browse Datasets",
   };
 
+  const signing: ResearchItem = {
+    id: "sign",
+    title: "Signing Avatar",
+    kind: "Research",
+    description:
+      "Type or speak English and a 3D signer shows it in sign language, with word signs where it has them and fingerspelling for the rest.",
+    tags: ["Sign language", "3D avatar"],
+    languages: [],
+    topics: ["Sign language"],
+    href: "/sign",
+    cta: "Try the Signer",
+  };
+
   const dated = [...reports, ...releaseItems].sort((a, b) =>
     (b.date ?? "").localeCompare(a.date ?? ""),
   );
-  return [corpus, ...dated, datasetIndex];
+  return [corpus, ...dated, signing, datasetIndex];
 }
