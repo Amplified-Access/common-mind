@@ -426,5 +426,5 @@ export const LEXICON: SignDef[] = [
   ]),
 ];
 
-/** The question signs a wh-question can end on. */
+/** The question signs ASL moves to the end of a wh-question. */
 export const WH_GLOSSES = new Set(["WHAT", "WHERE", "WHO", "WHY", "HOW", "WHEN"]);

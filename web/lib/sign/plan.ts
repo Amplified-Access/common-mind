@@ -1,24 +1,32 @@
-import { canSpell } from "./alphabet";
-import { LEXICON, WH_GLOSSES } from "./lexicon";
+import { canSpell, type ManualAlphabet } from "./alphabet";
+import { ASL, type SignLanguage } from "./languages";
 import type { SignDef } from "./types";
 
-// English text to a sequence of ASL signs: a gloss. This is a word-by-word
-// rendering with a few of ASL's rules (no articles or "to be", wh-words
-// last, question faces). Full translation into ASL grammar is a model's job.
+// English text to a sequence of signs in one sign language: a gloss. This is
+// a word-by-word rendering with a few rules (no articles or "to be", and the
+// language's place for wh-words and question faces). Full translation into a
+// sign language's grammar is a model's job.
 
 /** A pause after an item: at a comma, or longer at the end of a sentence. */
 export type Pause = "phrase" | "sentence";
 
 export type PlanItem = (
-  | { kind: "sign"; gloss: string; word: string; sign: SignDef }
+  | {
+      kind: "sign";
+      gloss: string;
+      word: string;
+      sign: SignDef;
+      /** The short name of the language the sign was borrowed from. */
+      borrowed?: string;
+    }
   | { kind: "spell"; gloss: string; word: string; chars: string[] }
 ) & { pause?: Pause };
 
 export type Mood = "statement" | "wh-question" | "yn-question";
 
-export type Plan = { items: PlanItem[]; mood: Mood };
+export type Plan = { items: PlanItem[]; mood: Mood; language: SignLanguage };
 
-// Words ASL grammar has no sign for.
+// English words the sign languages here have no sign for.
 const DROPPED = new Set([
   "a", "an", "the", "is", "am", "are", "was", "were", "be", "been", "being",
   "to", "of", "do", "does", "did", "will", "would", "and",
@@ -103,7 +111,7 @@ function stems(word: string): string[] {
 
 type Index = { words: Map<string, SignDef>; longest: number };
 
-function indexLexicon(lexicon: SignDef[]): Index {
+function indexLexicon(lexicon: readonly SignDef[]): Index {
   const words = new Map<string, SignDef>();
   let longest = 1;
   for (const sign of lexicon) {
@@ -115,25 +123,62 @@ function indexLexicon(lexicon: SignDef[]): Index {
   return { words, longest };
 }
 
-const defaultIndex = indexLexicon(LEXICON);
+const indexes = new WeakMap<readonly SignDef[], Index>();
 
-function spell(word: string): PlanItem | null {
-  const chars = word.toUpperCase().split("").filter(canSpell);
+function indexFor(lexicon: readonly SignDef[]): Index {
+  let index = indexes.get(lexicon);
+  if (!index) {
+    index = indexLexicon(lexicon);
+    indexes.set(lexicon, index);
+  }
+  return index;
+}
+
+function spell(word: string, alphabet: ManualAlphabet): PlanItem | null {
+  const chars = word.toUpperCase().split("").filter((c) => canSpell(c, alphabet));
   if (chars.length === 0) return null;
   const gloss = /^\d+$/.test(word) ? `#${word}` : `fs-${chars.join("")}`;
   return { kind: "spell", gloss, word, chars };
 }
 
+type Found = { sign: SignDef; borrowed?: string };
+
+/** Looks a word or phrase up in the language's own signs, then in the signs
+ * of the language it borrows from. */
+function finder(language: SignLanguage) {
+  const own = indexFor(language.lexicon);
+  const lender = language.borrowsFrom;
+  const lent = lender && indexFor(lender.lexicon);
+  const longest = Math.max(own.longest, lent?.longest ?? 1);
+  const find = (key: string): Found | undefined => {
+    const sign = own.words.get(key);
+    if (sign) return { sign };
+    const borrowed = lent?.words.get(key);
+    return borrowed && lender && { sign: borrowed, borrowed: lender.abbr };
+  };
+  return { find, longest };
+}
+
+type Finder = ReturnType<typeof finder>;
+
+const signItem = ({ sign, borrowed }: Found, word: string): PlanItem => ({
+  kind: "sign",
+  gloss: sign.gloss,
+  word,
+  sign,
+  ...(borrowed && { borrowed }),
+});
+
 /** One phrase's signs, matching the longest phrase that has a sign first. */
-function planPhrase(tokens: string[], index: Index): PlanItem[] {
+function planPhrase(tokens: string[], { find, longest }: Finder, alphabet: ManualAlphabet): PlanItem[] {
   const items: PlanItem[] = [];
   for (let i = 0; i < tokens.length; ) {
     let matched = false;
-    for (let n = Math.min(index.longest, tokens.length - i); n >= 2; n--) {
+    for (let n = Math.min(longest, tokens.length - i); n >= 2; n--) {
       const phrase = tokens.slice(i, i + n).join(" ");
-      const sign = index.words.get(phrase);
-      if (sign) {
-        items.push({ kind: "sign", gloss: sign.gloss, word: phrase, sign });
+      const found = find(phrase);
+      if (found) {
+        items.push(signItem(found, phrase));
         i += n;
         matched = true;
         break;
@@ -143,32 +188,32 @@ function planPhrase(tokens: string[], index: Index): PlanItem[] {
 
     const word = tokens[i++];
     if (DROPPED.has(word)) continue;
-    const sign = index.words.get(word) ?? stems(word).map((s) => index.words.get(s)).find(Boolean);
-    if (sign) {
-      items.push({ kind: "sign", gloss: sign.gloss, word, sign });
+    const found = find(word) ?? stems(word).map(find).find(Boolean);
+    if (found) {
+      items.push(signItem(found, word));
       continue;
     }
-    const spelled = spell(NUMBER_WORDS[word] ?? word);
+    const spelled = spell(NUMBER_WORDS[word] ?? word, alphabet);
     if (spelled) items.push({ ...spelled, word });
   }
   return items;
 }
 
-export function planSigns(text: string, lexicon?: SignDef[]): Plan {
-  const index = lexicon ? indexLexicon(lexicon) : defaultIndex;
+export function planSigns(text: string, language: SignLanguage = ASL): Plan {
+  const lookup = finder(language);
   const sentences = tokenize(text);
   const items: PlanItem[] = [];
 
   for (const { words, question } of sentences) {
     const signed: PlanItem[] = [];
     for (const phrase of words) {
-      const planned = planPhrase(phrase, index);
+      const planned = planPhrase(phrase, lookup, language.alphabet);
       if (planned.length > 0) planned[planned.length - 1].pause = "phrase";
       signed.push(...planned);
     }
     if (signed.length === 0) continue;
-    // ASL puts the question sign at the end: YOUR NAME WHAT?
-    if (question && signed.length > 1 && WH_GLOSSES.has(signed[0].gloss)) {
+    // Some languages put the question sign at the end: YOUR NAME WHAT?
+    if (question && signed.length > 1 && language.finalWh.has(signed[0].gloss)) {
       const wh = signed.shift()!;
       delete wh.pause;
       signed.push(wh);
@@ -181,5 +226,5 @@ export function planSigns(text: string, lexicon?: SignDef[]): Plan {
   const wh = !!last?.question && last.words.flat().some((t) => WH_WORDS.has(t));
   const mood: Mood = wh ? "wh-question" : last?.question ? "yn-question" : "statement";
 
-  return { items, mood };
+  return { items, mood, language };
 }

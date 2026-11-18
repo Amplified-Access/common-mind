@@ -24,6 +24,7 @@ export const getStarted = {
       title: "Resources",
       languages: "Languages",
       benchmarks: "Benchmarks",
+      sign: "Sign",
       contributing: "Contributing",
     },
   },
@@ -76,6 +77,10 @@ export const getStarted = {
     evaluation: {
       title: "Language Evaluation",
       text: "Measure and compare model performance using available benchmarks.",
+    },
+    sign: {
+      title: "Sign",
+      text: "Type or speak in English and a virtual signer shows it in sign language.",
     },
     community: {
       title: "Community Research",

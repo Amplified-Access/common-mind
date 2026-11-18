@@ -16,6 +16,7 @@ import { FramedCard } from "@/components/system/framed-card";
 import { Segmented } from "@/components/system/segmented";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CHARACTERS, type Character } from "@/lib/sign/characters";
+import { SIGN_LANGUAGES, type SignLanguage } from "@/lib/sign/languages";
 import { type Plan, planSigns } from "@/lib/sign/plan";
 import { type Body, DEFAULT_BODY } from "@/lib/sign/body";
 import { type Timeline, activeItem, buildTimeline } from "@/lib/sign/timeline";
@@ -36,8 +37,14 @@ const EXAMPLES = ["Hello, my name is Grace", "Thank you, friend", "What is your 
 const HISTORY_KEY = "sign:recent";
 const SIGNER_KEY = "sign:signer";
 const MOUTHING_KEY = "sign:mouthing";
+const LANGUAGE_KEY = "sign:language";
 
-// Per-viewer conveniences: the signer they chose and what they signed lately.
+/** A sign language by its code or short name (ase, asl). */
+const findLanguage = (key: string | null) =>
+  SIGN_LANGUAGES.find((l) => l.id === key?.toLowerCase() || l.abbr.toLowerCase() === key?.toLowerCase());
+
+// Per-viewer conveniences: the signer and sign language they chose and what
+// they signed lately.
 function readStored<T>(key: string, fallback: T): T {
   try {
     const raw = window.localStorage.getItem(key);
@@ -68,17 +75,19 @@ function SignStudio() {
   // viewer who lip-reads. On unless the viewer turned it off.
   const [mouthing, setMouthing] = useState(true);
   const [signer, setSigner] = useState<Character>(CHARACTERS[0]);
+  const [language, setLanguage] = useState<SignLanguage>(SIGN_LANGUAGES[0]);
+  // Read when signing, so changing language keeps sign() the same function.
+  const languageRef = useRef(language);
   // The loaded avatar's measurements: each sign is placed on its body.
   const [body, setBody] = useState<Body>(DEFAULT_BODY);
   const [history, setHistory] = useState<string[]>([]);
   const [active, setActive] = useState(-1);
-  const progressRef = useRef<HTMLSpanElement>(null);
   const activeRef = useRef(-1);
 
   const sign = useCallback((input: string) => {
     const clean = input.trim();
     if (!clean) return;
-    const plan = planSigns(clean);
+    const plan = planSigns(clean, languageRef.current);
     if (plan.items.length === 0) return;
     setCurrent({ text: clean, plan });
     setRun((r) => r + 1);
@@ -98,9 +107,12 @@ function SignStudio() {
     const params = new URLSearchParams(window.location.search);
     const id = params.get("signer") ?? readStored<string | null>(SIGNER_KEY, null);
     const saved = CHARACTERS.find((c) => c.id === id);
+    const savedLanguage = findLanguage(params.get("lang") ?? readStored<string | null>(LANGUAGE_KEY, null));
+    if (savedLanguage) languageRef.current = savedLanguage;
     const initial = params.get("text");
     queueMicrotask(() => {
       if (saved) setSigner(saved);
+      if (savedLanguage) setLanguage(savedLanguage);
       setMouthing(readStored<boolean>(MOUTHING_KEY, true));
       setHistory(readStored<string[]>(HISTORY_KEY, []));
       if (initial) {
@@ -122,7 +134,6 @@ function SignStudio() {
   );
 
   const onFrame = useCallback((t: number, tl: Timeline) => {
-    if (progressRef.current) progressRef.current.style.width = `${(t / tl.duration) * 100}%`;
     const i = activeItem(tl, t);
     if (i !== activeRef.current) {
       activeRef.current = i;
@@ -136,12 +147,21 @@ function SignStudio() {
     setActive(-1);
   }, []);
 
+  const chooseLanguage = (id: string) => {
+    const next = findLanguage(id);
+    if (!next) return;
+    setLanguage(next);
+    languageRef.current = next;
+    store(LANGUAGE_KEY, next.id);
+    // Sign what is on screen again, in the new language.
+    if (current) sign(current.text);
+  };
+
   const chooseSigner = (c: Character) => {
     setSigner(c);
     store(SIGNER_KEY, c.id);
   };
 
-  const status = playing ? (paused ? "Paused" : "Signing") : "Ready";
   const timeline = useMemo(() => (current ? buildTimeline(current.plan, body) : null), [current, body]);
   const items = timeline?.items ?? [];
 
@@ -150,18 +170,29 @@ function SignStudio() {
       <header className="flex h-14 shrink-0 items-center justify-between gap-4 border-b border-line px-4 md:px-6">
         <div className="flex items-center gap-4">
           <Link href="/" aria-label="CommonMind home" className="shrink-0">
-            <Image src="/logo-white.svg" alt="CommonMind" width={225} height={37} priority className="h-6 w-auto" />
+            {/* The mark alone on phones, leaving room for the controls. */}
+            <span aria-hidden className="block h-6 w-7 bg-signal mask-[url(/icon-white.svg)] mask-contain mask-center mask-no-repeat sm:hidden" />
+            <Image src="/logo-white.svg" alt="CommonMind" width={225} height={37} priority className="hidden h-6 w-auto sm:block" />
           </Link>
           <span className="hidden h-5 w-px bg-line sm:block" />
           <span className="hidden font-mono text-xs text-subtle uppercase sm:block">Sign</span>
         </div>
         <div className="flex items-center gap-2">
-          <span
-            title="American Sign Language"
-            className="inline-flex h-7 items-center rounded-full border border-signal-deep/60 px-3 font-mono text-xs leading-none text-signal"
-          >
-            ASL
-          </span>
+          {SIGN_LANGUAGES.length > 1 ? (
+            <Segmented
+              items={SIGN_LANGUAGES.map((l) => ({ id: l.id, label: <span title={l.name}>{l.abbr}</span> }))}
+              value={language.id}
+              onChange={chooseLanguage}
+              label="Sign language"
+            />
+          ) : (
+            <span
+              title={language.name}
+              className="inline-flex h-7 items-center rounded-full border border-signal-deep/60 px-3 font-mono text-xs leading-none text-signal"
+            >
+              {language.abbr}
+            </span>
+          )}
           <button
             type="button"
             onClick={() => setCaptions((c) => !c)}
@@ -267,16 +298,6 @@ function SignStudio() {
               onBody={setBody}
               className="absolute inset-0"
             />
-
-            <div className="absolute top-3 left-3 flex items-center gap-2.5 rounded-full border border-line bg-background/70 py-1.5 pr-3 pl-2.5 backdrop-blur">
-              <span className={cn("size-1.5 rounded-full", playing && !paused ? "bg-signal" : "bg-subtle")} />
-              <span className="font-mono text-xs leading-none">{status}</span>
-              {playing && (
-                <span className="relative h-1 w-16 overflow-hidden rounded-full bg-white/10">
-                  <span ref={progressRef} className="absolute inset-y-0 left-0 bg-signal" />
-                </span>
-              )}
-            </div>
 
             {current && (
               <div className="absolute top-3 right-3 flex gap-2">
