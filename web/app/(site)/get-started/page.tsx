@@ -1,4 +1,5 @@
 import {
+  Accessibility,
   ChartEvaluation,
   Code,
   DataBase,
@@ -40,6 +41,7 @@ const sidebar = {
   resources: [
     { id: "languages", href: "/languages" },
     { id: "benchmarks", href: "/benchmarks" },
+    { id: "sign", href: "/sign" },
     { id: "contributing", href: "/data-lab" },
   ],
 } as const;
@@ -57,6 +59,7 @@ const tasks = [
   { id: "languages", href: "/languages", icon: Language },
   { id: "classification", href: "/applications", icon: Tag },
   { id: "evaluation", href: "/benchmarks", icon: ChartEvaluation },
+  { id: "sign", href: "/sign", icon: Accessibility },
   { id: "community", href: "/data-lab", icon: UserMultiple },
 ] as const;
 
