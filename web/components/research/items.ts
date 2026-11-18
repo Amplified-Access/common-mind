@@ -85,10 +85,9 @@ export function researchItems({
 
   const signing: ResearchItem = {
     id: "sign",
-    title: "Signing Avatar",
+    title: "Sign",
     kind: "Research",
-    description:
-      "Type or speak English and a 3D signer shows it in sign language, with word signs where it has them and fingerspelling for the rest.",
+    description: "Type or speak in English and a virtual signer shows it in sign language.",
     tags: ["Sign language", "3D avatar"],
     languages: [],
     topics: ["Sign language"],

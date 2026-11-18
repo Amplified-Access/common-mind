@@ -24,7 +24,7 @@ export const getStarted = {
       title: "Resources",
       languages: "Languages",
       benchmarks: "Benchmarks",
-      sign: "Signing Avatar",
+      sign: "Sign",
       contributing: "Contributing",
     },
   },
@@ -79,8 +79,8 @@ export const getStarted = {
       text: "Measure and compare model performance using available benchmarks.",
     },
     sign: {
-      title: "Sign Language",
-      text: "Type or speak English and a 3D signer shows it in sign language.",
+      title: "Sign",
+      text: "Type or speak in English and a virtual signer shows it in sign language.",
     },
     community: {
       title: "Community Research",
