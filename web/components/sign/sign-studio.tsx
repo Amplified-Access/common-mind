@@ -82,7 +82,6 @@ function SignStudio() {
   const [body, setBody] = useState<Body>(DEFAULT_BODY);
   const [history, setHistory] = useState<string[]>([]);
   const [active, setActive] = useState(-1);
-  const progressRef = useRef<HTMLSpanElement>(null);
   const activeRef = useRef(-1);
 
   const sign = useCallback((input: string) => {
@@ -135,7 +134,6 @@ function SignStudio() {
   );
 
   const onFrame = useCallback((t: number, tl: Timeline) => {
-    if (progressRef.current) progressRef.current.style.width = `${(t / tl.duration) * 100}%`;
     const i = activeItem(tl, t);
     if (i !== activeRef.current) {
       activeRef.current = i;
@@ -164,7 +162,6 @@ function SignStudio() {
     store(SIGNER_KEY, c.id);
   };
 
-  const status = playing ? (paused ? "Paused" : "Signing") : "Ready";
   const timeline = useMemo(() => (current ? buildTimeline(current.plan, body) : null), [current, body]);
   const items = timeline?.items ?? [];
 
@@ -301,16 +298,6 @@ function SignStudio() {
               onBody={setBody}
               className="absolute inset-0"
             />
-
-            <div className="absolute top-3 left-3 flex items-center gap-2.5 rounded-full border border-line bg-background/70 py-1.5 pr-3 pl-2.5 backdrop-blur">
-              <span className={cn("size-1.5 rounded-full", playing && !paused ? "bg-signal" : "bg-subtle")} />
-              <span className="font-mono text-xs leading-none">{status}</span>
-              {playing && (
-                <span className="relative h-1 w-16 overflow-hidden rounded-full bg-white/10">
-                  <span ref={progressRef} className="absolute inset-y-0 left-0 bg-signal" />
-                </span>
-              )}
-            </div>
 
             {current && (
               <div className="absolute top-3 right-3 flex gap-2">
