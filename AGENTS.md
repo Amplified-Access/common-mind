@@ -18,7 +18,7 @@ Claude Code users: see `CLAUDE.md` for the feature development workflow and suba
 
 ## Setup
 
-Prerequisites: Go 1.25+, Node.js 22+, pnpm, Docker + Docker Compose.
+Prerequisites: Go 1.26+, Node.js 22+, pnpm, Docker + Docker Compose.
 
 ```bash
 make setup                      # first run: checks tools, installs deps, copies .env files, migrates
