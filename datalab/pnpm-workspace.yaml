@@ -1,3 +1,10 @@
 ignoredBuiltDependencies:
   - sharp
   - unrs-resolver
+
+# Patched releases of transitive dependencies with security advisories,
+# for packages whose parents have not picked them up yet. Remove an entry
+# once the parent depends on a fixed version.
+overrides:
+  '@grpc/grpc-js@<1.13.6': ^1.13.6
+  'minimatch@>=7.0.0 <11.0.1': ^11.0.1
