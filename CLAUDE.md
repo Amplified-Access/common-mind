@@ -6,7 +6,7 @@ See `AGENTS.md` for setup, Data Lab rules, and security rules; `docs/adr/` for a
 | Layer | Tech |
 |---|---|
 | Frontend | Next.js 16, React 19, TypeScript 5, Tailwind CSS 4 |
-| Backend | Go 1.25, Gin, `database/sql` + pgx v5 stdlib |
+| Backend | Go 1.26, Gin, `database/sql` + pgx v5 stdlib |
 | Database | PostgreSQL 16 + Redis 7 via Docker Compose |
 | Content | Sanity, Studio embedded at `/studio` — see `web/docs/cms.md` |
 | Inference | Python (FastAPI) on a Runpod GPU pod — see `inference/README.md` |

@@ -13,7 +13,7 @@ tools:
 You are a Go backend specialist for this project.
 
 ## Stack
-- Go 1.25, Gin web framework
+- Go 1.26, Gin web framework
 - `database/sql` with the pgx v5 stdlib driver
 - Postgres (goose migrations), Redis + Asynq, Cloudflare R2, Firebase Admin SDK
 - Env vars loaded via the `godotenv/autoload` blank import in `internal/bootstrap/bootstrap.go`

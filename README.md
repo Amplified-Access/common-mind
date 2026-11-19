@@ -22,7 +22,7 @@ The layout follows the fullstack template shared with Blaze and ActionChallenge 
 | Layer | Technology |
 |---|---|
 | Web | Next.js 16, React 19, TypeScript 5, Tailwind CSS 4 |
-| Backend | Go 1.25, Gin, `database/sql` + pgx v5 |
+| Backend | Go 1.26, Gin, `database/sql` + pgx v5 |
 | Data | PostgreSQL 16 (goose migrations), Redis 7 + Asynq, Cloudflare R2 |
 | Auth | Firebase Authentication |
 | Inference | Python, FastAPI, Runpod |
@@ -31,7 +31,7 @@ The layout follows the fullstack template shared with Blaze and ActionChallenge 
 
 ## Getting started
 
-Prerequisites: Go 1.25+, Node.js 22+, pnpm, and Docker (running).
+Prerequisites: Go 1.26+, Node.js 22+, pnpm, and Docker (running).
 
 ```bash
 make setup   # checks tools, installs web deps, copies .env files, starts Postgres + Redis, migrates
