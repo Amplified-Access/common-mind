@@ -89,4 +89,4 @@ cd web && pnpm dev                     # site on :3000
 
 ## License
 
-[MIT](LICENSE). Datasets and models published by CommonMind carry their own licences, listed on their pages.
+[Apache 2.0](LICENSE). Datasets and models published by CommonMind carry their own licences, listed on their pages.
