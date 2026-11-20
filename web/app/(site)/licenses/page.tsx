@@ -52,7 +52,17 @@ const LicensesPage = async () => {
       </LegalSection>
 
       <LegalSection number={3} title={copy.website.title}>
-        <p className="text-signal">{copy.website.text}</p>
+        <p>{copy.website.text}</p>
+        <p>
+          <a
+            href="https://github.com/Amplified-Access/common-mind/blob/main/LICENSE"
+            target="_blank"
+            rel="noreferrer"
+            className="text-foreground underline underline-offset-4 hover:text-signal"
+          >
+            {copy.website.link} ↗
+          </a>
+        </p>
       </LegalSection>
     </LegalDocument>
   );

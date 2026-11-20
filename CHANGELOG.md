@@ -5,6 +5,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Fixed
+
+- The Licenses page states the website's license (Apache 2.0) and links to it on GitHub, replacing a placeholder.
+
 ## [1.0.0] - 2026-11-20
 
 First public release of CommonMind: open language models, datasets and benchmarks for African languages, and the Data Lab for building civic language datasets.

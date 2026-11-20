@@ -18,6 +18,7 @@ export const licenses = {
   },
   website: {
     title: "This Website",
-    text: "[License for the website's code and content to be provided.]",
+    text: "The website's source code is open source under the Apache License 2.0. The models and datasets listed above keep their own licenses.",
+    link: "Read the license on GitHub",
   },
 };
