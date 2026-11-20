@@ -76,10 +76,10 @@ export const registry: Record<string, RegistryMeta> = {
       { label: "Kaggle" },
     ],
     evaluation: {
-      set: "Held-out SALT-derived test split (100 examples, English↔Luganda)",
-      short: "SALT held-out",
+      set: "Held-out test split of the SALT and Kimera training data (100 examples, English↔Luganda)",
+      short: "Held-out split",
       summary:
-        "Evaluated on 100 English–Luganda examples from a held-out split of the Sunbird SALT corpus, measuring translation quality on sentences the model never saw in training.",
+        "Evaluated on 100 English–Luganda examples from a held-out split of the training data (the Sunbird SALT corpus and the Kimera English–Luganda corpus), measuring translation quality on sentences the model never saw in training.",
       bleu: 13.85,
       chrf: 46.59,
       baseBleu: 0.06,
