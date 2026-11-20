@@ -9,7 +9,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 import { buttonClasses } from "@/components/system/primitives";
-import { hubs, isActive, isStandalone, navItems } from "@/lib/site";
+import { hubs, isActive, isStandalone, navItems, sourceCode } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 import { HubsMenu } from "./hubs-menu";
@@ -165,6 +165,14 @@ const Header = () => {
                   </a>
                 ))}
               </div>
+              <a
+                href={sourceCode.href}
+                target="_blank"
+                rel="noreferrer"
+                className={buttonClasses("outline", "h-11")}
+              >
+                {sourceCode.label}
+              </a>
             </div>
           </SheetContent>
         </Sheet>

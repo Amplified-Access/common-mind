@@ -37,6 +37,7 @@ export const site = {
     huggingface: "https://huggingface.co/AmplifiedAccess",
     kaggle: "https://www.kaggle.com/amplifiedaccess",
     ollama: "https://ollama.com/amplifiedaccessorg",
+    github: "https://github.com/Amplified-Access/common-mind",
   },
 } as const;
 
@@ -46,6 +47,9 @@ export const hubs = [
   { label: "Kaggle", href: site.links.kaggle },
   { label: "Ollama", href: site.links.ollama },
 ] as const;
+
+// Where the platform's code lives, in the same menu.
+export const sourceCode = { label: "GitHub", href: site.links.github } as const;
 
 export function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);

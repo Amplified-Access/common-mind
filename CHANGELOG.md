@@ -5,6 +5,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- A link to the source code on GitHub in the header's Repositories menu, the mobile menu, and the footer's Developers column.
+
 ### Fixed
 
 - The Licenses page states the website's license (Apache 2.0) and links to it on GitHub, replacing a placeholder.
