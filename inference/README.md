@@ -42,10 +42,16 @@ uses it, so it does not stay up on its own.
    ```bash
    ssh -i ~/.runpod/ssh/runpodctl-ssh-key -p <ssh-port> root@<pod-ip>
    cd /workspace
-   HF_TOKEN=<hf-token> TRANSLATE_API_KEY=<shared-secret> \
-     nohup python3 -m uvicorn server:app --host 0.0.0.0 --port 8000 \
+   read -rsp 'HF token: ' HF_TOKEN; echo
+   read -rsp 'Translate API key: ' TRANSLATE_API_KEY; echo
+   export HF_TOKEN TRANSLATE_API_KEY
+   nohup python3 -m uvicorn server:app --host 0.0.0.0 --port 8000 \
      > /workspace/server.log 2>&1 &
    ```
+
+   `read -s` keeps both secrets out of shell history and off the screen.
+   Use a read-only Hugging Face token here, not a personal token with write
+   or org access.
 
    This downloads ~13GB of weights from HuggingFace; watch for
    `ALL MODELS LOADED` in `server.log`. It happens on **every** start: the pod
