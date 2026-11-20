@@ -6,7 +6,7 @@ export const licenses = {
     description: "The licenses CommonMind's models are released under, and where each dataset's terms live.",
   },
   title: "Licenses",
-  updated: "October 2026",
+  updated: "November 2026",
   models: {
     title: "Models",
     intro: "Each model is released under its own license, and adapters also inherit the terms of the base model they load.",
