@@ -8,10 +8,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 ### Added
 
 - A link to the source code on GitHub in the header's Repositories menu, the mobile menu, and the footer's Developers column.
+- Kaggle in the "Available on" list of all four models, which are now published on Kaggle.
 
 ### Fixed
 
 - The Licenses page states the website's license (Apache 2.0) and links to it on GitHub, replacing a placeholder.
+- The Luganda model's evaluation is described as a held-out split of its SALT and Kimera training data, not of SALT alone.
 
 ## [1.0.0] - 2026-11-20
 

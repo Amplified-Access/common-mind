@@ -47,6 +47,7 @@ export type RegistryMeta = {
 };
 
 const hf = (id: string) => `https://huggingface.co/${id}`;
+const kaggle = (slug: string) => `https://www.kaggle.com/models/amplifiedaccess/${slug}`;
 
 export const registry: Record<string, RegistryMeta> = {
   "luganda-gemma-1b-it": {
@@ -73,13 +74,13 @@ export const registry: Record<string, RegistryMeta> = {
     availability: [
       { label: "Hugging Face", href: hf("AmplifiedAccess/Luganda-gemma-1b-it") },
       { label: "Ollama", href: "https://ollama.com/amplifiedaccessorg/Luganda-gemma-1b-it" },
-      { label: "Kaggle" },
+      { label: "Kaggle", href: kaggle("luganda-gemma-1b-it") },
     ],
     evaluation: {
-      set: "Held-out SALT-derived test split (100 examples, English↔Luganda)",
-      short: "SALT held-out",
+      set: "Held-out test split of the SALT and Kimera training data (100 examples, English↔Luganda)",
+      short: "Held-out split",
       summary:
-        "Evaluated on 100 English–Luganda examples from a held-out split of the Sunbird SALT corpus, measuring translation quality on sentences the model never saw in training.",
+        "Evaluated on 100 English–Luganda examples from a held-out split of the training data (the Sunbird SALT corpus and the Kimera English–Luganda corpus), measuring translation quality on sentences the model never saw in training.",
       bleu: 13.85,
       chrf: 46.59,
       baseBleu: 0.06,
@@ -112,7 +113,7 @@ export const registry: Record<string, RegistryMeta> = {
     availability: [
       { label: "Hugging Face", href: hf("AmplifiedAccess/Swahili-gemma-1b-it") },
       { label: "Ollama", href: "https://ollama.com/amplifiedaccessorg/Swahili-gemma-1b-it" },
-      { label: "Kaggle" },
+      { label: "Kaggle", href: kaggle("swahili-gemma-1b-it") },
     ],
     evaluation: {
       set: "FLORES-200 devtest (1,012 sentence pairs, English→Swahili)",
@@ -130,7 +131,7 @@ export const registry: Record<string, RegistryMeta> = {
   "swahili-nllb-1-3b": {
     name: "Swahili-nllb-1.3B",
     languages: ["sw"],
-    platforms: ["HuggingFace"],
+    platforms: ["HuggingFace", "Kaggle"],
     hfId: "AmplifiedAccess/Swahili-nllb-1.3b",
     task: "translation",
     languageNames: ["Swahili", "English"],
@@ -150,6 +151,7 @@ export const registry: Record<string, RegistryMeta> = {
     maxLength: "128 tokens",
     availability: [
       { label: "Hugging Face", href: hf("AmplifiedAccess/Swahili-nllb-1.3b") },
+      { label: "Kaggle", href: kaggle("swahili-nllb-1-3b") },
     ],
     evaluation: {
       set: "FLORES-200 devtest (1,012 sentence pairs, English→Swahili)",
@@ -165,7 +167,7 @@ export const registry: Record<string, RegistryMeta> = {
   "swahili-nllb-600m": {
     name: "Swahili-nllb-600M",
     languages: ["sw"],
-    platforms: ["HuggingFace"],
+    platforms: ["HuggingFace", "Kaggle"],
     hfId: "AmplifiedAccess/Swahili-nllb-600m",
     task: "translation",
     languageNames: ["Swahili", "English"],
@@ -185,6 +187,7 @@ export const registry: Record<string, RegistryMeta> = {
     maxLength: "128 tokens",
     availability: [
       { label: "Hugging Face", href: hf("AmplifiedAccess/Swahili-nllb-600m") },
+      { label: "Kaggle", href: kaggle("swahili-nllb-600m") },
     ],
     evaluation: {
       set: "FLORES-200 devtest (1,012 sentence pairs, English→Swahili)",

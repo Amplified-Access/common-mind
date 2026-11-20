@@ -72,12 +72,12 @@ export const swahiliFlores: LanguageBenchmark = {
   ],
 };
 
-// Luganda: our model was scored on a held-out SALT-derived split, so it is
+// Luganda: our model was scored on a held-out split of its SALT + Kimera training data, so it is
 // only compared head-to-head with the base model on that same split.
 export const lugandaHeldOut: LanguageBenchmark = {
   code: "lg",
   label: "English ↔ Luganda",
-  evalSet: "Held-out SALT-derived test split · 100 examples",
+  evalSet: "Held-out SALT + Kimera test split · 100 examples",
   entries: [
     {
       model: "Gemma 3 1B (base)",
