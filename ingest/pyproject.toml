@@ -1,6 +1,6 @@
 [project]
 name = "ingest"
-version = "0.1.0"
+version = "1.0.0"
 description = "Offline pipeline that turns openly licensed documents into Data Lab import files (ADR 0013)"
 readme = "README.md"
 requires-python = ">=3.11.5"
