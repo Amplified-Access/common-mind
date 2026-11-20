@@ -77,10 +77,10 @@ export const registry: Record<string, RegistryMeta> = {
       { label: "Kaggle", href: kaggle("luganda-gemma-1b-it") },
     ],
     evaluation: {
-      set: "Held-out test split of the SALT and Kimera training data (100 examples, English↔Luganda)",
-      short: "Held-out split",
+      set: "Test split of the SALT and Kimera training data (100 examples, English↔Luganda), overlapping the training sentences",
+      short: "Training-data test split",
       summary:
-        "Evaluated on 100 English–Luganda examples from a held-out split of the training data (the Sunbird SALT corpus and the Kimera English–Luganda corpus), measuring translation quality on sentences the model never saw in training.",
+        "Evaluated on 100 English–Luganda examples from a test split of the training data (the Sunbird SALT corpus and the Kimera English–Luganda corpus). The split was made after each sentence pair was turned into several prompts, so 95 of the 100 test sentences also appear in training in another form, such as the opposite translation direction. The score is not a held-out result and is not comparable to the FLORES-200 scores of the Swahili models.",
       bleu: 13.85,
       chrf: 46.59,
       baseBleu: 0.06,

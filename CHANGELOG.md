@@ -13,7 +13,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 ### Fixed
 
 - The Licenses page states the website's license (Apache 2.0) and links to it on GitHub, replacing a placeholder.
-- The Luganda model's evaluation is described as a held-out split of its SALT and Kimera training data, not of SALT alone.
+- The Luganda model's evaluation is described accurately: a test split of its SALT and Kimera training data in which 95 of the 100 scored sentences also appear in training, not a held-out SALT split.
 
 ## [1.0.0] - 2026-11-20
 

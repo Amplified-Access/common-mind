@@ -44,7 +44,7 @@ export const benchmarks = {
       "BLEU measures n-gram overlap with reference translations, while chrF++ captures character- and word-level similarity, providing additional sensitivity to morphological variation.",
     standardisedTitle: "Standardised Evaluation",
     standardised:
-      "Models are compared using shared evaluation sets. Swahili models are evaluated on FLORES-200, while Luganda models use a held-out test set.",
+      "Models are compared using shared evaluation sets. Swahili models are evaluated on FLORES-200, while Luganda models use a test split of their training data.",
     reproducibleTitle: "Reproducible Results",
     reproducible:
       "Evaluation methods, datasets, and model configurations are documented to support transparent, consistent, and reproducible comparisons.",

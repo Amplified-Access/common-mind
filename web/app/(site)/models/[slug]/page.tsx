@@ -92,7 +92,18 @@ const ModelPage = async ({ params }: PageProps) => {
           },
           {
             label: "Available on",
-            value: model.availability.map((a) => a.label).join(", "),
+            value: model.availability.map((a, i) => (
+              <span key={a.label}>
+                {i > 0 && ", "}
+                {a.href ? (
+                  <a href={a.href} target="_blank" rel="noreferrer" className="hover:text-signal">
+                    {a.label} ↗
+                  </a>
+                ) : (
+                  a.label
+                )}
+              </span>
+            )),
           },
         ]}
       />

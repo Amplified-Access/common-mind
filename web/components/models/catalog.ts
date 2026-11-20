@@ -29,7 +29,7 @@ export function modelCardData(model: RegistryModel): ModelCardData {
       { label: "Direction", value: model.directions.join(", ") },
       {
         label: "BLEU",
-        value: `${model.evaluation.bleu.toFixed(2)}${model.evaluation.flores ? "" : " (held-out)"}`,
+        value: `${model.evaluation.bleu.toFixed(2)}${model.evaluation.flores ? "" : " (training-data split)"}`,
       },
       { label: "Trained", value: `${model.trainable} params` },
     ],
