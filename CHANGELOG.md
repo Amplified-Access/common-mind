@@ -8,6 +8,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 ### Added
 
 - A link to the source code on GitHub in the header's Repositories menu, the mobile menu, and the footer's Developers column.
+- Kaggle in the "Available on" list of all four models, which are now published on Kaggle.
 
 ### Fixed
 
