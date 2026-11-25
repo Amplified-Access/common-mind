@@ -83,7 +83,9 @@ export function createLiveRetarget() {
     const shape = handShape(frame, s, video);
     if (shape) held[s] = { shape, t: frame.t };
     const kept = held[s] && frame.t - held[s].t <= HOLD ? held[s].shape : null;
-    return handPose(frame, s, body, scale, shape ?? kept, !!shape);
+    // Only a hand in view signs; a flicker in tracking keeps the last pose.
+    const inView = shape ?? kept;
+    return handPose(frame, s, body, scale, inView, !!inView);
   };
 
   return {

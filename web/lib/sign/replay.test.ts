@@ -167,6 +167,23 @@ describe("replayTimeline", () => {
     l.wrist.forEach((v, i) => expect(v).toBeCloseTo(REST_HAND.wrist[i], 5));
   });
 
+  it("doesn't sign with a hand that isn't in view, even where the body tracker places its arm", () => {
+    // The arm is raised and plainly visible to the body tracker, but no hand
+    // is tracked: the hand is out of frame.
+    const raised = pose({ wristR: [-0.18, -0.25, -0.3], elbowR: [-0.24, -0.25, -0.05] });
+    const frames = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => frame(i / 10, { body: raised }));
+    const tl = replayTimeline(file(frames));
+    samplePose(tl, 0.5).r.wrist.forEach((v, i) => expect(v).toBeCloseTo(REST_HAND.wrist[i], 5));
+  });
+
+  it("rests a hand once it has been out of view longer than a moment", () => {
+    const fist = mediaPipeHand(jointsFor("A"), flat, "left");
+    // Tracked for the first five frames, then gone for the rest of the second.
+    const frames = Array.from({ length: 30 }, (_, i) => frame(i / 30, i < 5 ? { left: fist, leftWorld: fist } : {}));
+    const tl = replayTimeline(file(frames));
+    samplePose(tl, 29 / 30).l.wrist.forEach((v, i) => expect(v).toBeCloseTo(REST_HAND.wrist[i], 5));
+  });
+
   it("keeps the handshape through a brief gap in hand tracking", () => {
     const fist = mediaPipeHand(jointsFor("A"), flat, "left");
     const frames = [0, 1, 2, 3, 4, 5, 6].map((i) =>

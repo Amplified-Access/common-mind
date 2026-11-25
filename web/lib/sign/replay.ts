@@ -22,8 +22,10 @@ import type { FacePose, HandPose, HeadPose, Pose, Quat, Vec3 } from "./types";
 // - Head: turn, nod and tilt from the ears and nose, measured from the way
 //   the signer usually faced through the take.
 //
-// Tracking jitters, so every track is smoothed over a few frames. A hand out
-// of view goes to rest; a hand lost for a moment keeps its last shape.
+// Tracking jitters, so every track is smoothed over a few frames. Only a
+// hand in view signs: a side whose hand isn't tracked rests, even where the
+// body tracker still places its arm. A hand lost for a moment, as tracking
+// flickers, keeps its last pose.
 
 type Triple = readonly [number, number, number];
 export type Side = "left" | "right";
@@ -33,10 +35,11 @@ export type HandShape = Pick<HandPose, "quat" | "joints">;
  * and face. At 30 frames a second, a few hundredths of a second. */
 const SMOOTH_HANDS = 2;
 const SMOOTH_FACE = 1;
-/** How long a hand lost from view keeps its last shape, in seconds. */
-export const HOLD = 0.5;
-/** Below this, a pose point is a guess: an arm whose wrist is this unsure,
- * with no hand tracked, is resting out of view. */
+/** How long a hand lost from tracking keeps signing, in seconds: long
+ * enough to ride over a flicker, short enough that a hand leaving the view
+ * goes to rest. */
+export const HOLD = 0.3;
+/** Below this, a pose point is a guess, left out of the arm's length. */
 const VISIBLE = 0.5;
 export const HEAD_LIMIT = 0.6;
 
@@ -208,10 +211,10 @@ export function handShape(f: LandmarkFrame, side: Side, video: LandmarksFile["vi
 }
 
 /**
- * A side's hand in a frame. The arm is tracked when the frame has a pose and
- * either a hand was tracked (`seen`) or the wrist is plainly in view; it
- * then reaches from its own shoulder as the signer's did, scaled to the
- * avatar, with `shape` (or a resting one). Otherwise the hand rests.
+ * A side's hand in a frame. While the hand is in view (`seen`: tracked now,
+ * or a moment ago) and the frame has a pose, the arm reaches from its own
+ * shoulder as the signer's did, scaled to the avatar, with `shape` (or a
+ * resting one). Otherwise the hand rests.
  */
 export function handPose(
   f: LandmarkFrame,
@@ -223,7 +226,7 @@ export function handPose(
 ): HandPose {
   const rest = restHand(body);
   const world = f.poseWorld;
-  if (!world || !(seen || visible(f, POSE.wrist[side]))) return rest;
+  if (!world || !seen) return rest;
   const shoulder = toEngine(world[POSE.shoulder[side]], side);
   const wrist = toEngine(world[POSE.wrist[side]], side).sub(shoulder).multiplyScalar(scale).add(new Vector3(...body.shoulder));
   const lean = toEngine(world[POSE.elbow[side]], side).sub(shoulder);
@@ -232,8 +235,8 @@ export function handPose(
   return { wrist: wrist.toArray() as Vec3, elbow, quat, joints };
 }
 
-/** One side's hand through the take: tracked where it can be, its shape
- * held through brief losses, at rest when out of view. */
+/** One side's hand through the take: signing while its hand is in view,
+ * held through brief losses, at rest otherwise. */
 function trackSide(file: LandmarksFile, side: Side, body: Body, scale: number): HandPose[] {
   const { frames } = file;
   const shapes = frames.map((f) => handShape(f, side, file.video));
@@ -257,7 +260,7 @@ function trackSide(file: LandmarksFile, side: Side, body: Body, scale: number): 
     return best?.shape ?? null;
   });
 
-  return frames.map((f, i) => handPose(f, side, body, scale, filled[i], !!shapes[i]));
+  return frames.map((f, i) => handPose(f, side, body, scale, filled[i], !!filled[i]));
 }
 
 /** Averages each value over the frames either side. */

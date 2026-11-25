@@ -6,6 +6,7 @@ import type { LandmarkFrame } from "@/lib/sign-capture/landmarks";
 import { DEFAULT_BODY } from "./body";
 import { jointsFor } from "./hand";
 import { createLiveRetarget } from "./live";
+import { HOLD } from "./replay";
 import { planSigns } from "./plan";
 import { filmTimeline } from "./replay.fixtures";
 import { REST_HAND } from "./resolve";
@@ -36,7 +37,7 @@ describe("createLiveRetarget", () => {
     expect(fingers / samples).toBeLessThan(0.08);
   });
 
-  it("eases a hand that leaves the view down to rest, without a jump", () => {
+  it("holds a hand that leaves the view for a moment, then eases it down to rest", () => {
     const signed = buildTimeline(planSigns("hello"));
     const raised = filmTimeline(signed).frames.find((f) => f.t >= 1.4)!;
     const live = createLiveRetarget();
@@ -53,14 +54,34 @@ describe("createLiveRetarget", () => {
       right: null,
       rightWorld: null,
     });
-    const next = live.update(gone(raised.t + 4 / 30), [], VIDEO, DEFAULT_BODY).r.wrist;
-    const step = new Vector3(...next).distanceTo(new Vector3(...up));
+    // Last seen at frame 3. For a flicker's worth of time the hand holds;
+    // then each frame moves it part of the way down, never all at once.
     const whole = new Vector3(...REST_HAND.wrist).distanceTo(new Vector3(...up));
-    expect(step).toBeGreaterThan(0);
-    expect(step).toBeLessThan(whole * 0.6);
+    let i = 4;
+    let firstStep = 0;
+    for (; i < 60; i++) {
+      const wrist = live.update(gone(raised.t + i / 30), [], VIDEO, DEFAULT_BODY).r.wrist;
+      firstStep = new Vector3(...wrist).distanceTo(new Vector3(...up));
+      if (firstStep > 1e-6) break;
+    }
+    expect((i - 3) / 30).toBeGreaterThan(HOLD - 0.04);
+    expect(firstStep).toBeLessThan(whole * 0.6);
 
-    let pose = live.update(gone(raised.t + 5 / 30), [], VIDEO, DEFAULT_BODY);
-    for (let i = 6; i < 40; i++) pose = live.update(gone(raised.t + i / 30), [], VIDEO, DEFAULT_BODY);
+    let pose = live.update(gone(raised.t + (i + 1) / 30), [], VIDEO, DEFAULT_BODY);
+    for (let j = i + 2; j < i + 40; j++) pose = live.update(gone(raised.t + j / 30), [], VIDEO, DEFAULT_BODY);
+    pose.r.wrist.forEach((v, i) => expect(v).toBeCloseTo(REST_HAND.wrist[i], 2));
+  });
+
+  it("lets a hand rest once it leaves the view, though the body tracker still sees the arm", () => {
+    const signed = buildTimeline(planSigns("hello"));
+    const raised = filmTimeline(signed).frames.find((f) => f.t >= 1.4)!;
+    const live = createLiveRetarget();
+    live.update(raised, [], VIDEO, DEFAULT_BODY);
+    // Pose fully visible, no hands tracked, for a second.
+    let pose = live.update({ ...raised, t: raised.t + 1 / 30, right: null, rightWorld: null, left: null, leftWorld: null }, [], VIDEO, DEFAULT_BODY);
+    for (let i = 2; i <= 30; i++) {
+      pose = live.update({ ...raised, t: raised.t + i / 30, right: null, rightWorld: null, left: null, leftWorld: null }, [], VIDEO, DEFAULT_BODY);
+    }
     pose.r.wrist.forEach((v, i) => expect(v).toBeCloseTo(REST_HAND.wrist[i], 2));
   });
 
