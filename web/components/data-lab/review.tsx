@@ -295,7 +295,9 @@ function Review({ language }: { language: string }) {
           <div className="flex flex-col gap-5 border-t border-line p-6 sm:p-8">
             {mode === "reject" && (
               <fieldset className="flex flex-col gap-4">
-                <legend className="pb-3 font-mono text-xs text-faint">Why isn&apos;t it ready?</legend>
+                <legend className="pb-3 font-mono text-xs text-faint">
+                  Why is it rejected? It goes back for another volunteer to do.
+                </legend>
                 <div className="flex flex-wrap gap-2">
                   {reasonsFor[view.item.modality].map((r) => (
                     <button
@@ -315,7 +317,7 @@ function Review({ language }: { language: string }) {
                   ))}
                 </div>
                 <label className="flex max-w-xl flex-col gap-1.5">
-                  <span className="font-mono text-xs text-faint">Note for the contributor (optional)</span>
+                  <span className="font-mono text-xs text-faint">Note for the team (optional)</span>
                   <textarea
                     rows={2}
                     value={note}
@@ -337,7 +339,7 @@ function Review({ language }: { language: string }) {
                     disabled={busy || !reason}
                     className={secondaryButton}
                   >
-                    Reject
+                    Reject with this reason
                   </button>
                 </>
               )}
@@ -359,7 +361,7 @@ function Review({ language }: { language: string }) {
               {mode === "review" && (
                 <>
                   <button type="button" onClick={() => setMode("reject")} disabled={busy} className={secondaryButton}>
-                    Needs changes
+                    Reject
                   </button>
                   {view.item.modality === "text" && (
                     <button
