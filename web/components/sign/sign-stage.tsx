@@ -25,6 +25,9 @@ type SignStageProps = {
   onEnd?: () => void;
   /** The loaded avatar's measurements, for placing its hands. */
   onBody?: (body: Body) => void;
+  /** A clock to follow instead of playing on its own, such as a video's
+   * current time, in seconds; null holds the stage's own playback. */
+  followTime?: () => number | null;
   className?: string;
 };
 
@@ -37,7 +40,19 @@ const GAZE_PLANE_Z = 1.4;
 const GAZE_TIMEOUT = 4;
 
 // The 3D signer: a canvas the avatar is drawn into, playing a timeline.
-function SignStage({ character, timeline, run, speed, paused, mouthing, onFrame, onEnd, onBody, className }: SignStageProps) {
+function SignStage({
+  character,
+  timeline,
+  run,
+  speed,
+  paused,
+  mouthing,
+  onFrame,
+  onEnd,
+  onBody,
+  followTime,
+  className,
+}: SignStageProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stageRef = useRef<Stage | null>(null);
   const avatarRef = useRef<RiggedAvatar | null>(null);
@@ -47,10 +62,10 @@ function SignStage({ character, timeline, run, speed, paused, mouthing, onFrame,
   const loading = shown !== character.id;
 
   // The loop reads these, so changes take effect without restarting it.
-  const playback = useRef({ timeline, speed, paused, mouthing, onFrame, onEnd, t: 0, playing: false });
+  const playback = useRef({ timeline, speed, paused, mouthing, onFrame, onEnd, followTime, t: 0, playing: false });
   useEffect(() => {
-    Object.assign(playback.current, { timeline, speed, paused, mouthing, onFrame, onEnd });
-  }, [timeline, speed, paused, mouthing, onFrame, onEnd]);
+    Object.assign(playback.current, { timeline, speed, paused, mouthing, onFrame, onEnd, followTime });
+  }, [timeline, speed, paused, mouthing, onFrame, onEnd, followTime]);
 
   useEffect(() => {
     playback.current.t = 0;
@@ -124,8 +139,12 @@ function SignStage({ character, timeline, run, speed, paused, mouthing, onFrame,
       const avatar = avatarRef.current;
       const pb = playback.current;
       const tl = pb.timeline;
+      const followed = tl ? (pb.followTime?.() ?? null) : null;
       // Signing waits for the avatar to arrive.
-      if (avatar && tl && pb.playing && !pb.paused) {
+      if (avatar && tl && followed !== null) {
+        pb.t = Math.min(Math.max(followed, 0), tl.duration);
+        pb.onFrame?.(pb.t, tl);
+      } else if (avatar && tl && pb.playing && !pb.paused) {
         pb.t = Number.isFinite(freeze) ? freeze : pb.t + dt * pb.speed;
         if (pb.t >= tl.duration) {
           pb.t = tl.duration;
@@ -139,7 +158,8 @@ function SignStage({ character, timeline, run, speed, paused, mouthing, onFrame,
         // The gaze eases toward the pointer, or back to the viewer. While
         // signing the signer looks at the viewer, as a signer keeps eye
         // contact.
-        if (!pb.playing && now / 1000 - pointer.at < GAZE_TIMEOUT) {
+        const signing = pb.playing || followed !== null;
+        if (!signing && now / 1000 - pointer.at < GAZE_TIMEOUT) {
           ray.setFromCamera(pointer.ndc, camera);
           if (!ray.ray.intersectPlane(pane, gazeTarget)) gazeTarget.copy(camera.position);
         } else {
@@ -147,7 +167,7 @@ function SignStage({ character, timeline, run, speed, paused, mouthing, onFrame,
         }
         gaze.lerp(gazeTarget, 1 - Math.exp(-dt * 8));
         // The head follows the gaze only between signs.
-        idle += ((pb.playing ? 0 : 1) - idle) * (1 - Math.exp(-dt * 4));
+        idle += ((signing ? 0 : 1) - idle) * (1 - Math.exp(-dt * 4));
         avatar.update(tl ? samplePose(tl, pb.t) : restPose(avatar.body), elapsed, gaze, idle, pb.mouthing);
       }
       renderer.render(scene, camera);

@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import { civicCategories } from "@/components/civic/data";
 import { FramedCard } from "@/components/system/framed-card";
 import { Eyebrow } from "@/components/system/primitives";
-import { Segmented } from "@/components/system/segmented";
 import { type LandmarksFile, parseLandmarks } from "@/lib/sign-capture/landmarks";
 import { cn } from "@/lib/utils";
 
@@ -46,58 +45,62 @@ const reasonsFor = { text: textReasons, audio: recordingReasons, video: signReas
 const categoryLabel = (id: string) => civicCategories.find((c) => c.id === id)?.label ?? id;
 
 /**
- * A sign to review: its video, and when the camera tracked it, the avatar
- * replaying the tracked landmarks, fetched when first opened.
+ * A sign to review: its video beside the avatar signing it from the
+ * tracked landmarks, the avatar keeping time with the video. A sign
+ * recorded without tracking shows the video alone.
  */
 function SignToWatch({ videoUrl, landmarksUrl }: { videoUrl?: string; landmarksUrl?: string }) {
-  const [watch, setWatch] = useState<"video" | "avatar">("video");
-  const [track, setTrack] = useState<LandmarksFile | "loading" | "failed" | null>(null);
+  const [track, setTrack] = useState<LandmarksFile | "loading" | "failed">("loading");
+  const video = useRef<HTMLVideoElement>(null);
 
-  const open = async (id: string) => {
-    setWatch(id as "video" | "avatar");
-    if (id !== "avatar" || track || !landmarksUrl) return;
-    setTrack("loading");
-    try {
-      const res = await fetch(landmarksUrl);
-      setTrack((res.ok && parseLandmarks(await res.json())) || "failed");
-    } catch {
-      setTrack("failed");
-    }
-  };
+  useEffect(() => {
+    if (!landmarksUrl) return;
+    let cancelled = false;
+    fetch(landmarksUrl)
+      .then(async (res) => (res.ok ? parseLandmarks(await res.json()) : null))
+      .then(
+        (file) => !cancelled && setTrack(file ?? "failed"),
+        () => !cancelled && setTrack("failed"),
+      );
+    return () => {
+      cancelled = true;
+    };
+  }, [landmarksUrl]);
 
+  const box = "aspect-video w-full rounded-inset border border-line";
   return (
-    <div className="flex flex-col gap-3">
-      {landmarksUrl && (
-        <Segmented
-          label="Watch the sign"
-          value={watch}
-          onChange={open}
-          items={[
-            { id: "video", label: "Video" },
-            { id: "avatar", label: "Avatar" },
-          ]}
-          className="self-start"
-        />
-      )}
-      {watch === "avatar" ? (
-        typeof track === "object" && track ? (
-          <SignReplay landmarks={track} />
+    <div className="grid gap-4 md:grid-cols-2">
+      <figure className="flex flex-col gap-2">
+        <figcaption className="font-mono text-xs text-faint">Video</figcaption>
+        {videoUrl ? (
+          <video
+            ref={video}
+            controls
+            playsInline
+            preload="metadata"
+            src={videoUrl}
+            className={cn(box, "bg-background object-contain")}
+          />
         ) : (
-          <p className="flex aspect-video w-full items-center justify-center rounded-inset border border-line font-mono text-xs text-faint">
-            {track === "failed" ? "The tracking for this sign can't be loaded right now." : "Loading the tracking…"}
+          <p className={cn(box, "flex items-center justify-center font-mono text-xs text-faint")}>
+            The video can&apos;t be played right now.
           </p>
-        )
-      ) : videoUrl ? (
-        <video
-          controls
-          playsInline
-          preload="metadata"
-          src={videoUrl}
-          className="aspect-video w-full rounded-inset border border-line bg-background object-contain"
-        />
-      ) : (
-        <p className="font-mono text-xs text-faint">The video can&apos;t be played right now.</p>
-      )}
+        )}
+      </figure>
+      <figure className="flex flex-col gap-2">
+        <figcaption className="font-mono text-xs text-faint">The avatar, from the hand tracking</figcaption>
+        {landmarksUrl && typeof track === "object" ? (
+          <SignReplay landmarks={track} follow={video} />
+        ) : (
+          <p className={cn(box, "flex items-center justify-center border-dashed p-6 text-center font-mono text-xs text-faint")}>
+            {!landmarksUrl
+              ? "This sign was recorded without hand tracking."
+              : track === "failed"
+                ? "The tracking for this sign can't be loaded right now."
+                : "Loading the tracking…"}
+          </p>
+        )}
+      </figure>
     </div>
   );
 }
@@ -203,7 +206,8 @@ function Review({ language }: { language: string }) {
 
       {view.status === "item" && (
         <FramedCard panelsClassName="flex flex-col bg-[#0b0a07]">
-          <div className="grid md:grid-cols-2">
+          {/* A sign's word sits across the top, its video and avatar side by side below. */}
+          <div className={cn("grid", view.item.modality !== "video" && "md:grid-cols-2")}>
             <div className="flex flex-col gap-5 bg-[#1c1a0e] p-6 sm:p-8">
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                 <Eyebrow>
@@ -240,8 +244,8 @@ function Review({ language }: { language: string }) {
               {view.item.modality === "video" ? (
                 <>
                   <p className="text-sm text-subtle">
-                    Watch, and check it signs the {view.item.kind === "word" ? "word" : "sentence"} clearly, as a
-                    signer of {target?.name ?? language} would.
+                    Play the video, and check it signs the {view.item.kind === "word" ? "word" : "sentence"} clearly,
+                    as a signer of {target?.name ?? language} would. The avatar signs along from the tracking.
                   </p>
                   <SignToWatch
                     key={view.item.contribution_id}

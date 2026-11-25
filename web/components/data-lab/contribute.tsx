@@ -310,18 +310,20 @@ function Contribute({ language }: { language: string }) {
           {/* Stays mounted while the next task loads, so the camera and the
               hand tracker start once per visit. */}
           {(view.status === "task" || view.status === "loading") && modality === "video" && (
-            <FramedCard panelsClassName="grid bg-[#0b0a07] md:grid-cols-[2fr_3fr]">
-              <div className="flex flex-col gap-5 bg-[#1c1a0e] p-6 sm:p-8">
+            <FramedCard panelsClassName="flex flex-col bg-[#0b0a07]">
+              {/* What to sign, across the top; the take and the avatar side
+                  by side below. */}
+              <div className="flex min-h-36 flex-col gap-4 bg-[#1c1a0e] p-6 sm:p-8">
                 {view.status === "task" ? (
                   <>
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                       <Eyebrow>Sign in {target?.name ?? language}</Eyebrow>
                       <span className="font-mono text-xs text-faint">{categoryLabel(view.task.category)}</span>
                     </div>
-                    <p lang={view.task.text_language} className="text-2xl leading-snug text-pretty">
+                    <p lang={view.task.text_language} className="text-3xl leading-snug text-pretty">
                       {view.task.text}
                     </p>
-                    <p className="mt-auto text-sm text-subtle">
+                    <p className="text-sm text-subtle">
                       {view.task.kind === "word"
                         ? "Sign this word as you would in conversation, then let your hands rest."
                         : "Sign the meaning of this sentence, as you would tell it to someone."}

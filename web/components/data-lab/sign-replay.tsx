@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { type RefObject, useEffect, useMemo, useRef, useState } from "react";
 
 import { SignStage } from "@/components/sign/sign-stage";
 import { Segmented } from "@/components/system/segmented";
@@ -18,12 +18,25 @@ const SPEEDS = [
   { id: "0.5", label: "½×" },
 ];
 
+const stageClasses = "aspect-video w-full overflow-hidden rounded-inset border border-line bg-background";
+
 /**
- * A recorded take replayed by the avatar from its tracked landmarks, on a
- * loop, at full or half speed. It shows how the tracking read the sign, as
- * the avatar would sign it.
+ * A recorded take replayed by the avatar from its tracked landmarks. It
+ * shows how the tracking read the sign, as the avatar would sign it.
+ *
+ * With `follow`, the avatar keeps time with that video of the same take:
+ * playing, pausing, seeking and slowing with it, so the two can be compared
+ * side by side. Without, it loops on its own at full or half speed.
  */
-function SignReplay({ landmarks, className }: { landmarks: LandmarksFile; className?: string }) {
+function SignReplay({
+  landmarks,
+  follow,
+  className,
+}: {
+  landmarks: LandmarksFile;
+  follow?: RefObject<HTMLVideoElement | null>;
+  className?: string;
+}) {
   const [body, setBody] = useState<Body>(DEFAULT_BODY);
   const [speed, setSpeed] = useState("1");
   const [run, setRun] = useState(0);
@@ -42,6 +55,26 @@ function SignReplay({ landmarks, className }: { landmarks: LandmarksFile; classN
     loop.current = setTimeout(() => setRun((n) => n + 1), LOOP_PAUSE * 1000);
   };
 
+  // The landmarks' times count from the start of the take, as the video's do.
+  // Read each frame by the stage's loop, never while rendering.
+  const videoTime = () => follow?.current?.currentTime ?? null;
+
+  if (follow) {
+    return (
+      <SignStage
+        character={CHARACTERS[0]}
+        timeline={timeline}
+        run={0}
+        speed={1}
+        paused
+        mouthing={false}
+        onBody={setBody}
+        followTime={videoTime}
+        className={cn(stageClasses, className)}
+      />
+    );
+  }
+
   return (
     <div className={cn("flex flex-col gap-3", className)}>
       <SignStage
@@ -53,7 +86,7 @@ function SignReplay({ landmarks, className }: { landmarks: LandmarksFile; classN
         mouthing={false}
         onEnd={again}
         onBody={setBody}
-        className="aspect-video w-full overflow-hidden rounded-inset border border-line bg-background"
+        className={stageClasses}
       />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <span className="font-mono text-xs text-faint">

@@ -5,7 +5,6 @@ import { RecordIcon, StopIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useEffect, useRef, useState } from "react";
 
-import { Segmented } from "@/components/system/segmented";
 import { createLandmarkLog, type LandmarkLog, type LandmarksFile } from "@/lib/sign-capture/landmarks";
 import { cn } from "@/lib/utils";
 
@@ -100,11 +99,11 @@ function SignRecorder({
   const [tracking, setTracking] = useState<Tracking>("loading");
   const [handsInView, setHandsInView] = useState(false);
   const [attempt, setAttempt] = useState(0);
-  // Watching a take back: the video, or the avatar replaying its landmarks.
-  const [watch, setWatch] = useState<"video" | "avatar">("video");
 
   const video = useRef<HTMLVideoElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
+  // The take played back, which the avatar keeps time with.
+  const takeVideo = useRef<HTMLVideoElement>(null);
   const stream = useRef<MediaStream | null>(null);
   const tracker = useRef<HolisticLandmarker | null>(null);
   const log = useRef<LandmarkLog | null>(null);
@@ -248,7 +247,6 @@ function SignRecorder({
       const current = log.current;
       const tracked = tracker.current && current && current.file().frames.length > 0 ? current : null;
       const track = tracked ? tracked.file() : null;
-      setWatch("video");
       onChange({
         video: blob,
         url: URL.createObjectURL(blob),
@@ -321,74 +319,75 @@ function SignRecorder({
   const counting = phase.name === "countdown";
   const lowCoverage = take?.handCoverage != null && take.handCoverage < LOW_COVERAGE;
 
-  const replaying = !!take?.track && watch === "avatar";
-
   return (
     <div className="flex w-full flex-col gap-4">
-      {take?.track && (
-        <Segmented
-          label="Watch your take"
-          value={watch}
-          onChange={(id) => setWatch(id as "video" | "avatar")}
-          items={[
-            { id: "video", label: "Video" },
-            { id: "avatar", label: "Avatar" },
-          ]}
-          className="self-start"
-        />
-      )}
-      {replaying && take?.track && <SignReplay landmarks={take.track} />}
-      {/* The camera stays mounted under the replay, so its stream is kept. */}
-      <div
-        className={cn(
-          "relative aspect-video w-full overflow-hidden rounded-inset border border-line bg-background",
-          replaying && "hidden",
-        )}
-      >
-        {/* The live camera stays on between takes, so recording again is instant. */}
-        <video
-          ref={video}
-          muted
-          playsInline
-          aria-label="Camera preview"
-          className={cn("absolute inset-0 size-full -scale-x-100 object-cover", take && "invisible")}
-        />
-        <canvas
-          ref={canvas}
-          aria-hidden
-          className={cn("absolute inset-0 size-full -scale-x-100 object-cover text-signal", take && "invisible")}
-        />
-        {/* Played back as recorded, the way a viewer sees the signer. */}
-        {take && (
-          <video
-            src={take.url}
-            controls
-            playsInline
-            aria-label="Your take"
-            className="absolute inset-0 size-full bg-background object-contain"
-          />
-        )}
-        {phase.name === "starting" && (
-          <p className="absolute inset-0 flex items-center justify-center font-mono text-xs text-faint">
-            Starting the camera…
-          </p>
-        )}
-        {counting && (
-          <span className="absolute inset-0 flex items-center justify-center bg-background/40 text-7xl tabular-nums">
-            {phase.left}
-          </span>
-        )}
-        {recording && (
-          <span className="absolute top-3 left-3 inline-flex items-center gap-2 rounded-full bg-background/70 px-3 py-1 font-mono text-xs tabular-nums">
-            <span className="size-2 rounded-full bg-signal motion-safe:animate-pulse" />
-            {clock(phase.elapsed)} / {clock(MAX_SECONDS)}
-          </span>
-        )}
-        {!take && tracking === "on" && phase.name !== "starting" && (
-          <span className="absolute top-3 right-3 rounded-full bg-background/70 px-3 py-1 font-mono text-[11px] text-subtle">
-            {handsInView ? "Hands in view" : "Bring your hands into view"}
-          </span>
-        )}
+      {/* The camera, then the take, beside the avatar signing the take back:
+          both the same size, so they compare at a glance. */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <figure className="flex flex-col gap-2">
+          <figcaption className="font-mono text-xs text-faint">{take ? "Your take" : "Camera"}</figcaption>
+          <div className="relative aspect-video w-full overflow-hidden rounded-inset border border-line bg-background">
+            {/* The live camera stays on between takes, so recording again is instant. */}
+            <video
+              ref={video}
+              muted
+              playsInline
+              aria-label="Camera preview"
+              className={cn("absolute inset-0 size-full -scale-x-100 object-cover", take && "invisible")}
+            />
+            <canvas
+              ref={canvas}
+              aria-hidden
+              className={cn("absolute inset-0 size-full -scale-x-100 object-cover text-signal", take && "invisible")}
+            />
+            {/* Played back as recorded, the way a viewer sees the signer. The
+                avatar beside it keeps time with it. */}
+            {take && (
+              <video
+                ref={takeVideo}
+                src={take.url}
+                controls
+                playsInline
+                aria-label="Your take"
+                className="absolute inset-0 size-full bg-background object-contain"
+              />
+            )}
+            {phase.name === "starting" && (
+              <p className="absolute inset-0 flex items-center justify-center font-mono text-xs text-faint">
+                Starting the camera…
+              </p>
+            )}
+            {counting && (
+              <span className="absolute inset-0 flex items-center justify-center bg-background/40 text-7xl tabular-nums">
+                {phase.left}
+              </span>
+            )}
+            {recording && (
+              <span className="absolute top-3 left-3 inline-flex items-center gap-2 rounded-full bg-background/70 px-3 py-1 font-mono text-xs tabular-nums">
+                <span className="size-2 rounded-full bg-signal motion-safe:animate-pulse" />
+                {clock(phase.elapsed)} / {clock(MAX_SECONDS)}
+              </span>
+            )}
+            {!take && tracking === "on" && phase.name !== "starting" && (
+              <span className="absolute top-3 right-3 rounded-full bg-background/70 px-3 py-1 font-mono text-[11px] text-subtle">
+                {handsInView ? "Hands in view" : "Bring your hands into view"}
+              </span>
+            )}
+          </div>
+        </figure>
+
+        <figure className="flex flex-col gap-2">
+          <figcaption className="font-mono text-xs text-faint">The avatar, from your hand tracking</figcaption>
+          {take?.track ? (
+            <SignReplay landmarks={take.track} follow={takeVideo} />
+          ) : (
+            <p className="flex aspect-video w-full items-center justify-center rounded-inset border border-dashed border-line p-6 text-center font-mono text-xs text-faint">
+              {take
+                ? "Hand tracking didn't run for this take, so the avatar can't sign it back."
+                : "Record a take, and the avatar signs it back here as you play it."}
+            </p>
+          )}
+        </figure>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -396,7 +395,7 @@ function SignRecorder({
           {take
             ? lowCoverage
               ? "Your hands were out of view for much of this take. Watch it back, and record again if needed."
-              : `${clock(take.seconds)} recorded. Watch it back, or record again.`
+              : `${clock(take.seconds)} recorded. Play it to watch the avatar sign along, or record again.`
             : tracking === "loading"
               ? "Loading hand tracking…"
               : tracking === "off"
