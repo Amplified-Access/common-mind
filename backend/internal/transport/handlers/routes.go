@@ -99,6 +99,7 @@ func (h *Handler) RegisterRoutes(rps float64, burst int, sentryDSN string, allow
 	lab.GET("/me", h.DataLabMeHandler)
 	lab.POST("/onboarding", h.OnboardHandler)
 	lab.POST("/consent/voice", h.AcceptVoiceConsentHandler)
+	lab.POST("/consent/video", h.AcceptVideoConsentHandler)
 	lab.GET("/tasks/next", h.NextTaskHandler)
 	lab.POST("/recordings", h.StartRecordingHandler)
 	lab.POST("/contributions", h.ContributeHandler)

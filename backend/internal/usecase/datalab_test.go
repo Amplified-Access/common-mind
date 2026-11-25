@@ -18,6 +18,7 @@ type fakeStore struct {
 	ref         *domain.ContributionRef
 	reviewed    *ReviewRecord
 	voiceFor    int64 // the volunteer whose voice consent was saved
+	videoFor    int64 // the volunteer whose video consent was saved
 	translation int64 // the verified translation of every item, 0 for none
 }
 
@@ -47,6 +48,11 @@ func (f *fakeStore) VerifiedTranslation(context.Context, int64, string) (int64, 
 
 func (f *fakeStore) SaveVoiceConsent(_ context.Context, userID int64, _ string) error {
 	f.voiceFor = userID
+	return nil
+}
+
+func (f *fakeStore) SaveVideoConsent(_ context.Context, userID int64, _ string) error {
+	f.videoFor = userID
 	return nil
 }
 

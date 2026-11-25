@@ -49,18 +49,21 @@ func (h *Handler) ProgressHandler(c *gin.Context) {
 type featuresResponse struct {
 	// Voice is true when recordings can be stored (object storage is set up).
 	Voice bool `json:"voice"`
+	// Video is true when signs can be recorded on camera; it needs the same storage.
+	Video bool `json:"video"`
 }
 
 // FeaturesHandler godoc
 //
 //	@Summary		Data Lab features
-//	@Description	Which optional features this server has: voice is true when recordings can be stored.
+//	@Description	Which optional features this server has: voice and video are true when recordings can be stored.
 //	@Tags			data-lab
 //	@Produce		json
 //	@Success		200	{object}	featuresResponse
 //	@Router			/api/v1/data-lab/features [get]
 func (h *Handler) FeaturesHandler(c *gin.Context) {
-	JSON(c, featuresResponse{Voice: h.dataLab.VoiceAvailable()})
+	stored := h.dataLab.VoiceAvailable()
+	JSON(c, featuresResponse{Voice: stored, Video: stored})
 }
 
 // DataLabMeHandler godoc
@@ -152,6 +155,30 @@ func (h *Handler) AcceptVoiceConsentHandler(c *gin.Context) {
 	JSON(c, v)
 }
 
+// AcceptVideoConsentHandler godoc
+//
+//	@Summary		Agree to sign on camera
+//	@Description	Extends the volunteer's current consent to video recordings of their signing, which show their face and hands and are published with the dataset. Needed before recording in a sign language.
+//	@Tags			data-lab
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200	{object}	VolunteerAlias
+//	@Failure		401	{object}	map[string]string
+//	@Failure		403	{object}	map[string]string	"onboarding_required or consent_required"
+//	@Router			/api/v1/data-lab/consent/video [post]
+func (h *Handler) AcceptVideoConsentHandler(c *gin.Context) {
+	tok, ok := currentToken(c)
+	if !ok {
+		return
+	}
+	v, err := h.dataLab.AcceptVideoConsent(c.Request.Context(), tok)
+	if err != nil {
+		dataLabError(c, err)
+		return
+	}
+	JSON(c, v)
+}
+
 type languageQuery struct {
 	Language string `form:"language" binding:"required"`
 }
@@ -164,12 +191,12 @@ type taskQuery struct {
 // NextTaskHandler godoc
 //
 //	@Summary		Get the next task in a language
-//	@Description	modality=text (the default) returns an item to translate or a prompt to answer. modality=audio returns a verified translation in the language to read aloud: only translated, verified items are recorded. 404 no_tasks when the language has nothing left for this volunteer.
+//	@Description	In a spoken language, modality=text (the default) returns an item to translate or a prompt to answer, and modality=audio a verified translation in the language to read aloud: only translated, verified items are recorded. In a sign language, modality=video (its default and only modality) returns an English word or sentence to sign, words first. 404 no_tasks when the language has nothing left for this volunteer.
 //	@Tags			data-lab
 //	@Produce		json
 //	@Security		BearerAuth
 //	@Param			language	query		string	true	"Target language code, e.g. sw"
-//	@Param			modality	query		string	false	"text (default) or audio"
+//	@Param			modality	query		string	false	"text (default) or audio; video for a sign language"
 //	@Success		200			{object}	TaskAlias
 //	@Failure		403			{object}	map[string]string
 //	@Failure		404			{object}	map[string]string	"no_tasks"
@@ -201,7 +228,7 @@ type recordingRequest struct {
 // StartRecordingHandler godoc
 //
 //	@Summary		Get a URL to upload a recording to
-//	@Description	Returns a presigned URL (valid 15 minutes) the browser PUTs the recording to, with the returned content_type, then the key to submit with the contribution. Needs voice consent, and a verified translation of the item in the language.
+//	@Description	Returns a presigned URL (valid 15 minutes) the browser PUTs the recording to, with the returned content_type, then the key to submit with the contribution. In a spoken language: an audio recording, which needs voice consent and a verified translation of the item in the language. In a sign language: a video, which needs video consent, plus a second URL for the landmarks file (application/json) tracked while recording.
 //	@Tags			data-lab
 //	@Accept			json
 //	@Produce		json
@@ -209,7 +236,7 @@ type recordingRequest struct {
 //	@Param			body	body		recordingRequest	true	"Recording"
 //	@Success		201		{object}	RecordingUploadAlias
 //	@Failure		400		{object}	map[string]string
-//	@Failure		403		{object}	map[string]string	"voice_consent_required"
+//	@Failure		403		{object}	map[string]string	"voice_consent_required or video_consent_required"
 //	@Failure		503		{object}	map[string]string	"voice_unavailable"
 //	@Router			/api/v1/data-lab/recordings [post]
 func (h *Handler) StartRecordingHandler(c *gin.Context) {
@@ -236,20 +263,26 @@ func (h *Handler) StartRecordingHandler(c *gin.Context) {
 type contributionRequest struct {
 	ItemID   int64  `json:"item_id" binding:"required"`
 	Language string `json:"language" binding:"required"`
-	// Modality is "text" (the default) or "audio".
+	// Modality is "text" (the default) or "audio" in a spoken language, and
+	// "video" (the default) in a sign language.
 	Modality string `json:"modality"`
 	// Text is the written contribution; ignored for a recording, whose
 	// transcript is the verified translation it reads.
 	Text string `json:"text"`
 	// AudioKey is the key StartRecording returned, for a recording.
 	AudioKey string `json:"audio_key"`
-	Pasted   bool   `json:"pasted"`
+	// VideoKey is the key StartRecording returned, for a sign.
+	VideoKey string `json:"video_key"`
+	// LandmarksKey is the landmarks_key StartRecording returned, for a sign
+	// whose landmarks were tracked and uploaded; leave it empty otherwise.
+	LandmarksKey string `json:"landmarks_key"`
+	Pasted       bool   `json:"pasted"`
 }
 
 // ContributeHandler godoc
 //
 //	@Summary		Submit a contribution
-//	@Description	Saves a translation or answer as pending review, written or recorded. A recording (modality=audio) reads the item's verified translation aloud and carries the audio_key it was uploaded to. `pasted` is set by the editor when text was pasted in.
+//	@Description	Saves a translation or answer as pending review, written or recorded. A recording (modality=audio) reads the item's verified translation aloud and carries the audio_key it was uploaded to. A sign (modality=video) carries its video_key and, when tracked, its landmarks_key. `pasted` is set by the editor when text was pasted in.
 //	@Tags			data-lab
 //	@Accept			json
 //	@Produce		json
@@ -275,7 +308,10 @@ func (h *Handler) ContributeHandler(c *gin.Context) {
 		Modality: req.Modality,
 		Text:     req.Text,
 		AudioKey: req.AudioKey,
-		Pasted:   req.Pasted,
+		VideoKey: req.VideoKey,
+		// The landmarks file is optional: a device that can't track hands still submits.
+		LandmarksKey: req.LandmarksKey,
+		Pasted:       req.Pasted,
 	})
 	if err != nil {
 		dataLabError(c, err)
@@ -287,7 +323,7 @@ func (h *Handler) ContributeHandler(c *gin.Context) {
 // NextReviewHandler godoc
 //
 //	@Summary		Get the next contribution to review
-//	@Description	Returns the oldest pending contribution in the language by someone else. A recording comes with audio_url to play it and read_text, the verified translation it reads. 404 no_reviews when the queue is empty.
+//	@Description	Returns the oldest pending contribution in the language by someone else. A recording comes with audio_url to play it and read_text, the verified translation it reads. A sign comes with video_url and, when tracked, landmarks_url. 404 no_reviews when the queue is empty.
 //	@Tags			data-lab
 //	@Produce		json
 //	@Security		BearerAuth
@@ -324,7 +360,7 @@ type reviewRequest struct {
 // ReviewHandler godoc
 //
 //	@Summary		Review a contribution
-//	@Description	Accept verifies the contribution. Correct verifies written text with the reviewer's corrected_text, keeping the original on the contribution; recordings can't be corrected. Reject needs a reason (inaccurate, incomplete, machine_translated, off_topic, unclear, other) and reopens the item for others.
+//	@Description	Accept verifies the contribution. Correct verifies written text with the reviewer's corrected_text, keeping the original on the contribution; recordings and signs can't be corrected. Reject needs a reason (inaccurate, incomplete, machine_translated, off_topic, unclear, other) and reopens the item for others.
 //	@Tags			data-lab
 //	@Accept			json
 //	@Security		BearerAuth

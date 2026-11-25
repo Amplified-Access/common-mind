@@ -34,6 +34,7 @@ func TestDataLabError_MapsUseCaseErrors(t *testing.T) {
 		{err: usecase.ErrNoReviews, status: http.StatusNotFound, code: "no_reviews"},
 		{err: usecase.ErrVoiceUnavailable, status: http.StatusServiceUnavailable, code: "voice_unavailable"},
 		{err: usecase.ErrVoiceConsentRequired, status: http.StatusForbidden, code: "voice_consent_required"},
+		{err: usecase.ErrVideoConsentRequired, status: http.StatusForbidden, code: "video_consent_required"},
 		{err: errors.New("db down"), status: http.StatusInternalServerError, code: "internal_error"},
 	}
 	for _, tt := range tests {

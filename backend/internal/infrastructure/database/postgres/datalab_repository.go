@@ -50,14 +50,16 @@ func (r *dataLabRepository) ListLanguages(ctx context.Context) ([]domain.Languag
 }
 
 // GetVolunteer loads a user's Data Lab profile: their memberships, the latest
-// consent version they accepted, and whether it covers voice. Returns nil,
-// nil for unknown users.
+// consent version they accepted, and whether it covers voice and video.
+// Returns nil, nil for unknown users.
 func (r *dataLabRepository) GetVolunteer(ctx context.Context, firebaseUID string) (*domain.Volunteer, error) {
 	const q = `
         SELECT u.id, u.name, u.email,
                COALESCE((SELECT version FROM consents c WHERE c.user_id = u.id
                          ORDER BY accepted_at DESC LIMIT 1), ''),
                COALESCE((SELECT covers_voice FROM consents c WHERE c.user_id = u.id
+                         ORDER BY accepted_at DESC LIMIT 1), false),
+               COALESCE((SELECT covers_video FROM consents c WHERE c.user_id = u.id
                          ORDER BY accepted_at DESC LIMIT 1), false),
                COALESCE((SELECT json_agg(json_build_object('language_code', m.language_code, 'level', m.level,
                                                            'modality', l.modality)
@@ -70,7 +72,7 @@ func (r *dataLabRepository) GetVolunteer(ctx context.Context, firebaseUID string
 	v := &domain.Volunteer{}
 	var memberships []byte
 	err := r.db.QueryRowContext(ctx, q, firebaseUID).
-		Scan(&v.ID, &v.Name, &v.Email, &v.ConsentVersion, &v.VoiceConsent, &memberships)
+		Scan(&v.ID, &v.Name, &v.Email, &v.ConsentVersion, &v.VoiceConsent, &v.VideoConsent, &memberships)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
@@ -135,6 +137,15 @@ func (r *dataLabRepository) SaveVoiceConsent(ctx context.Context, userID int64, 
 	return nil
 }
 
+func (r *dataLabRepository) SaveVideoConsent(ctx context.Context, userID int64, version string) error {
+	if _, err := r.db.ExecContext(ctx, `
+        UPDATE consents SET covers_video = true WHERE user_id = $1 AND version = $2`,
+		userID, version); err != nil {
+		return fmt.Errorf("datalab repository: save video consent: %w", err)
+	}
+	return nil
+}
+
 // verifiedText is a written contribution's verified text: the reviewer's
 // correction when there is one. Use with `c` a contribution.
 const verifiedText = `COALESCE((SELECT rv.corrected_text FROM reviews rv WHERE rv.contribution_id = c.id), c.text)`
@@ -144,9 +155,11 @@ const verifiedText = `COALESCE((SELECT rv.corrected_text FROM reviews rv WHERE r
 // and modality until it has a pending or verified contribution there; a
 // rejected one reopens it for everyone except the volunteer who was rejected.
 //
-// Writing works from the source text. Recording reads a verified
-// translation aloud, so only items translated and verified in the language
-// are offered, and the task's text is that translation, in the language.
+// Writing works from the source text; words are for signing only. Recording
+// reads a verified translation aloud, so only items translated and verified
+// in the language are offered, and the task's text is that translation, in
+// the language. Signing works from the source text too: words first, since
+// single signs feed the /sign lexicon, then sentences (ADR 0014).
 //
 // Retired items (ADR 0013) are never offered, in either modality.
 func (r *dataLabRepository) NextItem(ctx context.Context, userID int64, language, modality string) (*domain.Task, error) {
@@ -158,10 +171,18 @@ func (r *dataLabRepository) NextItem(ctx context.Context, userID int64, language
 	q := `
         SELECT i.id, i.kind, i.category, i.text, i.language_code
         FROM items i
-        WHERE i.status = 'active' AND i.language_code <> $2 AND` + open + `
+        WHERE i.status = 'active' AND i.kind <> 'word' AND i.language_code <> $2 AND` + open + `
         ORDER BY random()
         LIMIT 1`
-	if modality == domain.ModalityAudio {
+	switch modality {
+	case domain.ModalityVideo:
+		q = `
+        SELECT i.id, i.kind, i.category, i.text, i.language_code
+        FROM items i
+        WHERE i.status = 'active' AND i.kind IN ('word', 'translate') AND i.language_code <> $2 AND` + open + `
+        ORDER BY i.kind = 'word' DESC, random()
+        LIMIT 1`
+	case domain.ModalityAudio:
 		q = `
         SELECT i.id, i.kind, i.category, ` + verifiedText + `, c.language_code
         FROM items i
@@ -203,14 +224,16 @@ func (r *dataLabRepository) VerifiedTranslation(ctx context.Context, itemID int6
 func (r *dataLabRepository) CreateContribution(ctx context.Context, rec usecase.ContributionRecord) (*domain.Contribution, error) {
 	const q = `
         INSERT INTO contributions (item_id, language_code, contributor_id, modality, text, audio_key,
-                                   reads_contribution_id, pasted, consent_version)
-        VALUES ($1, $2, $3, $4, $5, NULLIF($6, ''), NULLIF($7, 0), $8, $9)
-        RETURNING id, item_id, language_code, modality, text, COALESCE(audio_key, ''), pasted, status, created_at`
+                                   reads_contribution_id, pasted, consent_version, video_key, landmarks_key)
+        VALUES ($1, $2, $3, $4, $5, NULLIF($6, ''), NULLIF($7, 0), $8, $9, NULLIF($10, ''), NULLIF($11, ''))
+        RETURNING id, item_id, language_code, modality, text, COALESCE(audio_key, ''),
+                  COALESCE(video_key, ''), COALESCE(landmarks_key, ''), pasted, status, created_at`
 
 	c := &domain.Contribution{}
 	err := r.db.QueryRowContext(ctx, q, rec.ItemID, rec.Language, rec.ContributorID, rec.Modality, rec.Text,
-		rec.AudioKey, rec.ReadsContributionID, rec.Pasted, rec.ConsentVersion).
-		Scan(&c.ID, &c.ItemID, &c.LanguageCode, &c.Modality, &c.Text, &c.AudioKey, &c.Pasted, &c.Status, &c.CreatedAt)
+		rec.AudioKey, rec.ReadsContributionID, rec.Pasted, rec.ConsentVersion, rec.VideoKey, rec.LandmarksKey).
+		Scan(&c.ID, &c.ItemID, &c.LanguageCode, &c.Modality, &c.Text, &c.AudioKey, &c.VideoKey, &c.LandmarksKey,
+			&c.Pasted, &c.Status, &c.CreatedAt)
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) {
 		switch pgErr.Code {
@@ -234,7 +257,8 @@ func (r *dataLabRepository) NextPendingContribution(ctx context.Context, reviewe
                COALESCE((SELECT COALESCE(rv.corrected_text, rd.text)
                          FROM contributions rd LEFT JOIN reviews rv ON rv.contribution_id = rd.id
                          WHERE rd.id = c.reads_contribution_id), ''),
-               COALESCE(c.audio_key, ''), c.pasted, c.created_at
+               COALESCE(c.audio_key, ''), COALESCE(c.video_key, ''), COALESCE(c.landmarks_key, ''),
+               c.pasted, c.created_at
         FROM contributions c
         JOIN items i ON i.id = c.item_id
         WHERE c.language_code = $2 AND c.status = 'pending' AND c.contributor_id <> $1
@@ -244,7 +268,8 @@ func (r *dataLabRepository) NextPendingContribution(ctx context.Context, reviewe
 	it := &domain.ReviewItem{}
 	err := r.db.QueryRowContext(ctx, q, reviewerID, language).Scan(
 		&it.ContributionID, &it.Kind, &it.Category, &it.ItemText, &it.ItemLanguage,
-		&it.LanguageCode, &it.Modality, &it.Text, &it.ReadText, &it.AudioKey, &it.Pasted, &it.SubmittedAt)
+		&it.LanguageCode, &it.Modality, &it.Text, &it.ReadText, &it.AudioKey, &it.VideoKey, &it.LandmarksKey,
+		&it.Pasted, &it.SubmittedAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
@@ -301,13 +326,16 @@ func (r *dataLabRepository) SaveReview(ctx context.Context, rec usecase.ReviewRe
 }
 
 // Progress computes live counts per target language. Sentence pairs are
-// written contributions to translate items; recordings are counted apart.
+// written contributions to translate items; recordings and signs are counted
+// apart. A sign language has words and sentences available to sign.
 // Open is derived from the reviewer count with the same rule the use case
 // enforces.
 func (r *dataLabRepository) Progress(ctx context.Context, language string) ([]domain.LanguageProgress, error) {
 	const q = `
         SELECT l.code,
-               (SELECT count(*) FROM items i WHERE i.kind = 'translate' AND i.language_code <> l.code),
+               (SELECT count(*) FROM items i
+                WHERE i.language_code <> l.code
+                  AND (i.kind = 'translate' OR (l.modality = 'signed' AND i.kind = 'word'))),
                (SELECT count(*) FROM contributions c JOIN items i ON i.id = c.item_id
                 WHERE c.language_code = l.code AND i.kind = 'translate' AND c.modality = 'text'
                   AND c.status IN ('pending', 'verified')),
@@ -318,6 +346,10 @@ func (r *dataLabRepository) Progress(ctx context.Context, language string) ([]do
                 WHERE c.language_code = l.code AND c.modality = 'audio' AND c.status IN ('pending', 'verified')),
                (SELECT count(*) FROM contributions c
                 WHERE c.language_code = l.code AND c.modality = 'audio' AND c.status = 'verified'),
+               (SELECT count(*) FROM contributions c
+                WHERE c.language_code = l.code AND c.modality = 'video' AND c.status IN ('pending', 'verified')),
+               (SELECT count(*) FROM contributions c
+                WHERE c.language_code = l.code AND c.modality = 'video' AND c.status = 'verified'),
                (SELECT count(*) FROM contributions c WHERE c.language_code = l.code AND c.status = 'pending')
         FROM languages l
         WHERE l.role = 'target' AND l.enabled AND ($1 = '' OR l.code = $1)
@@ -332,7 +364,8 @@ func (r *dataLabRepository) Progress(ctx context.Context, language string) ([]do
 	var out []domain.LanguageProgress
 	for rows.Next() {
 		var p domain.LanguageProgress
-		if err := rows.Scan(&p.Code, &p.Available, &p.Translated, &p.Verified, &p.Recorded, &p.RecordedVerified, &p.Pending); err != nil {
+		if err := rows.Scan(&p.Code, &p.Available, &p.Translated, &p.Verified, &p.Recorded, &p.RecordedVerified,
+			&p.Signed, &p.SignedVerified, &p.Pending); err != nil {
 			return nil, fmt.Errorf("datalab repository: scan progress: %w", err)
 		}
 		out = append(out, p)

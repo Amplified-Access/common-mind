@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log/slog"
 	"mime"
+	"path"
 	"slices"
 	"strings"
 	"time"
@@ -31,10 +32,14 @@ type DataLabStore interface {
 	// SaveVoiceConsent marks the volunteer's consent of that version as
 	// covering voice recordings.
 	SaveVoiceConsent(ctx context.Context, userID int64, version string) error
+	// SaveVideoConsent marks the volunteer's consent of that version as
+	// covering signing on camera.
+	SaveVideoConsent(ctx context.Context, userID int64, version string) error
 	// NextItem returns an item the volunteer hasn't done in the modality that
 	// has no pending or verified contribution in the language and modality, or
 	// nil, nil when none is left. For audio, only items with a verified
 	// translation in the language, and the task's text is that translation.
+	// For video, words to sign before sentences.
 	NextItem(ctx context.Context, userID int64, language, modality string) (*domain.Task, error)
 	// VerifiedTranslation returns the ID of the item's verified written
 	// contribution in the language, the text a recording reads, or 0 if none.
@@ -68,14 +73,19 @@ type DataLab interface {
 	Onboard(ctx context.Context, tok *FirebaseToken, in OnboardingInput) (*domain.Volunteer, error)
 	// AcceptVoiceConsent extends the volunteer's current consent to voice.
 	AcceptVoiceConsent(ctx context.Context, tok *FirebaseToken) (*domain.Volunteer, error)
-	// VoiceAvailable reports whether recordings can be stored.
+	// AcceptVideoConsent extends the volunteer's current consent to signing
+	// on camera.
+	AcceptVideoConsent(ctx context.Context, tok *FirebaseToken) (*domain.Volunteer, error)
+	// VoiceAvailable reports whether recordings, voice or video, can be stored.
 	VoiceAvailable() bool
 	// NextTask returns ErrNoTasks when the language has nothing left for the
-	// volunteer in the modality ("text" when empty, or "audio").
+	// volunteer in the modality. A spoken language takes "text" (the default)
+	// or "audio"; a sign language takes "video", its default and only one.
 	NextTask(ctx context.Context, tok *FirebaseToken, language, modality string) (*domain.Task, error)
-	// StartRecording issues a URL to upload one recording of an item's
-	// verified translation to, directly from the browser, under the
-	// volunteer's own prefix.
+	// StartRecording issues a URL to upload one recording to, directly from
+	// the browser, under the volunteer's own prefix: in a spoken language, of
+	// an item's verified translation read aloud; in a sign language, a video
+	// of the item signed, with a second URL for its landmarks.
 	StartRecording(ctx context.Context, tok *FirebaseToken, in RecordingInput) (*RecordingUpload, error)
 	Contribute(ctx context.Context, tok *FirebaseToken, in ContributionInput) (*domain.Contribution, error)
 	// NextReview returns ErrNoReviews when nothing is waiting in the language.
@@ -104,15 +114,19 @@ type ReviewRecord struct {
 	Status         string // the contribution's new status
 }
 
-// ContributionInput is a volunteer's submission for one item: text, or a
-// recording of its verified translation, already uploaded to AudioKey.
+// ContributionInput is a volunteer's submission for one item: text, a
+// recording of its verified translation already uploaded to AudioKey, or a
+// signed video uploaded to VideoKey.
 type ContributionInput struct {
 	ItemID   int64
 	Language string
-	Modality string // "text" when empty
+	Modality string // the language's default when empty: text, or video for a sign language
 	Text     string // ignored for a recording: the translation it reads is its transcript
 	AudioKey string // for a recording: the key StartRecording issued
-	Pasted   bool
+	VideoKey string // for a sign: the key StartRecording issued
+	// LandmarksKey is the sign's landmarks file, "" when the browser couldn't track them.
+	LandmarksKey string
+	Pasted       bool
 }
 
 // ContributionRecord is a validated contribution, ready to persist.
@@ -123,6 +137,8 @@ type ContributionRecord struct {
 	Modality      string
 	Text          string
 	AudioKey      string // "" unless a recording
+	VideoKey      string // "" unless a sign
+	LandmarksKey  string // "" unless a sign with landmarks
 	// ReadsContributionID is the verified translation a recording reads.
 	ReadsContributionID int64
 	Pasted              bool
@@ -133,15 +149,20 @@ type ContributionRecord struct {
 type RecordingInput struct {
 	ItemID      int64
 	Language    string
-	ContentType string // what the browser recorded, e.g. "audio/webm;codecs=opus"
+	ContentType string // what the browser recorded, e.g. "audio/webm;codecs=opus" or "video/webm;codecs=vp9"
 }
 
 // RecordingUpload is where to upload a recording. The browser PUTs the file
-// to UploadURL with ContentType, then submits Key with the contribution.
+// to UploadURL with ContentType, then submits Key with the contribution. A
+// sign also gets a URL for its landmarks file, uploaded the same way.
 type RecordingUpload struct {
 	UploadURL   string `json:"upload_url"`
 	Key         string `json:"key"`
 	ContentType string `json:"content_type"`
+
+	LandmarksUploadURL   string `json:"landmarks_upload_url,omitempty"`
+	LandmarksKey         string `json:"landmarks_key,omitempty"`
+	LandmarksContentType string `json:"landmarks_content_type,omitempty"`
 }
 
 // OnboardingInput is what a volunteer submits when joining or adding languages.
@@ -237,19 +258,21 @@ func (d *dataLab) Onboard(ctx context.Context, tok *FirebaseToken, in Onboarding
 // contributorIn loads the volunteer and checks they may contribute in the
 // language: onboarded, current consent, and a member. A language needs no
 // reviewers to accept work; contributions wait as pending until someone other
-// than their author reviews them (ADR 0010).
-func (d *dataLab) contributorIn(ctx context.Context, tok *FirebaseToken, language string) (*domain.Volunteer, error) {
+// than their author reviews them (ADR 0010). It returns the membership too,
+// which says whether the language is signed.
+func (d *dataLab) contributorIn(ctx context.Context, tok *FirebaseToken, language string) (*domain.Volunteer, domain.Membership, error) {
 	v, err := d.Me(ctx, tok)
 	if err != nil {
-		return nil, err
+		return nil, domain.Membership{}, err
 	}
 	if !v.ConsentCurrent() {
-		return nil, ErrConsentOutdated
+		return nil, domain.Membership{}, ErrConsentOutdated
 	}
-	if _, ok := v.Membership(language); !ok {
-		return nil, ErrNotMember
+	m, ok := v.Membership(language)
+	if !ok {
+		return nil, domain.Membership{}, ErrNotMember
 	}
-	return v, nil
+	return v, m, nil
 }
 
 func (d *dataLab) AcceptVoiceConsent(ctx context.Context, tok *FirebaseToken) (*domain.Volunteer, error) {
@@ -267,9 +290,32 @@ func (d *dataLab) AcceptVoiceConsent(ctx context.Context, tok *FirebaseToken) (*
 	return v, nil
 }
 
-// modalityOf validates a modality, defaulting to text.
-func modalityOf(m string) (string, error) {
-	switch m {
+func (d *dataLab) AcceptVideoConsent(ctx context.Context, tok *FirebaseToken) (*domain.Volunteer, error) {
+	v, err := d.Me(ctx, tok)
+	if err != nil {
+		return nil, err
+	}
+	if !v.ConsentCurrent() {
+		return nil, ErrConsentOutdated
+	}
+	if err := d.store.SaveVideoConsent(ctx, v.ID, v.ConsentVersion); err != nil {
+		return nil, err
+	}
+	v.VideoConsent = true
+	return v, nil
+}
+
+// modalityIn validates a modality for the language. A spoken language is
+// written (the default) or read aloud; a sign language is signed on video,
+// and only that (ADR 0014).
+func modalityIn(m domain.Membership, modality string) (string, error) {
+	if m.Signed() {
+		if modality == "" || modality == domain.ModalityVideo {
+			return domain.ModalityVideo, nil
+		}
+		return "", invalid("sign languages are recorded on video")
+	}
+	switch modality {
 	case "", domain.ModalityText:
 		return domain.ModalityText, nil
 	case domain.ModalityAudio:
@@ -278,30 +324,34 @@ func modalityOf(m string) (string, error) {
 	return "", invalid("modality must be text or audio")
 }
 
-// canRecord checks voice is set up and the volunteer agreed to record.
-func (d *dataLab) canRecord(v *domain.Volunteer) error {
+// canRecordIn checks storage is set up and the volunteer agreed to be
+// recorded in the modality. Writing needs neither.
+func (d *dataLab) canRecordIn(v *domain.Volunteer, modality string) error {
+	if modality == domain.ModalityText {
+		return nil
+	}
 	if d.storage == nil {
 		return ErrVoiceUnavailable
 	}
-	if !v.CanRecord() {
+	if modality == domain.ModalityVideo && !v.CanRecordVideo() {
+		return ErrVideoConsentRequired
+	}
+	if modality == domain.ModalityAudio && !v.CanRecord() {
 		return ErrVoiceConsentRequired
 	}
 	return nil
 }
 
 func (d *dataLab) NextTask(ctx context.Context, tok *FirebaseToken, language, modality string) (*domain.Task, error) {
-	modality, err := modalityOf(modality)
+	v, m, err := d.contributorIn(ctx, tok, language)
 	if err != nil {
 		return nil, err
 	}
-	v, err := d.contributorIn(ctx, tok, language)
-	if err != nil {
+	if modality, err = modalityIn(m, modality); err != nil {
 		return nil, err
 	}
-	if modality == domain.ModalityAudio {
-		if err := d.canRecord(v); err != nil {
-			return nil, err
-		}
+	if err := d.canRecordIn(v, modality); err != nil {
+		return nil, err
 	}
 	task, err := d.store.NextItem(ctx, v.ID, language, modality)
 	if err != nil {
@@ -314,11 +364,14 @@ func (d *dataLab) NextTask(ctx context.Context, tok *FirebaseToken, language, mo
 }
 
 func (d *dataLab) StartRecording(ctx context.Context, tok *FirebaseToken, in RecordingInput) (*RecordingUpload, error) {
-	v, err := d.contributorIn(ctx, tok, in.Language)
+	v, m, err := d.contributorIn(ctx, tok, in.Language)
 	if err != nil {
 		return nil, err
 	}
-	if err := d.canRecord(v); err != nil {
+	if m.Signed() {
+		return d.startSign(ctx, v, in)
+	}
+	if err := d.canRecordIn(v, domain.ModalityAudio); err != nil {
 		return nil, err
 	}
 	// Storage holds only recordings of verified translations.
@@ -332,16 +385,57 @@ func (d *dataLab) StartRecording(ctx context.Context, tok *FirebaseToken, in Rec
 	if err != nil || !ok {
 		return nil, invalid("this browser records in a format the Data Lab can't take; try Chrome, Firefox or Safari")
 	}
-	name := make([]byte, 16)
-	if _, err := rand.Read(name); err != nil {
-		return nil, fmt.Errorf("data lab: recording name: %w", err)
+	name, err := recordingName()
+	if err != nil {
+		return nil, err
 	}
-	key := domain.RecordingPrefix(in.Language, v.ID) + hex.EncodeToString(name) + ext
+	key := domain.RecordingPrefix(in.Language, v.ID) + name + ext
 	url, err := d.storage.PresignUpload(ctx, key, contentType, recordingUploadTTL)
 	if err != nil {
 		return nil, err
 	}
 	return &RecordingUpload{UploadURL: url, Key: key, ContentType: contentType}, nil
+}
+
+// startSign issues upload URLs for a signed take and its landmarks, side by
+// side under the signer's prefix. Signing works from the item's own text, so
+// it needs no verified translation.
+func (d *dataLab) startSign(ctx context.Context, v *domain.Volunteer, in RecordingInput) (*RecordingUpload, error) {
+	if err := d.canRecordIn(v, domain.ModalityVideo); err != nil {
+		return nil, err
+	}
+	contentType, _, err := mime.ParseMediaType(in.ContentType)
+	ext, ok := domain.VideoTypes[contentType]
+	if err != nil || !ok {
+		return nil, invalid("this browser records video in a format the Data Lab can't take; try Chrome, Firefox or Safari")
+	}
+	name, err := recordingName()
+	if err != nil {
+		return nil, err
+	}
+	key := domain.SignPrefix(in.Language, v.ID) + name + ext
+	url, err := d.storage.PresignUpload(ctx, key, contentType, recordingUploadTTL)
+	if err != nil {
+		return nil, err
+	}
+	landmarks := domain.LandmarksKeyFor(key)
+	landmarksURL, err := d.storage.PresignUpload(ctx, landmarks, domain.LandmarksType, recordingUploadTTL)
+	if err != nil {
+		return nil, err
+	}
+	return &RecordingUpload{
+		UploadURL: url, Key: key, ContentType: contentType,
+		LandmarksUploadURL: landmarksURL, LandmarksKey: landmarks, LandmarksContentType: domain.LandmarksType,
+	}, nil
+}
+
+// recordingName is a random file name, so recordings can't be listed or guessed.
+func recordingName() (string, error) {
+	name := make([]byte, 16)
+	if _, err := rand.Read(name); err != nil {
+		return "", fmt.Errorf("data lab: recording name: %w", err)
+	}
+	return hex.EncodeToString(name), nil
 }
 
 // verifiedTranslation returns the verified translation a recording of the
@@ -357,17 +451,24 @@ func (d *dataLab) verifiedTranslation(ctx context.Context, itemID int64, languag
 	return id, nil
 }
 
-// checkRecording confirms the recording is the volunteer's own, in the
-// language, and was uploaded in full as audio within the size limit.
-func (d *dataLab) checkRecording(ctx context.Context, key, language string, userID int64) error {
-	name, ok := strings.CutPrefix(key, domain.RecordingPrefix(language, userID))
+// uploaded confirms the file at key sits directly under the volunteer's
+// prefix and finished uploading, and returns what storage holds.
+func (d *dataLab) uploaded(ctx context.Context, key, prefix, what string) (ObjectInfo, error) {
+	name, ok := strings.CutPrefix(key, prefix)
 	if !ok || name == "" || strings.Contains(name, "/") {
-		return invalid("that recording isn't yours to submit; record it again")
+		return ObjectInfo{}, invalid("that " + what + " isn't yours to submit; record it again")
 	}
 	info, err := d.storage.Stat(ctx, key)
 	if errors.Is(err, ErrObjectNotFound) {
-		return invalid("the recording didn't finish uploading; record it again")
+		return ObjectInfo{}, invalid("the " + what + " didn't finish uploading; record it again")
 	}
+	return info, err
+}
+
+// checkRecording confirms the recording is the volunteer's own, in the
+// language, and was uploaded in full as audio within the size limit.
+func (d *dataLab) checkRecording(ctx context.Context, key, language string, userID int64) error {
+	info, err := d.uploaded(ctx, key, domain.RecordingPrefix(language, userID), "recording")
 	if err != nil {
 		return err
 	}
@@ -380,13 +481,47 @@ func (d *dataLab) checkRecording(ctx context.Context, key, language string, user
 	return nil
 }
 
+// checkSign confirms the video is the signer's own, in the language, and was
+// uploaded in full within the size limit; and that the landmarks, when
+// given, are the ones recorded with that video.
+func (d *dataLab) checkSign(ctx context.Context, videoKey, landmarksKey, language string, userID int64) error {
+	prefix := domain.SignPrefix(language, userID)
+	info, err := d.uploaded(ctx, videoKey, prefix, "video")
+	if err != nil {
+		return err
+	}
+	if !strings.HasPrefix(info.ContentType, "video/") || domain.VideoTypes[info.ContentType] != path.Ext(videoKey) {
+		return invalid("that file isn't a video; record it again")
+	}
+	if info.Size == 0 || info.Size > domain.MaxVideoBytes {
+		return invalid("keep each take to a minute or so")
+	}
+	if landmarksKey == "" {
+		return nil
+	}
+	if landmarksKey != domain.LandmarksKeyFor(videoKey) {
+		return invalid("those hand-tracking points belong to another take; record it again")
+	}
+	info, err = d.uploaded(ctx, landmarksKey, prefix, "hand-tracking file")
+	if err != nil {
+		return err
+	}
+	if info.ContentType != domain.LandmarksType || info.Size == 0 || info.Size > domain.MaxLandmarksBytes {
+		return invalid("the hand-tracking file is damaged; record it again")
+	}
+	return nil
+}
+
 func (d *dataLab) Contribute(ctx context.Context, tok *FirebaseToken, in ContributionInput) (*domain.Contribution, error) {
-	modality, err := modalityOf(in.Modality)
+	v, m, err := d.contributorIn(ctx, tok, in.Language)
 	if err != nil {
 		return nil, err
 	}
-	v, err := d.contributorIn(ctx, tok, in.Language)
+	modality, err := modalityIn(m, in.Modality)
 	if err != nil {
+		return nil, err
+	}
+	if err := d.canRecordIn(v, modality); err != nil {
 		return nil, err
 	}
 	rec := ContributionRecord{
@@ -398,10 +533,13 @@ func (d *dataLab) Contribute(ctx context.Context, tok *FirebaseToken, in Contrib
 		Pasted:         in.Pasted,
 		ConsentVersion: v.ConsentVersion,
 	}
-	if modality == domain.ModalityAudio {
-		if err := d.canRecord(v); err != nil {
+	switch modality {
+	case domain.ModalityVideo:
+		if err := d.checkSign(ctx, in.VideoKey, in.LandmarksKey, in.Language, v.ID); err != nil {
 			return nil, err
 		}
+		rec.VideoKey, rec.LandmarksKey, rec.Text, rec.Pasted = in.VideoKey, in.LandmarksKey, "", false
+	case domain.ModalityAudio:
 		if rec.ReadsContributionID, err = d.verifiedTranslation(ctx, in.ItemID, in.Language); err != nil {
 			return nil, err
 		}
@@ -409,7 +547,7 @@ func (d *dataLab) Contribute(ctx context.Context, tok *FirebaseToken, in Contrib
 			return nil, err
 		}
 		rec.AudioKey, rec.Text, rec.Pasted = in.AudioKey, "", false
-	} else {
+	default:
 		if rec.Text == "" {
 			return nil, invalid("write something before submitting")
 		}
@@ -452,8 +590,16 @@ func (d *dataLab) NextReview(ctx context.Context, tok *FirebaseToken, language s
 	if item == nil {
 		return nil, ErrNoReviews
 	}
-	if item.AudioKey != "" && d.storage != nil {
-		item.AudioURL = d.storage.PublicURL(item.AudioKey)
+	if d.storage != nil {
+		if item.AudioKey != "" {
+			item.AudioURL = d.storage.PublicURL(item.AudioKey)
+		}
+		if item.VideoKey != "" {
+			item.VideoURL = d.storage.PublicURL(item.VideoKey)
+		}
+		if item.LandmarksKey != "" {
+			item.LandmarksURL = d.storage.PublicURL(item.LandmarksKey)
+		}
 	}
 	return item, nil
 }
@@ -496,7 +642,7 @@ func (d *dataLab) Review(ctx context.Context, tok *FirebaseToken, in ReviewInput
 	if ref.Status != domain.StatusPending {
 		return ErrAlreadyReviewed
 	}
-	if rec.Decision == domain.DecisionCorrect && ref.Modality == domain.ModalityAudio {
+	if rec.Decision == domain.DecisionCorrect && (ref.Modality == domain.ModalityAudio || ref.Modality == domain.ModalityVideo) {
 		return invalid("a recording can't be corrected; accept it or ask for it again")
 	}
 	if rec.Decision == domain.DecisionCorrect && rec.CorrectedText == strings.TrimSpace(ref.Text) {

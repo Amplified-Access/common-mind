@@ -68,6 +68,9 @@ definitions:
         type: string
       level:
         type: string
+      modality:
+        description: 'Modality is the language''s: spoken or signed.'
+        type: string
     type: object
   domain.TranslatorLanguage:
     properties:
@@ -152,6 +155,9 @@ definitions:
         items:
           type: string
         type: array
+      modality:
+        description: spoken or signed
+        type: string
       name:
         type: string
       native_name:
@@ -164,7 +170,8 @@ definitions:
   handlers.LanguageProgressAlias:
     properties:
       available:
-        description: translate items, the whole every language works from
+        description: translate items, the whole every language works from; for a sign
+          language, words and sentences to sign
         type: integer
       code:
         type: string
@@ -176,6 +183,11 @@ definitions:
           and verified.
         type: integer
       recorded_verified:
+        type: integer
+      signed:
+        description: Signs recorded on video, pending review or verified, and verified.
+        type: integer
+      signed_verified:
         type: integer
       translated:
         description: pairs pending review or verified
@@ -189,6 +201,12 @@ definitions:
       content_type:
         type: string
       key:
+        type: string
+      landmarks_content_type:
+        type: string
+      landmarks_key:
+        type: string
+      landmarks_upload_url:
         type: string
       upload_url:
         type: string
@@ -208,6 +226,9 @@ definitions:
         type: string
       kind:
         type: string
+      landmarks_url:
+        description: the sign's tracked landmarks, when recorded
+        type: string
       language_code:
         type: string
       modality:
@@ -222,6 +243,9 @@ definitions:
       text:
         description: '"" for a recording'
         type: string
+      video_url:
+        description: where the reviewer watches a sign
+        type: string
     type: object
   handlers.TaskAlias:
     properties:
@@ -232,14 +256,14 @@ definitions:
       kind:
         type: string
       modality:
-        description: 'text: write it; audio: read it aloud'
+        description: 'text: write it; audio: read it aloud; video: sign it'
         type: string
       target_language:
-        description: language the volunteer writes in
+        description: language the volunteer writes, speaks or signs in
         type: string
       text:
-        description: the segment to translate or prompt to answer; for a recording,
-          the verified translation to read
+        description: the segment to translate, prompt to answer, or word to sign;
+          for a recording, the verified translation to read
         type: string
       text_language:
         description: language Text is written in
@@ -316,6 +340,10 @@ definitions:
         type: array
       name:
         type: string
+      video_consent:
+        description: VideoConsent reports whether it covers signing on camera (ADR
+          0014).
+        type: boolean
       voice_consent:
         description: |-
           VoiceConsent reports whether that consent also covers voice recordings,
@@ -329,10 +357,17 @@ definitions:
         type: string
       item_id:
         type: integer
+      landmarks_key:
+        description: |-
+          LandmarksKey is the landmarks_key StartRecording returned, for a sign
+          whose landmarks were tracked and uploaded; leave it empty otherwise.
+        type: string
       language:
         type: string
       modality:
-        description: Modality is "text" (the default) or "audio".
+        description: |-
+          Modality is "text" (the default) or "audio" in a spoken language, and
+          "video" (the default) in a sign language.
         type: string
       pasted:
         type: boolean
@@ -341,12 +376,19 @@ definitions:
           Text is the written contribution; ignored for a recording, whose
           transcript is the verified translation it reads.
         type: string
+      video_key:
+        description: VideoKey is the key StartRecording returned, for a sign.
+        type: string
     required:
     - item_id
     - language
     type: object
   handlers.featuresResponse:
     properties:
+      video:
+        description: Video is true when signs can be recorded on camera; it needs
+          the same storage.
+        type: boolean
       voice:
         description: Voice is true when recordings can be stored (object storage is
           set up).
@@ -560,6 +602,35 @@ paths:
       summary: Get one translator (admin)
       tags:
       - admin
+  /api/v1/data-lab/consent/video:
+    post:
+      description: Extends the volunteer's current consent to video recordings of
+        their signing, which show their face and hands and are published with the
+        dataset. Needed before recording in a sign language.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.VolunteerAlias'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: onboarding_required or consent_required
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Agree to sign on camera
+      tags:
+      - data-lab
   /api/v1/data-lab/consent/voice:
     post:
       description: Extends the volunteer's current consent to voice recordings, which
@@ -594,8 +665,9 @@ paths:
       - application/json
       description: Saves a translation or answer as pending review, written or recorded.
         A recording (modality=audio) reads the item's verified translation aloud and
-        carries the audio_key it was uploaded to. `pasted` is set by the editor when
-        text was pasted in.
+        carries the audio_key it was uploaded to. A sign (modality=video) carries
+        its video_key and, when tracked, its landmarks_key. `pasted` is set by the
+        editor when text was pasted in.
       parameters:
       - description: Contribution
         in: body
@@ -635,8 +707,8 @@ paths:
       - data-lab
   /api/v1/data-lab/features:
     get:
-      description: 'Which optional features this server has: voice is true when recordings
-        can be stored.'
+      description: 'Which optional features this server has: voice and video are true
+        when recordings can be stored.'
       produces:
       - application/json
       responses:
@@ -767,10 +839,12 @@ paths:
     post:
       consumes:
       - application/json
-      description: Returns a presigned URL (valid 15 minutes) the browser PUTs the
+      description: 'Returns a presigned URL (valid 15 minutes) the browser PUTs the
         recording to, with the returned content_type, then the key to submit with
-        the contribution. Needs voice consent, and a verified translation of the item
-        in the language.
+        the contribution. In a spoken language: an audio recording, which needs voice
+        consent and a verified translation of the item in the language. In a sign
+        language: a video, which needs video consent, plus a second URL for the landmarks
+        file (application/json) tracked while recording.'
       parameters:
       - description: Recording
         in: body
@@ -792,7 +866,7 @@ paths:
               type: string
             type: object
         "403":
-          description: voice_consent_required
+          description: voice_consent_required or video_consent_required
           schema:
             additionalProperties:
               type: string
@@ -814,8 +888,9 @@ paths:
       - application/json
       description: Accept verifies the contribution. Correct verifies written text
         with the reviewer's corrected_text, keeping the original on the contribution;
-        recordings can't be corrected. Reject needs a reason (inaccurate, incomplete,
-        machine_translated, off_topic, unclear, other) and reopens the item for others.
+        recordings and signs can't be corrected. Reject needs a reason (inaccurate,
+        incomplete, machine_translated, off_topic, unclear, other) and reopens the
+        item for others.
       parameters:
       - description: Review
         in: body
@@ -853,7 +928,8 @@ paths:
     get:
       description: Returns the oldest pending contribution in the language by someone
         else. A recording comes with audio_url to play it and read_text, the verified
-        translation it reads. 404 no_reviews when the queue is empty.
+        translation it reads. A sign comes with video_url and, when tracked, landmarks_url.
+        404 no_reviews when the queue is empty.
       parameters:
       - description: Language code, e.g. sw
         in: query
@@ -886,17 +962,19 @@ paths:
       - data-lab
   /api/v1/data-lab/tasks/next:
     get:
-      description: 'modality=text (the default) returns an item to translate or a
-        prompt to answer. modality=audio returns a verified translation in the language
-        to read aloud: only translated, verified items are recorded. 404 no_tasks
-        when the language has nothing left for this volunteer.'
+      description: 'In a spoken language, modality=text (the default) returns an item
+        to translate or a prompt to answer, and modality=audio a verified translation
+        in the language to read aloud: only translated, verified items are recorded.
+        In a sign language, modality=video (its default and only modality) returns
+        an English word or sentence to sign, words first. 404 no_tasks when the language
+        has nothing left for this volunteer.'
       parameters:
       - description: Target language code, e.g. sw
         in: query
         name: language
         required: true
         type: string
-      - description: text (default) or audio
+      - description: text (default) or audio; video for a sign language
         in: query
         name: modality
         type: string
