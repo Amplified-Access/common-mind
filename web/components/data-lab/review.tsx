@@ -31,6 +31,15 @@ const recordingReasons: { value: RejectReason; label: string }[] = [
   { value: "other", label: "Other" },
 ];
 
+const signReasons: { value: RejectReason; label: string }[] = [
+  { value: "inaccurate", label: "Different meaning" },
+  { value: "incomplete", label: "Cut off or incomplete" },
+  { value: "unclear", label: "Hard to see" },
+  { value: "other", label: "Other" },
+];
+
+const reasonsFor = { text: textReasons, audio: recordingReasons, video: signReasons } as const;
+
 const categoryLabel = (id: string) => civicCategories.find((c) => c.id === id)?.label ?? id;
 
 type View =
@@ -138,9 +147,11 @@ function Review({ language }: { language: string }) {
             <div className="flex flex-col gap-5 bg-[#1c1a0e] p-6 sm:p-8">
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                 <Eyebrow>
-                  {view.item.kind === "translate"
-                    ? `Original · ${nameOf(view.item.item_language)}`
-                    : `Prompt · ${nameOf(view.item.item_language)}`}
+                  {view.item.kind === "write"
+                    ? `Prompt · ${nameOf(view.item.item_language)}`
+                    : view.item.kind === "word"
+                      ? `Word · ${nameOf(view.item.item_language)}`
+                      : `Original · ${nameOf(view.item.item_language)}`}
                 </Eyebrow>
                 <span className="font-mono text-xs text-faint">{categoryLabel(view.item.category)}</span>
               </div>
@@ -151,7 +162,13 @@ function Review({ language }: { language: string }) {
             <div className="flex flex-col gap-5 p-6 sm:p-8">
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                 <Eyebrow>
-                  {view.item.modality === "audio" ? "Recording" : view.item.kind === "translate" ? "Translation" : "Answer"}{" "}
+                  {view.item.modality === "video"
+                    ? "Sign"
+                    : view.item.modality === "audio"
+                      ? "Recording"
+                      : view.item.kind === "translate"
+                        ? "Translation"
+                        : "Answer"}{" "}
                   · {target?.name ?? language}
                 </Eyebrow>
                 {view.item.pasted && (
@@ -160,7 +177,25 @@ function Review({ language }: { language: string }) {
                   </span>
                 )}
               </div>
-              {view.item.modality === "audio" ? (
+              {view.item.modality === "video" ? (
+                <>
+                  <p className="text-sm text-subtle">
+                    Watch, and check it signs the {view.item.kind === "word" ? "word" : "sentence"} clearly, as a
+                    signer of {target?.name ?? language} would.
+                  </p>
+                  {view.item.video_url ? (
+                    <video
+                      controls
+                      playsInline
+                      preload="metadata"
+                      src={view.item.video_url}
+                      className="aspect-video w-full rounded-inset border border-line bg-background object-contain"
+                    />
+                  ) : (
+                    <p className="font-mono text-xs text-faint">The video can&apos;t be played right now.</p>
+                  )}
+                </>
+              ) : view.item.modality === "audio" ? (
                 <>
                   <p lang={language} className="text-xl leading-snug text-pretty whitespace-pre-line">
                     {view.item.read_text}
@@ -204,7 +239,7 @@ function Review({ language }: { language: string }) {
               <fieldset className="flex flex-col gap-4">
                 <legend className="pb-3 font-mono text-xs text-faint">Why isn&apos;t it ready?</legend>
                 <div className="flex flex-wrap gap-2">
-                  {(view.item.modality === "audio" ? recordingReasons : textReasons).map((r) => (
+                  {reasonsFor[view.item.modality].map((r) => (
                     <button
                       key={r.value}
                       type="button"
