@@ -54,12 +54,13 @@ async function request<T>(
 const dataLabApi = {
   languages: () => request<Language[]>("/languages"),
   progress: () => request<LanguageProgress[]>("/progress"),
-  /** Optional features this server has: voice is false until storage is set up. */
-  features: () => request<{ voice: boolean }>("/features"),
+  /** Optional features this server has: voice and video are false until storage is set up. */
+  features: () => request<{ voice: boolean; video: boolean }>("/features"),
   me: (token: string) => request<Volunteer>("/me", { token }),
   onboard: (token: string, body: { name: string; languages: string[]; consent_version: string }) =>
     request<Volunteer>("/onboarding", { token, method: "POST", body }),
   acceptVoiceConsent: (token: string) => request<Volunteer>("/consent/voice", { token, method: "POST" }),
+  acceptVideoConsent: (token: string) => request<Volunteer>("/consent/video", { token, method: "POST" }),
   nextTask: (token: string, language: string, modality: Modality = "text") =>
     request<Task>(
       `/tasks/next?language=${encodeURIComponent(language)}&modality=${modality}`,
@@ -76,6 +77,9 @@ const dataLabApi = {
       /** The text; empty for a recording, which reads its item's verified translation. */
       text: string;
       audio_key?: string;
+      /** For a sign: the video, and the landmarks when they were tracked. */
+      video_key?: string;
+      landmarks_key?: string;
       pasted: boolean;
     },
   ) => request<unknown>("/contributions", { token, method: "POST", body }),
@@ -98,10 +102,15 @@ const dataLabApi = {
  * Content-Type must be the one the URL was signed for.
  */
 async function uploadRecording(upload: RecordingUpload, recording: Blob): Promise<void> {
-  const res = await fetch(upload.upload_url, {
+  return uploadTo(upload.upload_url, upload.content_type, recording);
+}
+
+/** Uploads a file to a presigned URL with the type it was signed for. */
+async function uploadTo(url: string, contentType: string, file: Blob): Promise<void> {
+  const res = await fetch(url, {
     method: "PUT",
-    headers: { "Content-Type": upload.content_type },
-    body: recording,
+    headers: { "Content-Type": contentType },
+    body: file,
   }).catch(() => null);
   if (!res?.ok) {
     throw new ApiError(
@@ -116,4 +125,4 @@ async function uploadRecording(upload: RecordingUpload, recording: Blob): Promis
 const progressSocketUrl = (token: string) =>
   `${BASE.replace(/^http/, "ws")}/ws?token=${encodeURIComponent(token)}`;
 
-export { ApiError, dataLabApi, progressSocketUrl, uploadRecording };
+export { ApiError, dataLabApi, progressSocketUrl, uploadRecording, uploadTo };
