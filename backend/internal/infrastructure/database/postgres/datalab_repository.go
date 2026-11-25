@@ -23,7 +23,7 @@ func NewDataLabRepository(db *sql.DB) usecase.DataLabStore {
 // ListLanguages returns enabled languages, target languages first.
 func (r *dataLabRepository) ListLanguages(ctx context.Context) ([]domain.Language, error) {
 	const q = `
-        SELECT code, name, native_name, role, script, array_to_json(extra_characters)
+        SELECT code, name, native_name, role, script, array_to_json(extra_characters), modality
         FROM languages
         WHERE enabled
         ORDER BY role = 'source', name`
@@ -38,7 +38,7 @@ func (r *dataLabRepository) ListLanguages(ctx context.Context) ([]domain.Languag
 	for rows.Next() {
 		var l domain.Language
 		var extra []byte
-		if err := rows.Scan(&l.Code, &l.Name, &l.NativeName, &l.Role, &l.Script, &extra); err != nil {
+		if err := rows.Scan(&l.Code, &l.Name, &l.NativeName, &l.Role, &l.Script, &extra, &l.Modality); err != nil {
 			return nil, fmt.Errorf("datalab repository: scan language: %w", err)
 		}
 		if err := json.Unmarshal(extra, &l.ExtraCharacters); err != nil {
@@ -59,9 +59,11 @@ func (r *dataLabRepository) GetVolunteer(ctx context.Context, firebaseUID string
                          ORDER BY accepted_at DESC LIMIT 1), ''),
                COALESCE((SELECT covers_voice FROM consents c WHERE c.user_id = u.id
                          ORDER BY accepted_at DESC LIMIT 1), false),
-               COALESCE((SELECT json_agg(json_build_object('language_code', m.language_code, 'level', m.level)
+               COALESCE((SELECT json_agg(json_build_object('language_code', m.language_code, 'level', m.level,
+                                                           'modality', l.modality)
                                          ORDER BY m.language_code)
-                         FROM language_members m WHERE m.user_id = u.id), '[]')
+                         FROM language_members m JOIN languages l ON l.code = m.language_code
+                         WHERE m.user_id = u.id), '[]')
         FROM users u
         WHERE u.firebase_uid = $1`
 

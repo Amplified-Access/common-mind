@@ -15,11 +15,19 @@ type Language struct {
 	Role            string   `json:"role"`
 	Script          string   `json:"script"`
 	ExtraCharacters []string `json:"extra_characters"`
+	Modality        string   `json:"modality"` // spoken or signed
 }
 
 const (
 	LanguageRoleTarget = "target"
 	LanguageRoleSource = "source"
+)
+
+// Language modalities. Spoken languages are written and read aloud; signed
+// languages are recorded on camera (ADR 0014).
+const (
+	ModalitySpoken = "spoken"
+	ModalitySigned = "signed"
 )
 
 // CurrentConsentVersion is the consent text volunteers must have accepted to
@@ -38,7 +46,12 @@ const (
 type Membership struct {
 	LanguageCode string `json:"language_code"`
 	Level        string `json:"level"`
+	// Modality is the language's: spoken or signed.
+	Modality string `json:"modality"`
 }
+
+// Signed reports whether the language is a sign language.
+func (m Membership) Signed() bool { return m.Modality == ModalitySigned }
 
 // CanReview reports whether the level allows reviewing contributions.
 func (m Membership) CanReview() bool {
