@@ -4,10 +4,12 @@ import { describe, expect, it } from "vitest";
 import type { LandmarkFrame, LandmarksFile } from "@/lib/sign-capture/landmarks";
 
 import { DEFAULT_BODY } from "./body";
+import { planSigns } from "./plan";
+import { filmTimeline } from "./replay.fixtures";
 import { digitPoints, jointsFor, orientHand } from "./hand";
 import { replayTimeline, retargetHand } from "./replay";
 import { REST_HAND } from "./resolve";
-import { samplePose } from "./timeline";
+import { buildTimeline, samplePose } from "./timeline";
 
 type Triple = [number, number, number];
 
@@ -213,5 +215,32 @@ describe("replayTimeline", () => {
     const tl = replayTimeline(file([]));
     expect(tl.duration).toBe(0);
     samplePose(tl, 0).r.wrist.forEach((v, i) => expect(v).toBeCloseTo(REST_HAND.wrist[i], 5));
+  });
+});
+
+describe("replaying the engine's own signing", () => {
+  it("follows a filmed phrase closely: wrists within millimetres, handshapes within a degree", () => {
+    const signed = buildTimeline(planSigns("hello my name grace thank you"));
+    const replayed = replayTimeline(filmTimeline(signed));
+
+    let wristError = 0;
+    let fingerError = 0;
+    let thumbError = 0;
+    let samples = 0;
+    const meanGap = (a: number[], b: number[]) => a.reduce((sum, v, i) => sum + Math.abs(v - b[i]), 0) / a.length;
+    for (let t = 0; t <= signed.duration; t += 0.05) {
+      const want = samplePose(signed, t);
+      const got = samplePose(replayed, t);
+      for (const side of ["r", "l"] as const) {
+        wristError += new Vector3(...got[side].wrist).distanceTo(new Vector3(...want[side].wrist));
+        fingerError += meanGap(got[side].joints.slice(0, 16), want[side].joints.slice(0, 16));
+        thumbError += meanGap(got[side].joints.slice(16), want[side].joints.slice(16));
+        samples++;
+      }
+    }
+    // Smoothing softens the fastest moves a little; on average it stays within millimetres.
+    expect(wristError / samples).toBeLessThan(0.006);
+    expect(fingerError / samples).toBeLessThan(0.02);
+    expect(thumbError / samples).toBeLessThan(0.02);
   });
 });
