@@ -33,4 +33,4 @@ The Data Lab already collects human text and voice under consent, with review by
 
 ## Open questions
 - Self-hosting the MediaPipe runtime and model files instead of loading them from their public CDNs.
-- How verified signs become `/sign` lexicon entries (retargeting landmarks to the avatar's hand model).
+- How verified signs become `/sign` lexicon entries. *Update 2026-11-25:* the avatar replays a take from its landmarks (`web/lib/sign/replay.ts`), for signers and reviewers in the Data Lab. Turning a replay into a written lexicon entry (keyframes and handshapes) is still open.

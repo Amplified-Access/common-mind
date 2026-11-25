@@ -143,7 +143,7 @@ Sign languages are recorded on camera (ADR 0014). In a sign language, `video` is
 
 The landmarks file is written by the web app (`web/lib/sign-capture/landmarks.ts`, which documents the format): per video frame, MediaPipe Holistic's 33 pose points, 21 points per hand (normalised and in metres), and 52 face expression weights. The face mesh is left out; it can be extracted from the video later.
 
-Reviewers in the sign language get `video_url` and, when tracked, `landmarks_url` (`ReviewItem`). They accept or reject a sign; like a recording, it can't be corrected. Videos are published from the same public bucket as voice, and the video consent says so.
+Reviewers in the sign language get `video_url` and, when tracked, `landmarks_url` (`ReviewItem`). The web app replays the landmarks on the `/sign` avatar (`web/lib/sign/replay.ts`), so signers can check how a take was tracked before submitting and reviewers can switch between the video and the avatar. They accept or reject a sign; like a recording, it can't be corrected. Videos are published from the same public bucket as voice, and the video consent says so.
 
 ## Reviews
 
