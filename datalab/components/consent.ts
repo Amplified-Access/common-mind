@@ -19,3 +19,15 @@ export const voiceConsentPoints = [
   "Another speaker of the language listens to each recording before it joins a dataset.",
   "You can withdraw at any time, and your recordings are removed from the next release.",
 ];
+
+// What signers agree to before recording on camera in a sign language
+// (ADR 0014). Like the voice consent, it extends the consent above
+// (covers_video on the same version).
+export const videoConsentPoints = [
+  "Your videos are published in open datasets, where anyone can watch them, for research and for building sign language technology for African sign languages.",
+  "A video shows your face, hands and what is behind you, so people who know you can recognise you. Your name and email are kept out of published datasets.",
+  "The points your camera tracks on your hands, body and face while you sign are published with each video.",
+  "Sign only what the task asks, in front of a plain background with nothing personal in view.",
+  "Another signer of the language watches each video before it joins a dataset.",
+  "You can withdraw at any time, and your videos are removed from the next release.",
+];
