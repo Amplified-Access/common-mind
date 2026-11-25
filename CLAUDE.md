@@ -117,7 +117,7 @@ inference/
   server.py                     # FastAPI model server that runs on the Runpod pod
   translator.py                 # Flash worker with the same logic, for local iteration
 ingest/                         # offline pipeline: open documents → review sheet → Data Lab import file (README.md)
-docs/adr/                       # architectural decisions (0009–0011 and 0013 cover the Data Lab)
+docs/adr/                       # architectural decisions (0009–0011, 0013 and 0014 cover the Data Lab)
 ```
 
 ## Swagger / OpenAPI

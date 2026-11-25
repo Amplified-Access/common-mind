@@ -1,6 +1,6 @@
 ---
 topic: data-lab-admin
-last_verified: 2026-11-14
+last_verified: 2026-11-25
 sources:
   - internal/domain/datalab_admin.go
   - internal/usecase/datalab_admin.go
@@ -47,7 +47,7 @@ A non-numeric `:id`, `contributor`, `limit` or `offset` is 400 `invalid_input`. 
 
 | Field | Counts |
 |---|---|
-| `written`, `recorded` | their contributions with `modality` text / audio |
+| `written`, `recorded`, `signed` | their contributions with `modality` text / audio / video |
 | `pending`, `verified`, `rejected` | the same contributions by `status` |
 | `corrected` | verified ones whose review is a `correct`; part of `verified` |
 | `reviewed` | reviews they made (`reviews.reviewer_id`) |
@@ -57,9 +57,9 @@ With `language`, only that language's members and contributors are listed, and e
 
 ### Contributions
 
-`ListContributions` returns `{total, contributions}`: `total` is every match (a separate `COUNT(*)`), and `contributions` the page, newest `created_at` first. Filters are all optional: `contributor` (user ID), `language`, `status` (`pending`, `verified`, `rejected`), `modality` (`text`, `audio`). An unknown status or modality is 400. `limit` defaults to 50 and is capped at 200; a negative `offset` is 0.
+`ListContributions` returns `{total, contributions}`: `total` is every match (a separate `COUNT(*)`), and `contributions` the page, newest `created_at` first. Filters are all optional: `contributor` (user ID), `language`, `status` (`pending`, `verified`, `rejected`), `modality` (`text`, `audio`, `video`). An unknown status or modality is 400. `limit` defaults to 50 and is capped at 200; a negative `offset` is 0.
 
-Each `AdminContribution` has the item (`item_text`, `item_language`, `kind`, `category`, `source_title`), what the volunteer entered (`text`; `""` for a recording), `pasted`, `status`, `submitted_at`, and `review`: `null` while pending, otherwise `{decision, reason, note, corrected_text, reviewer_id, reviewer_name, reviewed_at}`. A recording also has `read_text`, the verified text it reads (the reviewer's correction when there is one), and `audio_url` when storage is configured.
+Each `AdminContribution` has the item (`item_text`, `item_language`, `kind`, `category`, `source_title`), what the volunteer entered (`text`; `""` for a recording), `pasted`, `status`, `submitted_at`, and `review`: `null` while pending, otherwise `{decision, reason, note, corrected_text, reviewer_id, reviewer_name, reviewed_at}`. A recording also has `read_text`, the verified text it reads (the reviewer's correction when there is one), and `audio_url` when storage is configured. A sign has `video_url`.
 
 ## Web app
 
