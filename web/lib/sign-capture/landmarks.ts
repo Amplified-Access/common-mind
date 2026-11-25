@@ -65,6 +65,26 @@ const round = (v: number, places: number) => {
 const triple = (p: Point): Triple => [round(p.x, 4), round(p.y, 4), round(p.z, 4)];
 const triples = (sets: Point[][]) => (sets[0]?.length ? sets[0].map(triple) : null);
 
+/** One tracker result as a frame of the file, `seconds` into the take. */
+export function frameFrom(result: TrackerResult, seconds: number): LandmarkFrame {
+  const face = result.faceBlendshapes[0]?.categories ?? [];
+  const pose = result.poseLandmarks[0];
+  return {
+    t: round(seconds, 3),
+    pose: pose?.length ? pose.map((p) => [...triple(p), round(p.visibility ?? 0, 2)]) : null,
+    poseWorld: triples(result.poseWorldLandmarks),
+    left: triples(result.leftHandLandmarks),
+    leftWorld: triples(result.leftHandWorldLandmarks),
+    right: triples(result.rightHandLandmarks),
+    rightWorld: triples(result.rightHandWorldLandmarks),
+    face: face.length ? face.map((c) => round(c.score, 4)) : null,
+  };
+}
+
+/** The names of a result's face weights, in order; empty without a face. */
+export const blendshapeNames = (result: TrackerResult) =>
+  (result.faceBlendshapes[0]?.categories ?? []).map((c) => c.categoryName);
+
 /**
  * Collects a take's frames as they're tracked, then assembles the file.
  * One log serves every take: reset it before the next one.
@@ -75,19 +95,8 @@ export function createLandmarkLog(meta: Pick<LandmarksFile, "tracker" | "video">
 
   return {
     add(result: TrackerResult, seconds: number) {
-      const face = result.faceBlendshapes[0]?.categories ?? [];
-      if (face.length && !blendshapes.length) blendshapes = face.map((c) => c.categoryName);
-      const pose = result.poseLandmarks[0];
-      frames.push({
-        t: round(seconds, 3),
-        pose: pose?.length ? pose.map((p) => [...triple(p), round(p.visibility ?? 0, 2)]) : null,
-        poseWorld: triples(result.poseWorldLandmarks),
-        left: triples(result.leftHandLandmarks),
-        leftWorld: triples(result.leftHandWorldLandmarks),
-        right: triples(result.rightHandLandmarks),
-        rightWorld: triples(result.rightHandWorldLandmarks),
-        face: face.length ? face.map((c) => round(c.score, 4)) : null,
-      });
+      if (!blendshapes.length) blendshapes = blendshapeNames(result);
+      frames.push(frameFrom(result, seconds));
     },
 
     /** The share of frames, from 0 to 1, with at least one hand tracked. */

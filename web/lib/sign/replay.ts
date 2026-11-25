@@ -26,18 +26,19 @@ import type { FacePose, HandPose, HeadPose, Pose, Quat, Vec3 } from "./types";
 // of view goes to rest; a hand lost for a moment keeps its last shape.
 
 type Triple = readonly [number, number, number];
-type Side = "left" | "right";
+export type Side = "left" | "right";
+export type HandShape = Pick<HandPose, "quat" | "joints">;
 
 /** Frames either side averaged to smooth the hands and arms, and the head
  * and face. At 30 frames a second, a few hundredths of a second. */
 const SMOOTH_HANDS = 2;
 const SMOOTH_FACE = 1;
 /** How long a hand lost from view keeps its last shape, in seconds. */
-const HOLD = 0.5;
+export const HOLD = 0.5;
 /** Below this, a pose point is a guess: an arm whose wrist is this unsure,
  * with no hand tracked, is resting out of view. */
 const VISIBLE = 0.5;
-const HEAD_LIMIT = 0.6;
+export const HEAD_LIMIT = 0.6;
 
 // MediaPipe's pose points.
 const POSE = {
@@ -161,7 +162,7 @@ function thumbJoints(d1: Vector3, d2: Vector3, d3: Vector3): number[] {
   ];
 }
 
-const median = (xs: number[]) => {
+export const median = (xs: number[]) => {
   if (!xs.length) return null;
   const s = [...xs].sort((a, b) => a - b);
   const m = s.length >> 1;
@@ -170,23 +171,28 @@ const median = (xs: number[]) => {
 
 const visible = (frame: LandmarkFrame, i: number) => (frame.pose?.[i]?.[3] ?? 0) >= VISIBLE;
 
-/** The signer's arm length, shoulder to elbow to wrist, through the take. */
-function armLength(frames: LandmarkFrame[]): number | null {
-  const lengths: number[] = [];
-  for (const f of frames) {
-    if (!f.poseWorld) continue;
-    for (const side of ["left", "right"] as const) {
-      const [s, e, w] = [POSE.shoulder[side], POSE.elbow[side], POSE.wrist[side]];
-      if (![s, e, w].every((i) => visible(f, i))) continue;
-      const [ps, pe, pw] = [s, e, w].map((i) => toEngine(f.poseWorld![i]));
-      lengths.push(ps.distanceTo(pe) + pe.distanceTo(pw));
-    }
-  }
-  return median(lengths);
+/** The signer's arm lengths in a frame, shoulder to elbow to wrist, for
+ * each arm fully in view. */
+export function armLengths(f: LandmarkFrame): number[] {
+  const world = f.poseWorld;
+  if (!world) return [];
+  return (["left", "right"] as const).flatMap((side) => {
+    const [s, e, w] = [POSE.shoulder[side], POSE.elbow[side], POSE.wrist[side]];
+    if (![s, e, w].every((i) => visible(f, i))) return [];
+    const [ps, pe, pw] = [s, e, w].map((i) => toEngine(world[i]));
+    return [ps.distanceTo(pe) + pe.distanceTo(pw)];
+  });
+}
+
+/** How much to scale the signer's reach to the avatar's arm, from their
+ * arm lengths: 1 when none were seen. */
+export function armScale(lengths: number[], body: Body): number {
+  const signer = median(lengths);
+  return signer ? (body.upperArm + body.forearm) / signer : 1;
 }
 
 /** The hand points of a side in a frame, in metres where tracked so. */
-function handPoints(frame: LandmarkFrame, side: Side, video: LandmarksFile["video"]): Triple[] | null {
+export function handPoints(frame: LandmarkFrame, side: Side, video: LandmarksFile["video"]): Triple[] | null {
   const world = side === "left" ? frame.leftWorld : frame.rightWorld;
   if (world?.length) return world;
   const image = side === "left" ? frame.left : frame.right;
@@ -195,21 +201,48 @@ function handPoints(frame: LandmarkFrame, side: Side, video: LandmarksFile["vide
   return image?.length ? image.map(([x, y, z]) => [x * video.width, y * video.height, z * video.width] as Triple) : null;
 }
 
+/** A side's hand shape tracked in a frame, or null. */
+export function handShape(f: LandmarkFrame, side: Side, video: LandmarksFile["video"]): HandShape | null {
+  const points = handPoints(f, side, video);
+  return points ? retargetHand(points, side) : null;
+}
+
+/**
+ * A side's hand in a frame. The arm is tracked when the frame has a pose and
+ * either a hand was tracked (`seen`) or the wrist is plainly in view; it
+ * then reaches from its own shoulder as the signer's did, scaled to the
+ * avatar, with `shape` (or a resting one). Otherwise the hand rests.
+ */
+export function handPose(
+  f: LandmarkFrame,
+  side: Side,
+  body: Body,
+  scale: number,
+  shape: HandShape | null,
+  seen: boolean,
+): HandPose {
+  const rest = restHand(body);
+  const world = f.poseWorld;
+  if (!world || !(seen || visible(f, POSE.wrist[side]))) return rest;
+  const shoulder = toEngine(world[POSE.shoulder[side]], side);
+  const wrist = toEngine(world[POSE.wrist[side]], side).sub(shoulder).multiplyScalar(scale).add(new Vector3(...body.shoulder));
+  const lean = toEngine(world[POSE.elbow[side]], side).sub(shoulder);
+  const elbow: Vec3 = lean.lengthSq() > 1e-6 ? (lean.normalize().toArray() as Vec3) : DEFAULT_ELBOW;
+  const { quat, joints } = shape ?? rest;
+  return { wrist: wrist.toArray() as Vec3, elbow, quat, joints };
+}
+
 /** One side's hand through the take: tracked where it can be, its shape
  * held through brief losses, at rest when out of view. */
 function trackSide(file: LandmarksFile, side: Side, body: Body, scale: number): HandPose[] {
-  const rest = restHand(body);
   const { frames } = file;
-  const shapes = frames.map((f) => {
-    const points = handPoints(f, side, file.video);
-    return points ? retargetHand(points, side) : null;
-  });
+  const shapes = frames.map((f) => handShape(f, side, file.video));
 
   // Fill brief losses from the nearest tracked shape, before or after.
   const filled = shapes.map((shape, i) => {
     if (shape) return shape;
     const t = frames[i].t;
-    let best: { shape: Pick<HandPose, "quat" | "joints">; gap: number } | null = null;
+    let best: { shape: HandShape; gap: number } | null = null;
     for (const step of [-1, 1]) {
       for (let j = i + step; j >= 0 && j < frames.length; j += step) {
         const gap = Math.abs(frames[j].t - t);
@@ -224,19 +257,7 @@ function trackSide(file: LandmarksFile, side: Side, body: Body, scale: number): 
     return best?.shape ?? null;
   });
 
-  return frames.map((f, i) => {
-    const s = POSE.shoulder[side];
-    const e = POSE.elbow[side];
-    const w = POSE.wrist[side];
-    const tracked = !!f.poseWorld && (!!shapes[i] || visible(f, w));
-    if (!tracked || !f.poseWorld) return rest;
-    const shoulder = toEngine(f.poseWorld[s], side);
-    const wrist = toEngine(f.poseWorld[w], side).sub(shoulder).multiplyScalar(scale).add(new Vector3(...body.shoulder));
-    const lean = toEngine(f.poseWorld[e], side).sub(shoulder);
-    const elbow: Vec3 = lean.lengthSq() > 1e-6 ? (lean.normalize().toArray() as Vec3) : DEFAULT_ELBOW;
-    const shape = filled[i] ?? rest;
-    return { wrist: wrist.toArray() as Vec3, elbow, quat: shape.quat, joints: shape.joints };
-  });
+  return frames.map((f, i) => handPose(f, side, body, scale, filled[i], !!shapes[i]));
 }
 
 /** Averages each value over the frames either side. */
@@ -272,7 +293,7 @@ function smoothHands(hands: HandPose[]): HandPose[] {
 }
 
 /** Turn, nod and tilt in each frame, before calibration; null without a pose. */
-function headAngles(f: LandmarkFrame): [turn: number, nod: number, tilt: number] | null {
+export function headAngles(f: LandmarkFrame): [turn: number, nod: number, tilt: number] | null {
   if (!f.poseWorld) return null;
   const left = toEngine(f.poseWorld[POSE.ear.left]);
   const right = toEngine(f.poseWorld[POSE.ear.right]);
@@ -301,18 +322,22 @@ function trackFace(file: LandmarksFile): FacePose[] {
     if (f.face && f.face.length === names.length) last = f.face;
     return last;
   });
-  return smooth(series, SMOOTH_FACE).map((weights) => {
-    const shapes = Object.fromEntries(names.map((n, i) => [n, weights[i]]));
-    const w = (n: string) => shapes[n] ?? 0;
-    const brows = clamp(w("browInnerUp") - (w("browDownLeft") + w("browDownRight")) / 2, -1, 1);
-    return {
-      ...faceFor("rest", brows),
-      open: w("jawOpen"),
-      wide: (w("mouthSmileLeft") + w("mouthSmileRight")) / 2,
-      round: w("mouthPucker"),
-      shapes,
-    };
-  });
+  return smooth(series, SMOOTH_FACE).map((weights) => facePose(names, weights));
+}
+
+/** A face from tracked weights, by name: the shapes themselves, and the
+ * engine's own brows and mouth read from them. */
+export function facePose(names: string[], weights: readonly number[]): FacePose {
+  const shapes = Object.fromEntries(names.map((n, i) => [n, weights[i] ?? 0]));
+  const w = (n: string) => shapes[n] ?? 0;
+  const brows = clamp(w("browInnerUp") - (w("browDownLeft") + w("browDownRight")) / 2, -1, 1);
+  return {
+    ...faceFor("rest", brows),
+    open: w("jawOpen"),
+    wide: (w("mouthSmileLeft") + w("mouthSmileRight")) / 2,
+    round: w("mouthPucker"),
+    shapes,
+  };
 }
 
 /** A recorded take as a timeline the avatar plays, fitted to its body. */
@@ -324,8 +349,7 @@ export function replayTimeline(file: LandmarksFile, body: Body = DEFAULT_BODY): 
     return { duration: 0, frames: [{ t: 0, pose, flow: true }], items: [], mouth: [] };
   }
 
-  const signer = armLength(frames);
-  const scale = signer ? (body.upperArm + body.forearm) / signer : 1;
+  const scale = armScale(frames.flatMap(armLengths), body);
   // The engine's r is the dominant hand, which it signs on the avatar's
   // right: the signer's own right hand.
   const r = smoothHands(trackSide(file, "right", body, scale));
