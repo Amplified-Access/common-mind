@@ -61,7 +61,9 @@ function LabApp({ children }: { children: React.ReactNode }) {
 
   return (
     <VolunteerContext.Provider value={{ state, refresh }}>
-      <div className="flex min-h-svh flex-col">
+      {/* A page marked data-fullscreen fills the screen below the bar,
+          without scrolling, from tablet width up. */}
+      <div className="flex min-h-svh flex-col md:has-[[data-fullscreen]]:h-svh">
         <LabBar
           volunteer={state.status === "ready" ? state.volunteer : undefined}
           signedIn={state.status !== "signed-out" && state.status !== "loading"}
@@ -71,8 +73,8 @@ function LabApp({ children }: { children: React.ReactNode }) {
             router.push("/data-lab");
           }}
         />
-        <main className="zoom-viewport flex-1 py-10 sm:py-14">
-          <Container>
+        <main className="zoom-viewport flex-1 py-10 sm:py-14 md:has-[[data-fullscreen]]:flex md:has-[[data-fullscreen]]:min-h-0 md:has-[[data-fullscreen]]:flex-col md:has-[[data-fullscreen]]:py-5">
+          <Container className="md:has-[[data-fullscreen]]:flex md:has-[[data-fullscreen]]:min-h-0 md:has-[[data-fullscreen]]:max-w-none md:has-[[data-fullscreen]]:flex-1 md:has-[[data-fullscreen]]:flex-col">
             {state.status === "error" && (
               <p role="alert" className="text-sm text-destructive">
                 {state.message}

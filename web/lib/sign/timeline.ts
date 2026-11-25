@@ -208,11 +208,15 @@ function lerpHand(a: HandPose, b: HandPose, u: number): HandPose {
   };
 }
 
+const lerpShapes = (a: Record<string, number>, b: Record<string, number>, u: number) =>
+  Object.fromEntries(Object.keys(a).map((k) => [k, lerp(a[k], b[k] ?? a[k], u)]));
+
 const lerpFace = (a: FacePose, b: FacePose, u: number): FacePose => ({
   brows: lerp(a.brows, b.brows, u),
   open: lerp(a.open, b.open, u),
   wide: lerp(a.wide, b.wide, u),
   round: lerp(a.round, b.round, u),
+  ...(a.shapes && { shapes: b.shapes ? lerpShapes(a.shapes, b.shapes, u) : a.shapes }),
 });
 
 /** How far along a move is, eased: to a stop and from a standstill, unless a

@@ -16,6 +16,7 @@
     "@carbon/icons-react": "11.89.0",
     "@hugeicons/core-free-icons": "^4.2.3",
     "@hugeicons/react": "^1.1.9",
+    "@mediapipe/tasks-vision": "1.2.3",
     "@radix-ui/react-tabs": "^1.1.22",
     "@sanity/client": "^8.16.0",
     "@sanity/icons": "^5.2.3",

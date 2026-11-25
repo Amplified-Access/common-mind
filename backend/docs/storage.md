@@ -1,9 +1,11 @@
 ---
 topic: storage
-last_verified: 2026-10-15
+last_verified: 2026-11-25
 sources:
   - backend/internal/usecase/storage.go
   - backend/internal/infrastructure/storage/r2/storage.go
+  - backend/internal/infrastructure/storage/r2/publisher.go
+  - backend/cmd/assets/main.go
   - backend/internal/bootstrap/bootstrap.go
 ---
 
@@ -73,6 +75,23 @@ Features upload straight from the browser to a presigned URL, so the bucket need
 The Data Lab's recordings are served from the bucket's public URL (`R2_PUBLIC_URL`): connect a custom domain under Settings → Custom Domains (the sister projects use `cdn.<domain>`, e.g. `cdn.thecommonmind.org`), or enable the `r2.dev` subdomain for testing.
 
 The bucket is `common-mind`, in the Amplified Access Cloudflare account.
+
+## Published static assets
+
+Besides recordings, the bucket serves static files the web app loads, under versioned keys, so each key's content never changes. `r2.Publisher` (`publisher.go`) uploads them for admin commands: with their content type, `Cache-Control: public, max-age=31536000, immutable`, and a `sha256` metadata entry; a file already there with the same hash is skipped.
+
+The Data Lab's hand tracker (ADR 0014) is published this way, so volunteers' browsers load it from `R2_PUBLIC_URL` and never from a third party:
+
+```bash
+make publish-mediapipe   # from backend/, after installing web/node_modules
+```
+
+| Key | What |
+|---|---|
+| `mediapipe/tasks-vision/<version>/wasm/vision_wasm_internal.{js,wasm}` | The MediaPipe runtime, copied from `web/node_modules/@mediapipe/tasks-vision` at the version `web/package.json` pins |
+| `mediapipe/models/holistic_landmarker/float16/1/holistic_landmarker.task` | The holistic model, downloaded from Google and checked against the SHA-256 in `cmd/assets/main.go`; a different file is refused |
+
+When `@mediapipe/tasks-vision` is upgraded, run the command again and update `MEDIAPIPE_VERSION` in `web/components/data-lab/sign-recorder.tsx`. The browser fetches these files cross-origin, so the bucket's CORS policy (above) must allow `GET` from the web app's origins, as it does.
 
 ## Bootstrap wiring
 In `bootstrap.Run`:

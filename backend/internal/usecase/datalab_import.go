@@ -113,8 +113,8 @@ func (im *importer) ImportItems(ctx context.Context, batch ImportBatch, rows []I
 		if r.Position != nil && *r.Position < 0 {
 			p = append(p, fmt.Sprintf("position %d is negative", *r.Position))
 		}
-		if r.Kind != domain.KindTranslate && r.Kind != domain.KindWrite {
-			p = append(p, fmt.Sprintf("kind %q is not translate or write", r.Kind))
+		if r.Kind != domain.KindTranslate && r.Kind != domain.KindWrite && r.Kind != domain.KindWord {
+			p = append(p, fmt.Sprintf("kind %q is not translate, write or word", r.Kind))
 		}
 		if !sourceLangs[r.Language] {
 			p = append(p, fmt.Sprintf("language %q is not a source language", r.Language))

@@ -82,6 +82,12 @@ migrate-version:
 migrate-create:
 	@go run ./cmd/migrate create $(name)
 
+# ---- Static assets ----
+# Publish the hand tracker's runtime and model to R2 for the web app (ADR 0014).
+# Needs web/node_modules installed; files already there unchanged are skipped.
+publish-mediapipe:
+	@go run ./cmd/assets mediapipe
+
 # ---- Data Lab admin ----
 
 # Import sources and items from a JSONL file: make datalab-import file=items.jsonl
@@ -110,4 +116,4 @@ datalab-promote:
 .PHONY: all build run test clean watch lint docker-run docker-down itest swagger \
         migrate-up migrate-up-one migrate-down migrate-down-to migrate-reset \
         migrate-status migrate-version migrate-create \
-        datalab-import datalab-check datalab-sample datalab-sample-translations datalab-promote
+        publish-mediapipe datalab-import datalab-check datalab-sample datalab-sample-translations datalab-promote

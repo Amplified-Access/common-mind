@@ -3,6 +3,8 @@ package domain
 import (
 	"fmt"
 	"hash/fnv"
+	"path"
+	"strings"
 	"time"
 )
 
@@ -15,11 +17,19 @@ type Language struct {
 	Role            string   `json:"role"`
 	Script          string   `json:"script"`
 	ExtraCharacters []string `json:"extra_characters"`
+	Modality        string   `json:"modality"` // spoken or signed
 }
 
 const (
 	LanguageRoleTarget = "target"
 	LanguageRoleSource = "source"
+)
+
+// Language modalities. Spoken languages are written and read aloud; signed
+// languages are recorded on camera (ADR 0014).
+const (
+	ModalitySpoken = "spoken"
+	ModalitySigned = "signed"
 )
 
 // CurrentConsentVersion is the consent text volunteers must have accepted to
@@ -38,7 +48,12 @@ const (
 type Membership struct {
 	LanguageCode string `json:"language_code"`
 	Level        string `json:"level"`
+	// Modality is the language's: spoken or signed.
+	Modality string `json:"modality"`
 }
+
+// Signed reports whether the language is a sign language.
+func (m Membership) Signed() bool { return m.Modality == ModalitySigned }
 
 // CanReview reports whether the level allows reviewing contributions.
 func (m Membership) CanReview() bool {
@@ -55,6 +70,8 @@ type Volunteer struct {
 	// VoiceConsent reports whether that consent also covers voice recordings,
 	// which volunteers accept separately before recording.
 	VoiceConsent bool `json:"voice_consent"`
+	// VideoConsent reports whether it covers signing on camera (ADR 0014).
+	VideoConsent bool `json:"video_consent"`
 }
 
 // ConsentCurrent reports whether the volunteer has accepted the current consent.
@@ -65,6 +82,11 @@ func (v Volunteer) ConsentCurrent() bool {
 // CanRecord reports whether the volunteer's current consent covers voice.
 func (v Volunteer) CanRecord() bool {
 	return v.ConsentCurrent() && v.VoiceConsent
+}
+
+// CanRecordVideo reports whether the volunteer's current consent covers video.
+func (v Volunteer) CanRecordVideo() bool {
+	return v.ConsentCurrent() && v.VideoConsent
 }
 
 // Membership returns the volunteer's standing in a language.
@@ -81,6 +103,7 @@ func (v Volunteer) Membership(code string) (Membership, bool) {
 const (
 	KindTranslate = "translate" // render a source-language segment
 	KindWrite     = "write"     // answer a civic prompt in your own language
+	KindWord      = "word"      // sign a civic word or short phrase (sign languages only)
 )
 
 // Contribution statuses.
@@ -95,10 +118,12 @@ const MaxContributionLength = 2000
 
 // Modalities: how a contribution was given. A recording reads a verified
 // written translation aloud, so voice follows text: an item is recorded in a
-// language once its translation there is verified.
+// language once its translation there is verified. Sign languages are
+// recorded on video, signing the source text directly (ADR 0014).
 const (
 	ModalityText  = "text"
 	ModalityAudio = "audio"
+	ModalityVideo = "video"
 )
 
 // MaxRecordingBytes bounds one recording: a few minutes of compressed speech.
@@ -120,6 +145,36 @@ func RecordingPrefix(language string, userID int64) string {
 	return fmt.Sprintf("data-lab/voice/%s/%d/", language, userID)
 }
 
+// Signed recordings: a video of the signer and, when the browser could track
+// them, the hand, body and face landmarks recorded alongside it.
+const (
+	// MaxVideoBytes bounds one take: a minute of camera video, with room to spare.
+	MaxVideoBytes = 64 << 20
+	// MaxLandmarksBytes bounds a take's landmarks file.
+	MaxLandmarksBytes = 16 << 20
+	// LandmarksType is the landmarks file's content type.
+	LandmarksType = "application/json"
+)
+
+// VideoTypes are the video types browsers record, with the file extension
+// each is stored under.
+var VideoTypes = map[string]string{
+	"video/webm": ".webm", // Chrome, Edge, Firefox
+	"video/mp4":  ".mp4",  // Safari
+}
+
+// SignPrefix is where a signer's recordings in a language are stored. A
+// recording is only accepted from under its contributor's prefix.
+func SignPrefix(language string, userID int64) string {
+	return fmt.Sprintf("data-lab/sign/%s/%d/", language, userID)
+}
+
+// LandmarksKeyFor is where the landmarks of the video at videoKey are stored:
+// beside it, under the same name.
+func LandmarksKeyFor(videoKey string) string {
+	return strings.TrimSuffix(videoKey, path.Ext(videoKey)) + ".landmarks.json"
+}
+
 // CivicCategories are the civic topics items are tagged with. They match the
 // ids in web/components/civic/data.ts.
 var CivicCategories = []string{
@@ -133,10 +188,10 @@ type Task struct {
 	ItemID         int64  `json:"item_id"`
 	Kind           string `json:"kind"`
 	Category       string `json:"category"`
-	Text           string `json:"text"`            // the segment to translate or prompt to answer; for a recording, the verified translation to read
+	Text           string `json:"text"`            // the segment to translate, prompt to answer, or word to sign; for a recording, the verified translation to read
 	TextLanguage   string `json:"text_language"`   // language Text is written in
-	TargetLanguage string `json:"target_language"` // language the volunteer writes in
-	Modality       string `json:"modality"`        // text: write it; audio: read it aloud
+	TargetLanguage string `json:"target_language"` // language the volunteer writes, speaks or signs in
+	Modality       string `json:"modality"`        // text: write it; audio: read it aloud; video: sign it
 }
 
 // Contribution is a volunteer's translation or answer for one item.
@@ -147,6 +202,8 @@ type Contribution struct {
 	Modality     string    `json:"modality"`
 	Text         string    `json:"text"` // "" for a recording: the text it reads is its transcript
 	AudioKey     string    `json:"-"`
+	VideoKey     string    `json:"-"`
+	LandmarksKey string    `json:"-"`
 	Pasted       bool      `json:"pasted"`
 	Status       string    `json:"status"`
 	CreatedAt    time.Time `json:"created_at"`
@@ -179,6 +236,10 @@ type ReviewItem struct {
 	ReadText       string    `json:"read_text,omitempty"` // for a recording: the verified translation it reads
 	AudioKey       string    `json:"-"`
 	AudioURL       string    `json:"audio_url,omitempty"` // where the reviewer plays a recording
+	VideoKey       string    `json:"-"`
+	VideoURL       string    `json:"video_url,omitempty"` // where the reviewer watches a sign
+	LandmarksKey   string    `json:"-"`
+	LandmarksURL   string    `json:"landmarks_url,omitempty"` // the sign's tracked landmarks, when recorded
 	Pasted         bool      `json:"pasted"`
 	SubmittedAt    time.Time `json:"submitted_at"`
 }
@@ -201,13 +262,16 @@ const ProgressEvent = "data-lab.progress"
 // translate items; Recorded and RecordedVerified count recordings. Pending is the review queue.
 type LanguageProgress struct {
 	Code       string `json:"code"`
-	Available  int    `json:"available"`  // translate items, the whole every language works from
+	Available  int    `json:"available"`  // translate items, the whole every language works from; for a sign language, words and sentences to sign
 	Translated int    `json:"translated"` // pairs pending review or verified
 	Verified   int    `json:"verified"`   // pairs a second speaker approved
 	// Recordings, of any kind of item, pending review or verified, and verified.
 	Recorded         int `json:"recorded"`
 	RecordedVerified int `json:"recorded_verified"`
-	Pending          int `json:"pending"` // contributions of any kind awaiting review
+	// Signs recorded on video, pending review or verified, and verified.
+	Signed         int `json:"signed"`
+	SignedVerified int `json:"signed_verified"`
+	Pending        int `json:"pending"` // contributions of any kind awaiting review
 }
 
 // Dataset splits. A source's split is fixed when it is first imported.

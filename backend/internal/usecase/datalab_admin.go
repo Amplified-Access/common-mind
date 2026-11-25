@@ -87,9 +87,9 @@ func (a *dataLabAdmin) Contributions(ctx context.Context, f ContributionFilter) 
 		return nil, invalid("status must be pending, verified, or rejected")
 	}
 	switch f.Modality {
-	case "", domain.ModalityText, domain.ModalityAudio:
+	case "", domain.ModalityText, domain.ModalityAudio, domain.ModalityVideo:
 	default:
-		return nil, invalid("modality must be text or audio")
+		return nil, invalid("modality must be text, audio, or video")
 	}
 	if f.Limit <= 0 {
 		f.Limit = AdminContributionsDefaultLimit
@@ -105,6 +105,9 @@ func (a *dataLabAdmin) Contributions(ctx context.Context, f ContributionFilter) 
 		for i, c := range page.Contributions {
 			if c.AudioKey != "" {
 				page.Contributions[i].AudioURL = a.storage.PublicURL(c.AudioKey)
+			}
+			if c.VideoKey != "" {
+				page.Contributions[i].VideoURL = a.storage.PublicURL(c.VideoKey)
 			}
 		}
 	}

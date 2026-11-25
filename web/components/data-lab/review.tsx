@@ -7,12 +7,14 @@ import { toast } from "sonner";
 import { civicCategories } from "@/components/civic/data";
 import { FramedCard } from "@/components/system/framed-card";
 import { Eyebrow } from "@/components/system/primitives";
+import { type LandmarksFile, parseLandmarks } from "@/lib/sign-capture/landmarks";
 import { cn } from "@/lib/utils";
 
 import { ApiError, dataLabApi } from "./api";
 import { useAuth } from "./auth-provider";
 import { BackLink } from "./back-link";
 import { CharacterPalette } from "./character-palette";
+import { SignReplay } from "./sign-replay-lazy";
 import { fieldClasses, primaryButton, quietButton, secondaryButton } from "./styles";
 import type { Language, RejectReason, ReviewItem } from "./types";
 
@@ -31,7 +33,77 @@ const recordingReasons: { value: RejectReason; label: string }[] = [
   { value: "other", label: "Other" },
 ];
 
+const signReasons: { value: RejectReason; label: string }[] = [
+  { value: "inaccurate", label: "Different meaning" },
+  { value: "incomplete", label: "Cut off or incomplete" },
+  { value: "unclear", label: "Hard to see" },
+  { value: "other", label: "Other" },
+];
+
+const reasonsFor = { text: textReasons, audio: recordingReasons, video: signReasons } as const;
+
 const categoryLabel = (id: string) => civicCategories.find((c) => c.id === id)?.label ?? id;
+
+/**
+ * A sign to review: its video beside the avatar signing it from the
+ * tracked landmarks, the avatar keeping time with the video. A sign
+ * recorded without tracking shows the video alone.
+ */
+function SignToWatch({ videoUrl, landmarksUrl }: { videoUrl?: string; landmarksUrl?: string }) {
+  const [track, setTrack] = useState<LandmarksFile | "loading" | "failed">("loading");
+  const video = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (!landmarksUrl) return;
+    let cancelled = false;
+    fetch(landmarksUrl)
+      .then(async (res) => (res.ok ? parseLandmarks(await res.json()) : null))
+      .then(
+        (file) => !cancelled && setTrack(file ?? "failed"),
+        () => !cancelled && setTrack("failed"),
+      );
+    return () => {
+      cancelled = true;
+    };
+  }, [landmarksUrl]);
+
+  const box = "aspect-video w-full rounded-inset border border-line";
+  return (
+    <div className="grid gap-4 md:grid-cols-2">
+      <figure className="flex flex-col gap-2">
+        <figcaption className="font-mono text-xs text-faint">Video</figcaption>
+        {videoUrl ? (
+          <video
+            ref={video}
+            controls
+            playsInline
+            preload="metadata"
+            src={videoUrl}
+            className={cn(box, "bg-background object-contain")}
+          />
+        ) : (
+          <p className={cn(box, "flex items-center justify-center font-mono text-xs text-faint")}>
+            The video can&apos;t be played right now.
+          </p>
+        )}
+      </figure>
+      <figure className="flex flex-col gap-2">
+        <figcaption className="font-mono text-xs text-faint">The avatar, from the hand tracking</figcaption>
+        {landmarksUrl && typeof track === "object" ? (
+          <SignReplay landmarks={track} follow={video} />
+        ) : (
+          <p className={cn(box, "flex items-center justify-center border-dashed p-6 text-center font-mono text-xs text-faint")}>
+            {!landmarksUrl
+              ? "This sign was recorded without hand tracking."
+              : track === "failed"
+                ? "The tracking for this sign can't be loaded right now."
+                : "Loading the tracking…"}
+          </p>
+        )}
+      </figure>
+    </div>
+  );
+}
 
 type View =
   | { status: "loading" }
@@ -134,13 +206,16 @@ function Review({ language }: { language: string }) {
 
       {view.status === "item" && (
         <FramedCard panelsClassName="flex flex-col bg-[#0b0a07]">
-          <div className="grid md:grid-cols-2">
+          {/* A sign's word sits across the top, its video and avatar side by side below. */}
+          <div className={cn("grid", view.item.modality !== "video" && "md:grid-cols-2")}>
             <div className="flex flex-col gap-5 bg-[#1c1a0e] p-6 sm:p-8">
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                 <Eyebrow>
-                  {view.item.kind === "translate"
-                    ? `Original · ${nameOf(view.item.item_language)}`
-                    : `Prompt · ${nameOf(view.item.item_language)}`}
+                  {view.item.kind === "write"
+                    ? `Prompt · ${nameOf(view.item.item_language)}`
+                    : view.item.kind === "word"
+                      ? `Word · ${nameOf(view.item.item_language)}`
+                      : `Original · ${nameOf(view.item.item_language)}`}
                 </Eyebrow>
                 <span className="font-mono text-xs text-faint">{categoryLabel(view.item.category)}</span>
               </div>
@@ -151,7 +226,13 @@ function Review({ language }: { language: string }) {
             <div className="flex flex-col gap-5 p-6 sm:p-8">
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                 <Eyebrow>
-                  {view.item.modality === "audio" ? "Recording" : view.item.kind === "translate" ? "Translation" : "Answer"}{" "}
+                  {view.item.modality === "video"
+                    ? "Sign"
+                    : view.item.modality === "audio"
+                      ? "Recording"
+                      : view.item.kind === "translate"
+                        ? "Translation"
+                        : "Answer"}{" "}
                   · {target?.name ?? language}
                 </Eyebrow>
                 {view.item.pasted && (
@@ -160,7 +241,19 @@ function Review({ language }: { language: string }) {
                   </span>
                 )}
               </div>
-              {view.item.modality === "audio" ? (
+              {view.item.modality === "video" ? (
+                <>
+                  <p className="text-sm text-subtle">
+                    Play the video, and check it signs the {view.item.kind === "word" ? "word" : "sentence"} clearly,
+                    as a signer of {target?.name ?? language} would. The avatar signs along from the tracking.
+                  </p>
+                  <SignToWatch
+                    key={view.item.contribution_id}
+                    videoUrl={view.item.video_url}
+                    landmarksUrl={view.item.landmarks_url}
+                  />
+                </>
+              ) : view.item.modality === "audio" ? (
                 <>
                   <p lang={language} className="text-xl leading-snug text-pretty whitespace-pre-line">
                     {view.item.read_text}
@@ -204,7 +297,7 @@ function Review({ language }: { language: string }) {
               <fieldset className="flex flex-col gap-4">
                 <legend className="pb-3 font-mono text-xs text-faint">Why isn&apos;t it ready?</legend>
                 <div className="flex flex-wrap gap-2">
-                  {(view.item.modality === "audio" ? recordingReasons : textReasons).map((r) => (
+                  {reasonsFor[view.item.modality].map((r) => (
                     <button
                       key={r.value}
                       type="button"

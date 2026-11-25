@@ -44,14 +44,23 @@ function Workspace() {
                     {lang?.name} · {levelLabel[m.level]}
                   </span>
                 </div>
-                {p && (
-                  <PairsBar
-                    language={lang?.name ?? m.language_code}
-                    available={p.available}
-                    translated={p.translated}
-                    verified={p.verified}
-                  />
-                )}
+                {p &&
+                  (m.modality === "signed" ? (
+                    <PairsBar
+                      language={lang?.name ?? m.language_code}
+                      verb="signed"
+                      available={p.available}
+                      translated={p.signed}
+                      verified={p.signed_verified}
+                    />
+                  ) : (
+                    <PairsBar
+                      language={lang?.name ?? m.language_code}
+                      available={p.available}
+                      translated={p.translated}
+                      verified={p.verified}
+                    />
+                  ))}
                 <div className="mt-auto flex flex-wrap gap-2">
                   <Link href={`/data-lab/contribute/${m.language_code}`} className={primaryButton}>
                     Contribute

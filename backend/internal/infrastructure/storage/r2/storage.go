@@ -38,6 +38,22 @@ func NewWithHTTPClient(accountID, accessKey, secretKey, bucket, publicBaseURL st
 		return nil, errors.New("r2: accountID, accessKey, secretKey, bucket, and publicBaseURL are all required")
 	}
 
+	client, err := newClient(accountID, accessKey, secretKey, httpClient)
+	if err != nil {
+		return nil, err
+	}
+
+	return &storageService{
+		client:    client,
+		presigner: s3.NewPresignClient(client),
+		bucket:    bucket,
+		publicURL: publicBaseURL,
+	}, nil
+}
+
+// newClient is an S3 client for the account's R2 endpoint. R2 is
+// S3-compatible; the endpoint encodes the account ID.
+func newClient(accountID, accessKey, secretKey string, httpClient *http.Client) (*s3.Client, error) {
 	endpoint := fmt.Sprintf("https://%s.r2.cloudflarestorage.com", accountID)
 
 	awsOpts := []func(*config.LoadOptions) error{
@@ -53,17 +69,10 @@ func NewWithHTTPClient(accountID, accessKey, secretKey, bucket, publicBaseURL st
 		return nil, fmt.Errorf("r2: load config: %w", err)
 	}
 
-	client := s3.NewFromConfig(cfg, func(o *s3.Options) {
+	return s3.NewFromConfig(cfg, func(o *s3.Options) {
 		o.BaseEndpoint = aws.String(endpoint)
 		o.UsePathStyle = true
-	})
-
-	return &storageService{
-		client:    client,
-		presigner: s3.NewPresignClient(client),
-		bucket:    bucket,
-		publicURL: publicBaseURL,
-	}, nil
+	}), nil
 }
 
 func (s *storageService) PresignUpload(ctx context.Context, key string, contentType string, ttl time.Duration) (string, error) {

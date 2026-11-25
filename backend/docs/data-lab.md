@@ -1,6 +1,6 @@
 ---
 topic: data-lab
-last_verified: 2026-11-14
+last_verified: 2026-11-25
 sources:
   - internal/domain/datalab.go
   - internal/usecase/datalab.go
@@ -17,12 +17,15 @@ sources:
   - internal/infrastructure/database/migrations/20261015101841_add_voice_recordings.sql
   - internal/infrastructure/database/migrations/20261015103845_voice_reads_verified_translations.sql
   - internal/infrastructure/database/migrations/20261019190500_add_source_provenance_and_import_batches.sql
+  - internal/infrastructure/database/migrations/20261125140248_add_sign_languages.sql
+  - internal/infrastructure/database/migrations/20261125140250_add_sign_recordings.sql
   - internal/usecase/storage.go
   - internal/usecase/datalab_import.go
   - internal/infrastructure/database/postgres/datalab_import_repository.go
   - cmd/datalab/main.go
   - Makefile
   - ../docs/adr/0013-source-acquisition-and-licences.md
+  - ../docs/adr/0014-sign-language-capture.md
 ---
 
 # Data Lab
@@ -40,7 +43,9 @@ The volunteer platform for creating, annotating, and verifying civic language da
 
 ## Languages
 
-`languages` is reference data seeded by its migration: the ten target languages (BCP-47 codes: nine shared with Watchtower, plus Karimojong `kdj`, which a later migration adds) and English and French as source languages. Each row carries its ISO 15924 `script` and the `extra_characters` a standard keyboard lacks, which the web editor offers as a palette. Disable a language with `enabled = false`; never delete rows other tables reference.
+`languages` is reference data seeded by its migrations: twelve target languages and English and French as source languages. Ten are spoken (BCP-47 codes: nine shared with Watchtower, plus Karimojong `kdj`) and two are sign languages, Uganda Sign Language (`ugn`) and Kenyan Sign Language (`xki`) (ADR 0014). Each row carries its ISO 15924 `script` (`Zxxx`, unwritten, for the sign languages), the `extra_characters` a standard keyboard lacks, which the web editor offers as a palette, and its `modality`: `spoken` or `signed`. Disable a language with `enabled = false`; never delete rows other tables reference.
+
+A volunteer's memberships carry their language's `modality` too (`Membership.Signed()`), which decides how they contribute in it: a spoken language is written or read aloud, a sign language is signed on camera (see Signs).
 
 ## Volunteers, levels, and consent
 
@@ -54,8 +59,8 @@ A volunteer is a `users` row plus `language_members` (one row per language, with
 ## Items, tasks, and contributions
 
 - **Sources** (`sources`) record where items come from; see Sources and licences below.
-- **Items** (`items`) are what volunteers work on. `translate` items are segments in a source language; `write` items are civic prompts to answer. One item serves every target language. `category` is one of `domain.CivicCategories`, which match the site's civic categories. Each item also has a nullable `position` (its order within the document), a `status` (`active` or `retired`), and the `import_batch_id` of the import that added it (null for items imported before batches existed).
-- **A task** is an item offered in one target language. `NextItem` picks at random among `active` items that have no pending or verified contribution in that language and that the volunteer hasn't done, for both the `text` and `audio` modalities. A rejected contribution reopens the item for everyone except its author.
+- **Items** (`items`) are what volunteers work on. `translate` items are segments in a source language; `write` items are civic prompts to answer; `word` items are civic words or short phrases for signers to sign. One item serves every target language. `category` is one of `domain.CivicCategories`, which match the site's civic categories. Each item also has a nullable `position` (its order within the document), a `status` (`active` or `retired`), and the `import_batch_id` of the import that added it (null for items imported before batches existed).
+- **A task** is an item offered in one target language. `NextItem` picks at random among `active` items that have no pending or verified contribution in that language and modality and that the volunteer hasn't done. Writing never gets `word` items. A rejected contribution reopens the item for everyone except its author.
 - **Contributions** start `pending`, written (`modality = 'text'`) or recorded (`'audio'`, see Voice recordings). `(item_id, language_code, contributor_id, modality)` is unique, so a volunteer submits an item once per language in each modality. Each row records the consent version in force and whether the text was pasted.
 - **Voice follows text.** `NextItem` takes a modality, and an item is open in a language and modality until it has a pending or verified contribution there. A recording reads a verified translation aloud, so `audio` tasks only offer `translate` items with a verified written contribution in the language, and the task's `text` is that translation (the reviewer's correction when there is one), in the language.
 
@@ -125,12 +130,27 @@ The bucket is **public**: a recording's URL is `R2_PUBLIC_URL/<key>`, which revi
 
 The bucket needs a CORS rule that allows `PUT` from the web app's origins with the `Content-Type` header; see `docs/storage.md`.
 
+## Signs
+
+Sign languages are recorded on camera (ADR 0014). In a sign language, `video` is the only modality and the default: a `text` or `audio` request there is 400, and so is `video` in a spoken language (`modalityIn`).
+
+1. **Agree** once: `POST /data-lab/consent/video` (`AcceptVideoConsent`) sets `consents.covers_video`. `Volunteer.CanRecordVideo()` (current consent that covers video) gates every sign; without it requests fail with `ErrVideoConsentRequired` (403 `video_consent_required`). Without storage they fail with `ErrVoiceUnavailable`, as voice does; `GET /data-lab/features` reports `video` beside `voice`.
+2. **Get a task**: `NextItem` with `video` offers `word` items first, then `translate` items, in their source language. Signing works from the source text, so no verified translation is needed.
+3. **Upload**: `POST /data-lab/recordings` in a sign language takes a video type (`domain.VideoTypes`: WebM, MP4) and returns two presigned URLs under `data-lab/sign/<language>/<user id>/` (`domain.SignPrefix`): the video at `<random>.webm|.mp4`, and its landmarks at `<random>.landmarks.json` (`domain.LandmarksKeyFor`, type `application/json`).
+4. **Submit** with `modality: "video"`, the `video_key`, and the `landmarks_key` when the browser tracked landmarks. The landmarks are optional so a device that can't run the tracker never blocks a signer.
+
+`checkSign` accepts the video only if it sits directly under the signer's prefix for the language, exists, is a video whose type matches its extension, and is at most `domain.MaxVideoBytes` (64 MB). Landmarks, when given, must be the file beside that video, exist, be `application/json`, and be at most `domain.MaxLandmarksBytes` (16 MB). A sign has no text.
+
+The landmarks file is written by the web app (`web/lib/sign-capture/landmarks.ts`, which documents the format): per video frame, MediaPipe Holistic's 33 pose points, 21 points per hand (normalised and in metres), and 52 face expression weights. The face mesh is left out; it can be extracted from the video later.
+
+Reviewers in the sign language get `video_url` and, when tracked, `landmarks_url` (`ReviewItem`). The web app replays the landmarks on the `/sign` avatar (`web/lib/sign/replay.ts`), so signers can check how a take was tracked before submitting and reviewers can switch between the video and the avatar. They accept or reject a sign; like a recording, it can't be corrected. Videos are published from the same public bucket as voice, and the video consent says so.
+
 ## Reviews
 
 A reviewer (level `reviewer` or `lead` in the language) takes the oldest pending contribution written by someone else (`NextPendingContribution`), then accepts or rejects it (`Review`):
 
 - **Accept** sets the contribution to `verified`. It is part of the live corpus from that moment.
-- **Correct** sets it to `verified` with the reviewer's `corrected_text`. Written contributions only: a recording is accepted or rejected. The translator's text stays on `contributions.text` and the correction goes on `reviews.corrected_text`, so both versions and both authors are kept; a row's verified text is `COALESCE(reviews.corrected_text, contributions.text)`. A correction must change the text (otherwise it's an Accept) and needs no further review: reviewers are chosen by the team (see below).
+- **Correct** sets it to `verified` with the reviewer's `corrected_text`. Written contributions only: a recording or a sign is accepted or rejected. The translator's text stays on `contributions.text` and the correction goes on `reviews.corrected_text`, so both versions and both authors are kept; a row's verified text is `COALESCE(reviews.corrected_text, contributions.text)`. A correction must change the text (otherwise it's an Accept) and needs no further review: reviewers are chosen by the team (see below).
 - **Reject** needs a reason from `domain.RejectReasons` (`inaccurate`, `incomplete`, `machine_translated`, `off_topic`, `unclear`, `other`) and sets it to `rejected`, which reopens the item for other volunteers.
 - Nobody reviews their own work (`ErrOwnContribution`).
 - `SaveReview` changes status only `WHERE status = 'pending'`, inside the same transaction as the review insert, so two reviewers racing on one contribution get one review and one `ErrAlreadyReviewed`.
@@ -139,7 +159,7 @@ One review per contribution for now (`reviews.contribution_id` is unique). Dispu
 
 ## Live progress
 
-`Progress` returns, per enabled target language, the written output in sentence pairs with English (written contributions to `translate` items): `available` (translate items, the whole every language works from), `translated` (pending review or verified), and `verified`. Recordings count separately: `recorded` (pending or verified, any item kind) and `recorded_verified`. It also returns `pending`, the review queue across all kinds and both modalities. It's public at `GET /api/v1/data-lab/progress`.
+`Progress` returns, per enabled target language, the written output in sentence pairs with English (written contributions to `translate` items): `available` (translate items, the whole every language works from; for a sign language, `word` and `translate` items, all there is to sign), `translated` (pending review or verified), and `verified`. Recordings count separately: `recorded` (pending or verified, any item kind) and `recorded_verified`; so do signs: `signed` and `signed_verified`. It also returns `pending`, the review queue across all kinds and both modalities. It's public at `GET /api/v1/data-lab/progress`.
 
 Answers to `write` prompts are original text, not pairs, so they count in `pending` while in review and in neither `translated` nor `verified`.
 
@@ -184,7 +204,7 @@ Only `key`, `title` and `licence` are required on the source; `position` is opti
   - `public-domain` and `public-domain-statute` need a `licence_url`;
   - `retrieved_at`, when given, must be a `YYYY-MM-DD` date;
   - `position`, when given, must be non-negative;
-  - the kind must be `translate` or `write`, the language a source language, and the category one of `domain.CivicCategories`;
+  - the kind must be `translate`, `write` or `word`, the language a source language, and the category one of `domain.CivicCategories`;
   - the text, after trimming, must not be empty.
 - One transaction per import (`postgres.importRepository.ImportItems`): it inserts the `import_batches` row first, writes sources and items pointing at it, then fills in the batch counts.
 - Sources upsert by `key`. The split comes from `domain.SplitFor(key)` (about 1 in 10 to `test`) and is set only on first insert. Re-importing an existing key overwrites `title`, `origin`, `licence` and every provenance column with the file's values, so a field omitted from the file is cleared. The split never changes.

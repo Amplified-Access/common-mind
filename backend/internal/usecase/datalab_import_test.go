@@ -28,6 +28,8 @@ func TestImportItems_ReportsEveryBadLineAndWritesNothing(t *testing.T) {
 		{Line: 4, Source: src, Kind: domain.KindWrite, Language: "en", Category: "weather", Text: "x"},
 		{Line: 5, Source: ImportSource{Key: "no-licence", Title: "x"}, Kind: domain.KindWrite, Language: "en", Category: "elections", Text: "x"},
 		{Line: 6, Source: src, Kind: domain.KindWrite, Language: "en", Category: "elections", Text: "  "},
+		// A word for signers to sign (ADR 0014).
+		{Line: 7, Source: src, Kind: domain.KindWord, Language: "en", Category: "public-services", Text: "clinic"},
 	}
 	store := &fakeImportStore{}
 	langs := &fakeStore{languages: launchLanguages()}
@@ -42,8 +44,10 @@ func TestImportItems_ReportsEveryBadLineAndWritesNothing(t *testing.T) {
 			t.Errorf("error %q does not mention %s", err, line)
 		}
 	}
-	if strings.Contains(err.Error(), "line 1:") {
-		t.Errorf("error %q flags the valid line 1", err)
+	for _, line := range []string{"line 1:", "line 7:"} {
+		if strings.Contains(err.Error(), line) {
+			t.Errorf("error %q flags the valid %s", err, line)
+		}
 	}
 	if store.imported != nil {
 		t.Error("rows written despite errors")

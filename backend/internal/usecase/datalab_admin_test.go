@@ -51,7 +51,7 @@ func TestDataLabAdmin_Contributions_PagesWithinLimits(t *testing.T) {
 }
 
 func TestDataLabAdmin_Contributions_RefusesUnknownStatusOrModality(t *testing.T) {
-	for _, f := range []ContributionFilter{{Status: "approved"}, {Modality: "video"}} {
+	for _, f := range []ContributionFilter{{Status: "approved"}, {Modality: "sms"}} {
 		_, err := NewDataLabAdmin(&fakeAdminStore{}, nil).Contributions(context.Background(), f)
 		if !errors.Is(err, ErrInvalidInput) {
 			t.Errorf("Contributions(%+v) error = %v, want ErrInvalidInput", f, err)
@@ -63,9 +63,10 @@ func TestDataLabAdmin_Contributions_GivesRecordingsTheirURL(t *testing.T) {
 	store := &fakeAdminStore{contributions: []domain.AdminContribution{
 		{ID: 1, Modality: domain.ModalityText},
 		{ID: 2, Modality: domain.ModalityAudio, AudioKey: "data-lab/voice/sw/1/a.webm"},
+		{ID: 3, Modality: domain.ModalityVideo, VideoKey: "data-lab/sign/ugn/1/a.webm"},
 	}}
 
-	page, err := NewDataLabAdmin(store, &fakeStorage{}).Contributions(context.Background(), ContributionFilter{})
+	page, err := NewDataLabAdmin(store, &fakeStorage{}).Contributions(context.Background(), ContributionFilter{Modality: domain.ModalityVideo})
 	if err != nil {
 		t.Fatalf("Contributions: %v", err)
 	}
@@ -74,6 +75,9 @@ func TestDataLabAdmin_Contributions_GivesRecordingsTheirURL(t *testing.T) {
 	}
 	if got := page.Contributions[1].AudioURL; got != "https://audio.example/data-lab/voice/sw/1/a.webm" {
 		t.Errorf("recording URL = %q", got)
+	}
+	if got := page.Contributions[2].VideoURL; got != "https://audio.example/data-lab/sign/ugn/1/a.webm" {
+		t.Errorf("sign URL = %q", got)
 	}
 }
 

@@ -91,6 +91,9 @@ export type FacePose = {
   round: number;
   /** Mouth shapes of the word being mouthed, 0–1 each. */
   visemes?: Partial<Record<Viseme, number>>;
+  /** Face shapes tracked from a signer, by their ARKit names, 0–1 each.
+   * They take over the shapes the fields above would set. */
+  shapes?: Record<string, number>;
 };
 
 export type HeadPose = { nod: number; turn: number; tilt: number };

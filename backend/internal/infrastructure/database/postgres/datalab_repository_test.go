@@ -22,8 +22,8 @@ func TestDataLab_ListLanguages_TargetsFirstSkipsDisabled(t *testing.T) {
 		t.Fatalf("ListLanguages: %v", err)
 	}
 
-	if len(langs) != 11 {
-		t.Fatalf("got %d languages, want the 10 targets plus English", len(langs))
+	if len(langs) != 13 {
+		t.Fatalf("got %d languages, want the 12 targets plus English", len(langs))
 	}
 	if last := langs[len(langs)-1]; last.Code != "en" {
 		t.Errorf("last language = %q, want the source language en", last.Code)
@@ -34,6 +34,13 @@ func TestDataLab_ListLanguages_TargetsFirstSkipsDisabled(t *testing.T) {
 		}
 		if l.Code == "kdj" && (l.NativeName != "Ngakarimojong" || l.Role != "target") {
 			t.Errorf("kdj = %+v, want the target language Ngakarimojong", l)
+		}
+		wantModality := domain.ModalitySpoken
+		if l.Code == "ugn" || l.Code == "xki" {
+			wantModality = domain.ModalitySigned
+		}
+		if l.Modality != wantModality {
+			t.Errorf("%s modality = %q, want %q", l.Code, l.Modality, wantModality)
 		}
 	}
 }
@@ -53,7 +60,7 @@ func TestDataLab_SaveOnboarding_AddsLanguagesWithoutLoweringLevel(t *testing.T) 
 	if _, err := testDB.Exec(`UPDATE language_members SET level = 'reviewer' WHERE language_code = 'sw'`); err != nil {
 		t.Fatal(err)
 	}
-	rec.Languages = []string{"sw", "luo"}
+	rec.Languages = []string{"sw", "luo", "ugn"}
 	if _, err := repo.SaveOnboarding(ctx, rec); err != nil {
 		t.Fatalf("second SaveOnboarding: %v", err)
 	}
@@ -68,8 +75,11 @@ func TestDataLab_SaveOnboarding_AddsLanguagesWithoutLoweringLevel(t *testing.T) 
 	if sw, _ := v.Membership("sw"); sw.Level != domain.LevelReviewer {
 		t.Errorf("sw level = %q, want reviewer kept", sw.Level)
 	}
-	if luo, ok := v.Membership("luo"); !ok || luo.Level != domain.LevelContributor {
-		t.Errorf("luo membership = %+v, %v, want contributor", luo, ok)
+	if luo, ok := v.Membership("luo"); !ok || luo.Level != domain.LevelContributor || luo.Modality != domain.ModalitySpoken {
+		t.Errorf("luo membership = %+v, %v, want a spoken-language contributor", luo, ok)
+	}
+	if ugn, ok := v.Membership("ugn"); !ok || ugn.Modality != domain.ModalitySigned {
+		t.Errorf("ugn membership = %+v, %v, want a signed language", ugn, ok)
 	}
 
 	if missing, err := repo.GetVolunteer(ctx, "uid-nobody"); err != nil || missing != nil {
@@ -363,8 +373,8 @@ func TestDataLab_Progress_CountsSentencePairsPerLanguage(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Progress: %v", err)
 	}
-	if len(all) != 10 {
-		t.Fatalf("got %d languages, want the 10 targets", len(all))
+	if len(all) != 12 {
+		t.Fatalf("got %d languages, want the 12 targets, sign languages included", len(all))
 	}
 	sw, err := NewDataLabRepository(testDB).Progress(ctx, "sw")
 	if err != nil || len(sw) != 1 {

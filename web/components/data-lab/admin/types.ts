@@ -2,7 +2,7 @@
 
 import type { ContributionStatus } from "@/lib/data-lab-admin/view";
 
-import type { Level, Modality } from "../types";
+import type { ItemKind, Level, Modality } from "../types";
 
 /** One of a translator's languages and how much they've contributed in it. */
 export type TranslatorLanguage = {
@@ -21,6 +21,7 @@ export type Translator = {
   joined_at: string;
   written: number;
   recorded: number;
+  signed: number;
   pending: number;
   verified: number;
   /** Verified with a reviewer's correction; part of verified. */
@@ -46,7 +47,7 @@ export type AdminContribution = {
   contributor_id: number;
   contributor_name: string;
   item_id: number;
-  kind: "translate" | "write";
+  kind: ItemKind;
   category: string;
   source_title: string;
   /** The segment translated or the prompt answered, in item_language. */
@@ -59,6 +60,8 @@ export type AdminContribution = {
   /** For a recording: the verified translation it reads. */
   read_text?: string;
   audio_url?: string;
+  /** Where to watch a sign. */
+  video_url?: string;
   pasted: boolean;
   status: ContributionStatus;
   submitted_at: string;
