@@ -87,6 +87,7 @@ func (h *Handler) RegisterRoutes(rps float64, burst int, sentryDSN string, allow
 		admin.GET("/translators", h.AdminTranslatorsHandler)
 		admin.GET("/translators/:id", h.AdminTranslatorHandler)
 		admin.GET("/contributions", h.AdminContributionsHandler)
+		admin.PUT("/translators/:id/languages/:language", h.AdminSetLevelHandler)
 	}
 
 	api := r.Group("/api/v1")

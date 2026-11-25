@@ -153,3 +153,17 @@ func (r *dataLabAdminRepository) ListContributions(ctx context.Context, f usecas
 	}
 	return page, rows.Err()
 }
+
+func (r *dataLabAdminRepository) SetMemberLevel(ctx context.Context, userID int64, language, level string) error {
+	out, err := r.db.ExecContext(ctx, `
+        UPDATE language_members SET level = $3, updated_at = now()
+        WHERE user_id = $1 AND language_code = $2`,
+		userID, language, level)
+	if err != nil {
+		return fmt.Errorf("datalab admin repository: set member level: %w", err)
+	}
+	if n, _ := out.RowsAffected(); n == 0 {
+		return usecase.ErrNotFound
+	}
+	return nil
+}

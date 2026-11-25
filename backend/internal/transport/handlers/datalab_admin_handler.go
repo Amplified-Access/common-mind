@@ -124,3 +124,40 @@ func (h *Handler) AdminContributionsHandler(c *gin.Context) {
 	}
 	JSON(c, page)
 }
+
+type levelRequest struct {
+	// Level is contributor, reviewer, or lead.
+	Level string `json:"level" binding:"required"`
+}
+
+// AdminSetLevelHandler godoc
+//
+//	@Summary		Set a volunteer's level in a language
+//	@Description	Makes a volunteer a contributor, reviewer, or lead in a language they joined. A reviewer can review others' work in that language. Needs the admin password.
+//	@Tags			admin
+//	@Accept			json
+//	@Security		AdminPassword
+//	@Param			id			path	int				true	"Volunteer ID"
+//	@Param			language	path	string			true	"Language code, e.g. ugn"
+//	@Param			body		body	levelRequest	true	"Level"
+//	@Success		204
+//	@Failure		400	{object}	map[string]string	"invalid_input: not a level"
+//	@Failure		401	{object}	map[string]string
+//	@Failure		404	{object}	map[string]string	"not_found: they haven't joined the language"
+//	@Router			/api/v1/admin/data-lab/translators/{id}/languages/{language} [put]
+func (h *Handler) AdminSetLevelHandler(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		JSONError(c, http.StatusBadRequest, "invalid_input", "id must be a number")
+		return
+	}
+	var req levelRequest
+	if !bindJSON(c, &req) {
+		return
+	}
+	if err := h.dataLabAdmin.SetLevel(c.Request.Context(), id, c.Param("language"), req.Level); err != nil {
+		dataLabError(c, err)
+		return
+	}
+	c.Status(http.StatusNoContent)
+}

@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"errors"
+	"strconv"
 	"testing"
 
 	"backend/internal/domain"
@@ -13,6 +14,16 @@ type fakeAdminStore struct {
 	contributions []domain.AdminContribution
 	gotFilter     ContributionFilter
 	gotTranslator TranslatorFilter
+	members       map[string]string // "id/language" → level, for SetMemberLevel
+}
+
+func (s *fakeAdminStore) SetMemberLevel(_ context.Context, userID int64, language, level string) error {
+	key := strconv.FormatInt(userID, 10) + "/" + language
+	if _, ok := s.members[key]; !ok {
+		return ErrNotFound
+	}
+	s.members[key] = level
+	return nil
 }
 
 func (s *fakeAdminStore) ListTranslators(_ context.Context, f TranslatorFilter) ([]domain.Translator, error) {
@@ -85,5 +96,40 @@ func TestDataLabAdmin_Translator_NotFoundWhenNone(t *testing.T) {
 	_, err := NewDataLabAdmin(&fakeAdminStore{}, nil).Translator(context.Background(), 7)
 	if !errors.Is(err, ErrNotFound) {
 		t.Errorf("Translator(unknown) error = %v, want ErrNotFound", err)
+	}
+}
+
+func TestDataLabAdmin_SetLevel_ChangesAMembershipToAKnownLevel(t *testing.T) {
+	tests := []struct {
+		name     string
+		id       int64
+		language string
+		level    string
+		wantErr  error
+	}{
+		{name: "contributor to reviewer", id: 7, language: "ugn", level: domain.LevelReviewer},
+		{name: "to lead", id: 7, language: "ugn", level: domain.LevelLead},
+		{name: "back to contributor", id: 7, language: "ugn", level: domain.LevelContributor},
+		{name: "an unknown level", id: 7, language: "ugn", level: "admin", wantErr: ErrInvalidInput},
+		{name: "a language they haven't joined", id: 7, language: "sw", level: domain.LevelReviewer, wantErr: ErrNotFound},
+		{name: "an unknown volunteer", id: 9, language: "ugn", level: domain.LevelReviewer, wantErr: ErrNotFound},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			store := &fakeAdminStore{members: map[string]string{"7/ugn": domain.LevelContributor}}
+
+			err := NewDataLabAdmin(store, nil).SetLevel(context.Background(), tt.id, tt.language, tt.level)
+
+			if !errors.Is(err, tt.wantErr) {
+				t.Fatalf("SetLevel() error = %v, want %v", err, tt.wantErr)
+			}
+			want := domain.LevelContributor
+			if tt.wantErr == nil {
+				want = tt.level
+			}
+			if got := store.members["7/ugn"]; got != want {
+				t.Errorf("level = %q, want %q", got, want)
+			}
+		})
 	}
 }

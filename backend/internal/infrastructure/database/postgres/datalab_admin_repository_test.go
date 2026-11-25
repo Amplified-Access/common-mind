@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"backend/internal/domain"
@@ -151,5 +152,29 @@ func TestDataLabAdmin_ListContributions_PairsItemWithTranslationAndReview(t *tes
 	}
 	if paged.Total != 3 || len(paged.Contributions) != 1 {
 		t.Errorf("paged = total %d, %d rows, want 3 pending in all and 1 left on the second page", paged.Total, len(paged.Contributions))
+	}
+}
+
+func TestDataLabAdmin_SetMemberLevel_ChangesOnlyThatMembership(t *testing.T) {
+	truncate(t, "users")
+	ctx := context.Background()
+	repo := NewDataLabAdminRepository(testDB)
+	amina := seedVolunteer(t, "amina", "ugn", "sw")
+
+	if err := repo.SetMemberLevel(ctx, amina, "ugn", domain.LevelReviewer); err != nil {
+		t.Fatalf("SetMemberLevel: %v", err)
+	}
+	v, _ := NewDataLabRepository(testDB).GetVolunteer(ctx, "amina")
+	if m, _ := v.Membership("ugn"); m.Level != domain.LevelReviewer {
+		t.Errorf("ugn level = %q, want reviewer", m.Level)
+	}
+	if m, _ := v.Membership("sw"); m.Level != domain.LevelContributor {
+		t.Errorf("sw level = %q, want contributor, untouched", m.Level)
+	}
+	if err := repo.SetMemberLevel(ctx, amina, "luo", domain.LevelReviewer); !errors.Is(err, usecase.ErrNotFound) {
+		t.Errorf("non-member error = %v, want ErrNotFound", err)
+	}
+	if err := repo.SetMemberLevel(ctx, amina+100, "ugn", domain.LevelReviewer); !errors.Is(err, usecase.ErrNotFound) {
+		t.Errorf("unknown volunteer error = %v, want ErrNotFound", err)
 	}
 }
