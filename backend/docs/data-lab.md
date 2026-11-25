@@ -52,7 +52,7 @@ A volunteer's memberships carry their language's `modality` too (`Membership.Sig
 A volunteer is a `users` row plus `language_members` (one row per language, with a `level`) and `consents` (one row per consent version accepted).
 
 - **Onboarding** (`DataLab.Onboard`) takes a name, target languages, and the consent version the volunteer accepted. The version must equal `domain.CurrentConsentVersion`, or it fails with `ErrConsentOutdated`. Calling it again adds languages; `ON CONFLICT DO NOTHING` keeps any existing level.
-- **Levels** are per language: `contributor` → `reviewer` → `lead`. New memberships start at `contributor`. Promotion is manual and done by the team with `make datalab-promote` (see Admin); there is no in-app promotion yet.
+- **Levels** are per language: `contributor` → `reviewer` → `lead`. New memberships start at `contributor`. The team promotes volunteers in the web admin, on each volunteer's page under Languages and levels ([data-lab-admin.md](data-lab-admin.md)), or with `make datalab-promote` (see Admin).
 - **Consent**: bump `CurrentConsentVersion` when the consent text changes. Volunteers then accept again (by onboarding) before contributing.
 - **Voice consent** is separate and optional: `AcceptVoiceConsent` sets `consents.covers_voice` on the volunteer's current consent row. `Volunteer.VoiceConsent` reports it, and `Volunteer.CanRecord()` (current consent that covers voice) gates every recording. A consent version bump asks for it again.
 

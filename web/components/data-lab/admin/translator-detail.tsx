@@ -7,7 +7,8 @@ import { acceptanceRate, adminHref, PAGE_SIZE, STATUSES, type AdminView } from "
 import { BackLink } from "../back-link";
 import { secondaryButton } from "../styles";
 import type { Language } from "../types";
-import { categoryLabel, formatDate, languageNamer, levelLabel, rejectReasonLabel } from "./format";
+import { categoryLabel, formatDate, languageNamer, rejectReasonLabel } from "./format";
+import { LevelControl } from "./level-control";
 import { FilterChips, Pill, StatRow, StatusPill } from "./parts";
 import { ADMIN_PATH } from "./session";
 import type { AdminContribution, AdminContributionPage, Translator } from "./types";
@@ -40,11 +41,35 @@ function TranslatorDetail({
         <Eyebrow>Translator</Eyebrow>
         <h1 className="text-h2">{t.name || "Unnamed"}</h1>
         <p className="font-mono text-xs text-subtle">
-          {t.email} · joined {formatDate(t.joined_at)} ·{" "}
-          {t.languages
-            .map((l) => `${nameOf(l.language_code)}${l.level ? ` (${levelLabel[l.level]})` : ""}: ${l.contributions}`)
-            .join(", ") || "no languages"}
+          {t.email} · joined {formatDate(t.joined_at)}
         </p>
+      </div>
+
+      {/* Each language with its level, which the team sets here: reviewers
+          and leads review others' work in that language. */}
+      <div className="flex flex-col gap-3">
+        <h2 className="font-mono text-xs text-faint">Languages and levels</h2>
+        {t.languages.length === 0 ? (
+          <p className="text-sm text-subtle">No languages yet.</p>
+        ) : (
+          <ul className="flex flex-col divide-y divide-line rounded-inset border border-line">
+            {t.languages.map((l) => (
+              <li key={l.language_code} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+                <span className="flex flex-col">
+                  <span className="text-sm">{nameOf(l.language_code)}</span>
+                  <span className="font-mono text-[11px] text-faint tabular-nums">
+                    {l.contributions.toLocaleString("en-US")} contributions
+                  </span>
+                </span>
+                {l.level ? (
+                  <LevelControl id={t.id} language={l.language_code} level={l.level} name={nameOf(l.language_code)} />
+                ) : (
+                  <span className="font-mono text-xs text-faint">Contributed here without joining the language</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       <StatRow
