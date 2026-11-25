@@ -6,7 +6,9 @@ import { SignStage } from "@/components/sign/sign-stage";
 import { Segmented } from "@/components/system/segmented";
 import { type Body, DEFAULT_BODY } from "@/lib/sign/body";
 import { CHARACTERS } from "@/lib/sign/characters";
+import { type LiveFrame, createLiveRetarget } from "@/lib/sign/live";
 import { replayTimeline } from "@/lib/sign/replay";
+import type { Pose } from "@/lib/sign/types";
 import type { LandmarksFile } from "@/lib/sign-capture/landmarks";
 import { cn } from "@/lib/utils";
 
@@ -98,4 +100,43 @@ function SignReplay({
   );
 }
 
-export { SignReplay };
+/**
+ * The avatar mirroring the signer live: each frame the camera tracks, read
+ * from `source`, becomes the avatar's pose as it arrives. Before anything is
+ * tracked, it stands at rest.
+ */
+function LiveAvatar({ source, className }: { source: RefObject<LiveFrame | null>; className?: string }) {
+  const [live] = useState(createLiveRetarget);
+  const body = useRef<Body>(DEFAULT_BODY);
+  const last = useRef<{ frame: LiveFrame["frame"]; pose: Pose } | null>(null);
+
+  // Read every frame by the stage's loop: a new tracked frame moves the
+  // avatar on; between them it holds.
+  const livePose = () => {
+    const shared = source.current;
+    if (!shared) return null;
+    if (last.current?.frame !== shared.frame) {
+      const pose = live.update(shared.frame, shared.blendshapes, shared.video, body.current);
+      last.current = { frame: shared.frame, pose };
+    }
+    return last.current.pose;
+  };
+
+  return (
+    <SignStage
+      character={CHARACTERS[0]}
+      timeline={null}
+      run={0}
+      speed={1}
+      paused
+      mouthing={false}
+      onBody={(b) => {
+        body.current = b;
+      }}
+      livePose={livePose}
+      className={cn(stageClasses, className)}
+    />
+  );
+}
+
+export { LiveAvatar, SignReplay };

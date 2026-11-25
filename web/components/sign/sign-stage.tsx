@@ -5,6 +5,7 @@ import { PerspectiveCamera, Plane, Raycaster, type Scene, Vector2, Vector3, type
 
 import type { Body } from "@/lib/sign/body";
 import type { Character } from "@/lib/sign/characters";
+import type { Pose } from "@/lib/sign/types";
 import { type Timeline, restPose, samplePose } from "@/lib/sign/timeline";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +29,9 @@ type SignStageProps = {
   /** A clock to follow instead of playing on its own, such as a video's
    * current time, in seconds; null holds the stage's own playback. */
   followTime?: () => number | null;
+  /** A pose to hold now, read every frame, such as a signer tracked live;
+   * null falls back to the timeline. */
+  livePose?: () => Pose | null;
   className?: string;
 };
 
@@ -51,6 +55,7 @@ function SignStage({
   onEnd,
   onBody,
   followTime,
+  livePose,
   className,
 }: SignStageProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -62,10 +67,10 @@ function SignStage({
   const loading = shown !== character.id;
 
   // The loop reads these, so changes take effect without restarting it.
-  const playback = useRef({ timeline, speed, paused, mouthing, onFrame, onEnd, followTime, t: 0, playing: false });
+  const playback = useRef({ timeline, speed, paused, mouthing, onFrame, onEnd, followTime, livePose, t: 0, playing: false });
   useEffect(() => {
-    Object.assign(playback.current, { timeline, speed, paused, mouthing, onFrame, onEnd, followTime });
-  }, [timeline, speed, paused, mouthing, onFrame, onEnd, followTime]);
+    Object.assign(playback.current, { timeline, speed, paused, mouthing, onFrame, onEnd, followTime, livePose });
+  }, [timeline, speed, paused, mouthing, onFrame, onEnd, followTime, livePose]);
 
   useEffect(() => {
     playback.current.t = 0;
@@ -154,11 +159,12 @@ function SignStage({
         pb.onFrame?.(pb.t, tl);
       }
 
+      const live = pb.livePose?.() ?? null;
       if (avatar) {
         // The gaze eases toward the pointer, or back to the viewer. While
         // signing the signer looks at the viewer, as a signer keeps eye
         // contact.
-        const signing = pb.playing || followed !== null;
+        const signing = pb.playing || followed !== null || live !== null;
         if (!signing && now / 1000 - pointer.at < GAZE_TIMEOUT) {
           ray.setFromCamera(pointer.ndc, camera);
           if (!ray.ray.intersectPlane(pane, gazeTarget)) gazeTarget.copy(camera.position);
@@ -168,7 +174,8 @@ function SignStage({
         gaze.lerp(gazeTarget, 1 - Math.exp(-dt * 8));
         // The head follows the gaze only between signs.
         idle += ((signing ? 0 : 1) - idle) * (1 - Math.exp(-dt * 4));
-        avatar.update(tl ? samplePose(tl, pb.t) : restPose(avatar.body), elapsed, gaze, idle, pb.mouthing);
+        const pose = live ?? (tl ? samplePose(tl, pb.t) : restPose(avatar.body));
+        avatar.update(pose, elapsed, gaze, idle, pb.mouthing);
       }
       renderer.render(scene, camera);
     };
