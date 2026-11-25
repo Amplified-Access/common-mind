@@ -340,6 +340,9 @@ function SignRecorder({
   }
 
   const recording = phase.name === "recording";
+  // Recording waits for hand tracking to load, or to fail, so every take
+  // that can be tracked is.
+  const preparing = !take && (phase.name === "starting" || tracking === "loading");
   const counting = phase.name === "countdown";
   const lowCoverage = take?.handCoverage != null && take.handCoverage < LOW_COVERAGE;
 
@@ -357,7 +360,11 @@ function SignRecorder({
               muted
               playsInline
               aria-label="Camera preview"
-              className={cn("absolute inset-0 size-full -scale-x-100 object-cover", take && "invisible")}
+              className={cn(
+                "absolute inset-0 size-full -scale-x-100 object-cover transition-[filter] duration-500",
+                take && "invisible",
+                preparing && "blur-xl",
+              )}
             />
             <canvas
               ref={canvas}
@@ -376,10 +383,21 @@ function SignRecorder({
                 className="absolute inset-0 size-full bg-background object-contain"
               />
             )}
-            {phase.name === "starting" && !take && (
-              <p className="absolute inset-0 flex items-center justify-center font-mono text-xs text-faint">
-                Starting the camera…
-              </p>
+            {/* While the camera starts and hand tracking loads, the feed is
+                blurred under a centred spinner saying which. */}
+            {preparing && (
+              <div
+                role="status"
+                className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background/40"
+              >
+                <span
+                  aria-hidden
+                  className="size-8 animate-spin rounded-full border-2 border-signal/25 border-t-signal motion-reduce:animate-none"
+                />
+                <span className="font-mono text-xs text-foreground">
+                  {phase.name === "starting" ? "Starting the camera…" : "Loading hand tracking…"}
+                </span>
+              </div>
             )}
             {counting && (
               <span className="absolute inset-0 flex items-center justify-center bg-background/40 text-7xl tabular-nums">
@@ -398,7 +416,7 @@ function SignRecorder({
                 "Camera"
               )}
             </span>
-            {!take && tracking === "on" && phase.name !== "starting" && (
+            {!preparing && !take && tracking === "on" && (
               <span className={cn(CHIP, "absolute top-3 right-3")}>
                 {handsInView ? "Hands in view" : "Bring your hands into view"}
               </span>
@@ -430,9 +448,7 @@ function SignRecorder({
             ? lowCoverage
               ? "Your hands were out of view for much of this take. Watch it back, and record again if needed."
               : `${clock(take.seconds)} recorded. Play it to watch the avatar sign along, or record again.`
-            : tracking === "loading"
-              ? "Loading hand tracking…"
-              : tracking === "off"
+            : tracking === "off"
                 ? "Hand tracking can't run on this device, so the avatar stays still. Your video still records."
                 : `Up to ${MAX_SECONDS} seconds. A ${COUNTDOWN}-second countdown starts each take.`}
         </span>
@@ -450,7 +466,7 @@ function SignRecorder({
             <button
               type="button"
               onClick={recording ? stop : start}
-              disabled={disabled || phase.name === "starting"}
+              disabled={disabled || preparing}
               aria-label={recording ? "Stop recording" : take ? "Record again" : "Start recording"}
               className={cn(
                 "inline-flex cursor-pointer items-center gap-2 rounded-full px-4 py-2 font-mono text-xs text-background transition-colors disabled:cursor-not-allowed disabled:opacity-60",
