@@ -31,6 +31,7 @@ Each ADR follows this structure:
 | [0011](0011-triggered-corpus-releases.md) | Live corpus with metric-triggered snapshot releases | Accepted |
 | [0012](0012-sanity-cms.md) | Sanity for the site's words and editorial content | Accepted |
 | [0013](0013-source-acquisition-and-licences.md) | Source acquisition and licence policy | Accepted |
+| [0014](0014-sign-language-capture.md) | Sign languages in the Data Lab: camera capture with hand tracking | Accepted |
 
 ## Adding a new ADR
 
