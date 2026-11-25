@@ -5,10 +5,17 @@ import { RecordIcon, StopIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useEffect, useRef, useState } from "react";
 
-import { createLandmarkLog, type LandmarkLog, type LandmarksFile } from "@/lib/sign-capture/landmarks";
+import type { LiveFrame } from "@/lib/sign/live";
+import {
+  type LandmarkLog,
+  type LandmarksFile,
+  blendshapeNames,
+  createLandmarkLog,
+  frameFrom,
+} from "@/lib/sign-capture/landmarks";
 import { cn } from "@/lib/utils";
 
-import { SignReplay } from "./sign-replay-lazy";
+import { LiveAvatar, SignReplay } from "./sign-replay-lazy";
 import { quietButton, secondaryButton } from "./styles";
 
 // The tracker runs on the signer's device (ADR 0014). Its runtime and model
@@ -62,6 +69,14 @@ type Phase =
 
 type Tracking = "loading" | "on" | "off";
 
+// Each side is a box filling its column. On a phone it is 16:9. Full
+// screen, it takes the height the screen has, from 16:9 up to 4:3 of its
+// width, so it never turns tall and narrow; any height left over sits evenly
+// above and below.
+const CELL = "flex min-h-0 items-center justify-center md:[container-type:size]";
+const BOX = "relative aspect-video w-full overflow-hidden rounded-inset md:aspect-auto md:h-[min(100cqh,75cqw)]";
+const CHIP = "rounded-full bg-background/70 px-3 py-1 font-mono text-[11px] text-subtle";
+
 const clock = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 
 async function loadTracker(): Promise<HolisticLandmarker> {
@@ -90,10 +105,13 @@ function SignRecorder({
   take,
   onChange,
   disabled,
+  actions,
 }: {
   take: SignTake | null;
   onChange: (take: SignTake | null) => void;
   disabled?: boolean;
+  /** More buttons for the end of the recorder's row, such as submitting. */
+  actions?: React.ReactNode;
 }) {
   const [phase, setPhase] = useState<Phase>({ name: "starting" });
   const [tracking, setTracking] = useState<Tracking>("loading");
@@ -104,6 +122,9 @@ function SignRecorder({
   const canvas = useRef<HTMLCanvasElement>(null);
   // The take played back, which the avatar keeps time with.
   const takeVideo = useRef<HTMLVideoElement>(null);
+  // The newest tracked frame, which the live avatar mirrors.
+  const liveFrame = useRef<LiveFrame | null>(null);
+  const videoSize = useRef({ width: 0, height: 0 });
   const stream = useRef<MediaStream | null>(null);
   const tracker = useRef<HolisticLandmarker | null>(null);
   const log = useRef<LandmarkLog | null>(null);
@@ -155,6 +176,11 @@ function SignRecorder({
           const hands = [...result.leftHandLandmarks, ...result.rightHandLandmarks];
           draw(hands);
           if (recordingSince.current !== null) log.current?.add(result, (now - recordingSince.current) / 1000);
+          liveFrame.current = {
+            frame: frameFrom(result, now / 1000),
+            blendshapes: blendshapeNames(result),
+            video: videoSize.current,
+          };
           const inView = hands.length > 0;
           if (inView !== handsShown.current) {
             handsShown.current = inView;
@@ -184,10 +210,8 @@ function SignRecorder({
       }
       stream.current = media;
       const settings = media.getVideoTracks()[0]?.getSettings() ?? {};
-      log.current = createLandmarkLog({
-        tracker: TRACKER,
-        video: { width: settings.width ?? 0, height: settings.height ?? 0 },
-      });
+      videoSize.current = { width: settings.width ?? 0, height: settings.height ?? 0 };
+      log.current = createLandmarkLog({ tracker: TRACKER, video: videoSize.current });
       if (video.current) {
         video.current.srcObject = media;
         await video.current.play().catch(() => undefined);
@@ -320,13 +344,13 @@ function SignRecorder({
   const lowCoverage = take?.handCoverage != null && take.handCoverage < LOW_COVERAGE;
 
   return (
-    <div className="flex w-full flex-col gap-4">
-      {/* The camera, then the take, beside the avatar signing the take back:
-          both the same size, so they compare at a glance. */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <figure className="flex flex-col gap-2">
-          <figcaption className="font-mono text-xs text-faint">{take ? "Your take" : "Camera"}</figcaption>
-          <div className="relative aspect-video w-full overflow-hidden rounded-inset border border-line bg-background">
+    <div className="flex w-full flex-col gap-4 md:min-h-0 md:flex-1">
+      {/* The camera, then the take, beside the avatar: live while the
+          signer is in front of the camera, then signing the take back in
+          time with it. Both the same size, so they compare at a glance. */}
+      <div className="grid gap-4 md:min-h-0 md:flex-1 md:grid-cols-2 md:grid-rows-[minmax(0,1fr)]">
+        <div className={CELL}>
+          <div className={cn(BOX, "border border-line bg-background")}>
             {/* The live camera stays on between takes, so recording again is instant. */}
             <video
               ref={video}
@@ -352,7 +376,7 @@ function SignRecorder({
                 className="absolute inset-0 size-full bg-background object-contain"
               />
             )}
-            {phase.name === "starting" && (
+            {phase.name === "starting" && !take && (
               <p className="absolute inset-0 flex items-center justify-center font-mono text-xs text-faint">
                 Starting the camera…
               </p>
@@ -362,32 +386,42 @@ function SignRecorder({
                 {phase.left}
               </span>
             )}
-            {recording && (
-              <span className="absolute top-3 left-3 inline-flex items-center gap-2 rounded-full bg-background/70 px-3 py-1 font-mono text-xs tabular-nums">
-                <span className="size-2 rounded-full bg-signal motion-safe:animate-pulse" />
-                {clock(phase.elapsed)} / {clock(MAX_SECONDS)}
-              </span>
-            )}
+            <span className={cn(CHIP, "absolute top-3 left-3 inline-flex items-center gap-2 tabular-nums")}>
+              {recording ? (
+                <>
+                  <span className="size-2 rounded-full bg-signal motion-safe:animate-pulse" />
+                  {clock(phase.elapsed)} / {clock(MAX_SECONDS)}
+                </>
+              ) : take ? (
+                "Your take"
+              ) : (
+                "Camera"
+              )}
+            </span>
             {!take && tracking === "on" && phase.name !== "starting" && (
-              <span className="absolute top-3 right-3 rounded-full bg-background/70 px-3 py-1 font-mono text-[11px] text-subtle">
+              <span className={cn(CHIP, "absolute top-3 right-3")}>
                 {handsInView ? "Hands in view" : "Bring your hands into view"}
               </span>
             )}
           </div>
-        </figure>
+        </div>
 
-        <figure className="flex flex-col gap-2">
-          <figcaption className="font-mono text-xs text-faint">The avatar, from your hand tracking</figcaption>
-          {take?.track ? (
-            <SignReplay landmarks={take.track} follow={takeVideo} />
-          ) : (
-            <p className="flex aspect-video w-full items-center justify-center rounded-inset border border-dashed border-line p-6 text-center font-mono text-xs text-faint">
-              {take
-                ? "Hand tracking didn't run for this take, so the avatar can't sign it back."
-                : "Record a take, and the avatar signs it back here as you play it."}
-            </p>
-          )}
-        </figure>
+        <div className={CELL}>
+          <div className={cn(BOX, !take?.track && take && "border border-dashed border-line")}>
+            {take?.track ? (
+              <SignReplay landmarks={take.track} follow={takeVideo} className="absolute inset-0 size-full" />
+            ) : take ? (
+              <p className="absolute inset-0 flex items-center justify-center p-6 text-center font-mono text-xs text-faint">
+                Hand tracking didn&apos;t run for this take, so the avatar can&apos;t sign it back.
+              </p>
+            ) : (
+              <LiveAvatar source={liveFrame} className="absolute inset-0 size-full" />
+            )}
+            <span className={cn(CHIP, "pointer-events-none absolute top-3 left-3")}>
+              {take ? "Avatar, signing your take" : tracking === "on" ? "Avatar, live" : "Avatar"}
+            </span>
+          </div>
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -399,10 +433,10 @@ function SignRecorder({
             : tracking === "loading"
               ? "Loading hand tracking…"
               : tracking === "off"
-                ? "Hand tracking can't run on this device. Your video still records."
+                ? "Hand tracking can't run on this device, so the avatar stays still. Your video still records."
                 : `Up to ${MAX_SECONDS} seconds. A ${COUNTDOWN}-second countdown starts each take.`}
         </span>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {take && (
             <button type="button" onClick={() => onChange(null)} disabled={disabled} className={quietButton}>
               Discard
@@ -427,6 +461,7 @@ function SignRecorder({
               {recording ? "Stop" : take ? "Record again" : "Record"}
             </button>
           )}
+          {actions}
         </div>
       </div>
     </div>

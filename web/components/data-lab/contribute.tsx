@@ -212,29 +212,36 @@ function Contribute({ language }: { language: string }) {
   const consent = modality === "text" ? null : consentFor[modality];
 
   return (
-    <div className="flex flex-col gap-8">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div className="flex flex-col gap-3">
-          <BackLink href="/data-lab/workspace" label="Workspace" className="self-start" />
-          <h1 className="text-h2">{target?.native_name ?? language}</h1>
+    // A sign language page fills the screen and drops the page header: the
+    // task card names the language, and the camera needs the room.
+    <div
+      data-fullscreen={signed || undefined}
+      className={cn("flex flex-col gap-8", signed && "md:min-h-0 md:flex-1")}
+    >
+      {languages !== null && !signed && (
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div className="flex flex-col gap-3">
+            <BackLink href="/data-lab/workspace" label="Workspace" className="self-start" />
+            <h1 className="text-h2">{target?.native_name ?? language}</h1>
+          </div>
+          <div className="flex flex-wrap items-center gap-4">
+            {submitted > 0 && (
+              <span className="font-mono text-xs text-subtle">{submitted} submitted for review this session</span>
+            )}
+            {voiceAvailable && !signed && (
+              <Segmented
+                label="Write or speak"
+                value={modality}
+                onChange={(id) => switchTo(id as Modality)}
+                items={[
+                  { id: "text", label: "Write" },
+                  { id: "audio", label: "Speak" },
+                ]}
+              />
+            )}
+          </div>
         </div>
-        <div className="flex flex-wrap items-center gap-4">
-          {submitted > 0 && (
-            <span className="font-mono text-xs text-subtle">{submitted} submitted for review this session</span>
-          )}
-          {voiceAvailable && !signed && (
-            <Segmented
-              label="Write or speak"
-              value={modality}
-              onChange={(id) => switchTo(id as Modality)}
-              items={[
-                { id: "text", label: "Write" },
-                { id: "audio", label: "Speak" },
-              ]}
-            />
-          )}
-        </div>
-      </div>
+      )}
 
       {askingConsent && consent ? (
         <FramedCard panelsClassName="flex flex-col gap-6 bg-[#1c1a0e] p-6 sm:p-8">
@@ -310,15 +317,20 @@ function Contribute({ language }: { language: string }) {
           {/* Stays mounted while the next task loads, so the camera and the
               hand tracker start once per visit. */}
           {(view.status === "task" || view.status === "loading") && modality === "video" && (
-            <FramedCard panelsClassName="flex flex-col bg-[#0b0a07]">
+            <FramedCard className="md:min-h-0 md:flex-1" panelsClassName="flex flex-col bg-[#0b0a07]">
               {/* What to sign, across the top; the take and the avatar side
-                  by side below. */}
-              <div className="flex min-h-36 flex-col gap-4 bg-[#1c1a0e] p-6 sm:p-8">
+                  by side below, filling the rest of the screen. */}
+              <div className="flex min-h-28 shrink-0 flex-col gap-3 bg-[#1c1a0e] px-6 py-5 sm:px-8">
                 {view.status === "task" ? (
                   <>
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                       <Eyebrow>Sign in {target?.name ?? language}</Eyebrow>
                       <span className="font-mono text-xs text-faint">{categoryLabel(view.task.category)}</span>
+                      {submitted > 0 && (
+                        <span className="ml-auto font-mono text-xs text-subtle">
+                          {submitted} submitted for review this session
+                        </span>
+                      )}
                     </div>
                     <p lang={view.task.text_language} className="text-3xl leading-snug text-pretty">
                       {view.task.text}
@@ -335,30 +347,36 @@ function Contribute({ language }: { language: string }) {
               </div>
 
               <form
-                className="flex flex-col gap-4 p-6 sm:p-8"
+                className="flex flex-col p-6 sm:px-8 md:min-h-0 md:flex-1 md:py-5"
                 onSubmit={(e) => {
                   e.preventDefault();
                   if (view.status === "task") submit(view.task);
                 }}
               >
-                <SignRecorder take={take} onChange={setTake} disabled={busy} />
-                <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={next}
-                    disabled={busy || view.status !== "task"}
-                    className={quietButton}
-                  >
-                    Skip
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={busy || !ready || view.status !== "task"}
-                    className={cn(primaryButton, "min-w-32")}
-                  >
-                    {busy ? "Uploading…" : "Submit"}
-                  </button>
-                </div>
+                <SignRecorder
+                  take={take}
+                  onChange={setTake}
+                  disabled={busy}
+                  actions={
+                    <>
+                      <button
+                        type="button"
+                        onClick={next}
+                        disabled={busy || view.status !== "task"}
+                        className={quietButton}
+                      >
+                        Skip
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={busy || !ready || view.status !== "task"}
+                        className={cn(primaryButton, "min-w-32")}
+                      >
+                        {busy ? "Uploading…" : "Submit"}
+                      </button>
+                    </>
+                  }
+                />
               </form>
             </FramedCard>
           )}
