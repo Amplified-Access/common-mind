@@ -5,9 +5,11 @@ import { RecordIcon, StopIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useEffect, useRef, useState } from "react";
 
-import { createLandmarkLog, type LandmarkLog } from "@/lib/sign-capture/landmarks";
+import { Segmented } from "@/components/system/segmented";
+import { createLandmarkLog, type LandmarkLog, type LandmarksFile } from "@/lib/sign-capture/landmarks";
 import { cn } from "@/lib/utils";
 
+import { SignReplay } from "./sign-replay-lazy";
 import { quietButton, secondaryButton } from "./styles";
 
 // The tracker runs on the signer's device (ADR 0014). Its runtime and model
@@ -42,6 +44,8 @@ export type SignTake = {
   seconds: number;
   /** The landmarks file, or null when the tracker couldn't run. */
   landmarks: Blob | null;
+  /** The same landmarks, read, for the avatar to replay. */
+  track: LandmarksFile | null;
   /** The share of frames with a hand tracked, or null without tracking. */
   handCoverage: number | null;
 };
@@ -96,6 +100,8 @@ function SignRecorder({
   const [tracking, setTracking] = useState<Tracking>("loading");
   const [handsInView, setHandsInView] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  // Watching a take back: the video, or the avatar replaying its landmarks.
+  const [watch, setWatch] = useState<"video" | "avatar">("video");
 
   const video = useRef<HTMLVideoElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -241,12 +247,15 @@ function SignRecorder({
       const blob = new Blob(chunks, { type: mime });
       const current = log.current;
       const tracked = tracker.current && current && current.file().frames.length > 0 ? current : null;
+      const track = tracked ? tracked.file() : null;
+      setWatch("video");
       onChange({
         video: blob,
         url: URL.createObjectURL(blob),
         type: mime,
         seconds: (performance.now() - since) / 1000,
-        landmarks: tracked ? new Blob([JSON.stringify(tracked.file())], { type: "application/json" }) : null,
+        landmarks: track ? new Blob([JSON.stringify(track)], { type: "application/json" }) : null,
+        track,
         handCoverage: tracked ? tracked.handCoverage() : null,
       });
       setPhase({ name: "ready" });
@@ -312,9 +321,30 @@ function SignRecorder({
   const counting = phase.name === "countdown";
   const lowCoverage = take?.handCoverage != null && take.handCoverage < LOW_COVERAGE;
 
+  const replaying = !!take?.track && watch === "avatar";
+
   return (
     <div className="flex w-full flex-col gap-4">
-      <div className="relative aspect-video w-full overflow-hidden rounded-inset border border-line bg-background">
+      {take?.track && (
+        <Segmented
+          label="Watch your take"
+          value={watch}
+          onChange={(id) => setWatch(id as "video" | "avatar")}
+          items={[
+            { id: "video", label: "Video" },
+            { id: "avatar", label: "Avatar" },
+          ]}
+          className="self-start"
+        />
+      )}
+      {replaying && take?.track && <SignReplay landmarks={take.track} />}
+      {/* The camera stays mounted under the replay, so its stream is kept. */}
+      <div
+        className={cn(
+          "relative aspect-video w-full overflow-hidden rounded-inset border border-line bg-background",
+          replaying && "hidden",
+        )}
+      >
         {/* The live camera stays on between takes, so recording again is instant. */}
         <video
           ref={video}

@@ -7,12 +7,15 @@ import { toast } from "sonner";
 import { civicCategories } from "@/components/civic/data";
 import { FramedCard } from "@/components/system/framed-card";
 import { Eyebrow } from "@/components/system/primitives";
+import { Segmented } from "@/components/system/segmented";
+import { type LandmarksFile, parseLandmarks } from "@/lib/sign-capture/landmarks";
 import { cn } from "@/lib/utils";
 
 import { ApiError, dataLabApi } from "./api";
 import { useAuth } from "./auth-provider";
 import { BackLink } from "./back-link";
 import { CharacterPalette } from "./character-palette";
+import { SignReplay } from "./sign-replay-lazy";
 import { fieldClasses, primaryButton, quietButton, secondaryButton } from "./styles";
 import type { Language, RejectReason, ReviewItem } from "./types";
 
@@ -41,6 +44,63 @@ const signReasons: { value: RejectReason; label: string }[] = [
 const reasonsFor = { text: textReasons, audio: recordingReasons, video: signReasons } as const;
 
 const categoryLabel = (id: string) => civicCategories.find((c) => c.id === id)?.label ?? id;
+
+/**
+ * A sign to review: its video, and when the camera tracked it, the avatar
+ * replaying the tracked landmarks, fetched when first opened.
+ */
+function SignToWatch({ videoUrl, landmarksUrl }: { videoUrl?: string; landmarksUrl?: string }) {
+  const [watch, setWatch] = useState<"video" | "avatar">("video");
+  const [track, setTrack] = useState<LandmarksFile | "loading" | "failed" | null>(null);
+
+  const open = async (id: string) => {
+    setWatch(id as "video" | "avatar");
+    if (id !== "avatar" || track || !landmarksUrl) return;
+    setTrack("loading");
+    try {
+      const res = await fetch(landmarksUrl);
+      setTrack((res.ok && parseLandmarks(await res.json())) || "failed");
+    } catch {
+      setTrack("failed");
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-3">
+      {landmarksUrl && (
+        <Segmented
+          label="Watch the sign"
+          value={watch}
+          onChange={open}
+          items={[
+            { id: "video", label: "Video" },
+            { id: "avatar", label: "Avatar" },
+          ]}
+          className="self-start"
+        />
+      )}
+      {watch === "avatar" ? (
+        typeof track === "object" && track ? (
+          <SignReplay landmarks={track} />
+        ) : (
+          <p className="flex aspect-video w-full items-center justify-center rounded-inset border border-line font-mono text-xs text-faint">
+            {track === "failed" ? "The tracking for this sign can't be loaded right now." : "Loading the tracking…"}
+          </p>
+        )
+      ) : videoUrl ? (
+        <video
+          controls
+          playsInline
+          preload="metadata"
+          src={videoUrl}
+          className="aspect-video w-full rounded-inset border border-line bg-background object-contain"
+        />
+      ) : (
+        <p className="font-mono text-xs text-faint">The video can&apos;t be played right now.</p>
+      )}
+    </div>
+  );
+}
 
 type View =
   | { status: "loading" }
@@ -183,17 +243,11 @@ function Review({ language }: { language: string }) {
                     Watch, and check it signs the {view.item.kind === "word" ? "word" : "sentence"} clearly, as a
                     signer of {target?.name ?? language} would.
                   </p>
-                  {view.item.video_url ? (
-                    <video
-                      controls
-                      playsInline
-                      preload="metadata"
-                      src={view.item.video_url}
-                      className="aspect-video w-full rounded-inset border border-line bg-background object-contain"
-                    />
-                  ) : (
-                    <p className="font-mono text-xs text-faint">The video can&apos;t be played right now.</p>
-                  )}
+                  <SignToWatch
+                    key={view.item.contribution_id}
+                    videoUrl={view.item.video_url}
+                    landmarksUrl={view.item.landmarks_url}
+                  />
                 </>
               ) : view.item.modality === "audio" ? (
                 <>

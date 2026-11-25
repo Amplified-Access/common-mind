@@ -445,6 +445,9 @@ export class RiggedAvatar {
       mouthPucker: face.round * 0.8,
       mouthFunnel: face.round * 0.45,
     };
+    // A face tracked from a signer takes over the shapes it has, blinks
+    // included.
+    if (face.shapes) Object.assign(shapes, face.shapes);
     // Mouthing: while a word is mouthed its visemes take the mouth, softened
     // a little, as signers mouth more lightly than they speak.
     const visemes = mouthing ? face.visemes : undefined;
