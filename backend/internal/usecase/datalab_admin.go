@@ -6,8 +6,8 @@ import (
 	"backend/internal/domain"
 )
 
-// DataLabAdmin is what the team reads in the Data Lab admin: each
-// volunteer's work, and every contribution beside the item it answers.
+// DataLabAdmin is the team's Data Lab admin: each volunteer's work, every
+// contribution beside the item it answers, and the volunteers' levels.
 type DataLabAdmin interface {
 	// Translators lists every volunteer, most contributions first; a
 	// language narrows it and its counts to that language ("" for all).
@@ -18,6 +18,11 @@ type DataLabAdmin interface {
 	// unknown status or modality is ErrInvalidInput; the limit defaults to
 	// AdminContributionsDefaultLimit and is capped at AdminContributionsMaxLimit.
 	Contributions(ctx context.Context, f ContributionFilter) (*domain.AdminContributionPage, error)
+	// SetLevel sets a volunteer's level in a language they joined: making
+	// them a reviewer opens reviewing there to them. An unknown level is
+	// ErrInvalidInput; a volunteer who hasn't joined the language is
+	// ErrNotFound.
+	SetLevel(ctx context.Context, id int64, language, level string) error
 }
 
 // Page sizes for the admin's list of contributions.
@@ -36,6 +41,9 @@ type DataLabAdminStore interface {
 	// ListContributions returns a page of contributions, newest first, with
 	// the total matching the filter.
 	ListContributions(ctx context.Context, f ContributionFilter) (*domain.AdminContributionPage, error)
+	// SetMemberLevel sets the level of a volunteer's membership in a
+	// language; ErrNotFound when there is no such membership.
+	SetMemberLevel(ctx context.Context, userID int64, language, level string) error
 }
 
 // TranslatorFilter narrows the translators listed; zero values mean all.
@@ -63,6 +71,22 @@ type dataLabAdmin struct {
 // NewDataLabAdmin constructs the admin use case. storage may be nil.
 func NewDataLabAdmin(store DataLabAdminStore, storage StorageService) DataLabAdmin {
 	return &dataLabAdmin{store: store, storage: storage}
+}
+
+func (a *dataLabAdmin) SetLevel(ctx context.Context, id int64, language, level string) error {
+	if err := checkLevel(level); err != nil {
+		return err
+	}
+	return a.store.SetMemberLevel(ctx, id, language, level)
+}
+
+// checkLevel refuses anything but the three member levels.
+func checkLevel(level string) error {
+	switch level {
+	case domain.LevelContributor, domain.LevelReviewer, domain.LevelLead:
+		return nil
+	}
+	return invalid("level must be contributor, reviewer, or lead")
 }
 
 func (a *dataLabAdmin) Translators(ctx context.Context, language string) ([]domain.Translator, error) {

@@ -17,7 +17,7 @@ sources:
 
 # Data Lab admin
 
-A page at `/data-lab/admin` on the web app for the team to see each volunteer's work: how much they've written and recorded, how much of it is verified, waiting or rejected, and every item's text beside what they entered. One shared password, `ADMIN_PASSWORD`, protects it. It is read-only.
+A page at `/data-lab/admin` on the web app for the team to see each volunteer's work: how much they've written and recorded, how much of it is verified, waiting or rejected, and every item's text beside what they entered. The team also sets each volunteer's level there: making someone a reviewer in a language opens reviewing there to them. One shared password, `ADMIN_PASSWORD`, protects it. Setting levels is the only change it makes.
 
 ## The password
 
@@ -38,8 +38,9 @@ All under `/api/v1/admin/data-lab`, outside the Firebase-authenticated group. Er
 | GET | `/translators?language=` | `[Translator]`, never `null` |
 | GET | `/translators/:id` | `Translator`, or 404 `not_found` |
 | GET | `/contributions?contributor=&language=&status=&modality=&limit=&offset=` | `AdminContributionPage` |
+| PUT | `/translators/:id/languages/:language` with `{"level": "contributor" \| "reviewer" \| "lead"}` | 204 |
 
-A non-numeric `:id`, `contributor`, `limit` or `offset` is 400 `invalid_input`. Any route: 401 `unauthorized`, 429 `too_many_attempts`.
+A non-numeric `:id`, `contributor`, `limit` or `offset` is 400 `invalid_input`. Setting a level (`DataLabAdmin.SetLevel`) refuses any other level (400 `invalid_input`) and a language the volunteer hasn't joined (404 `not_found`); it changes that one membership only. It does the same as `make datalab-promote`, by volunteer ID instead of email. Any route: 401 `unauthorized`, 429 `too_many_attempts`.
 
 ### Translators
 
@@ -66,7 +67,7 @@ Each `AdminContribution` has the item (`item_text`, `item_language`, `kind`, `ca
 - **Sign-in.** `/data-lab/admin` shows a password form until the `data_lab_admin` cookie is set. `signInToAdmin` (Server Action) checks the password against `/translators` and stores it only if it works: httpOnly, `sameSite: strict`, `path: /data-lab/admin`, 12 hours. A wrong password says so; a refused stored password (it changed) shows the form again with "The password has changed". **Sign out** deletes the cookie.
 - **Server only.** `components/data-lab/admin/api.ts` is `server-only`; the password never reaches the browser. It calls `BACKEND_URL`, falling back to `NEXT_PUBLIC_BACKEND_URL`.
 - **Translators** (`/data-lab/admin`): language chips, totals (volunteers, written, recorded, verified, waiting, rejected), and a table of every volunteer: each of their languages with how many contributions they've made in it (0 dimmed, for a language they joined but haven't started), the counts, accepted (verified ÷ (verified + rejected), "—" before any review), reviews of others, last active. Each name opens their page.
-- **A translator** (`/data-lab/admin/translators/<id>`): their figures, language and status chips, then their contributions, 25 a page. Each card shows the original (or prompt) on the left, what they entered on the right (or the recording and the text it reads), and below it the status, "Pasted in", and the review: accepted, corrected (with the corrected text) or rejected with the reason, and any note.
+- **A translator** (`/data-lab/admin/translators/<id>`): **Languages and levels**, each language they joined with its contributions and three buttons, Contributor, Reviewer and Lead; pressing another level saves it at once (`setTranslatorLevel`, a Server Action calling the PUT route with the stored password) and the page shows the new level. A language they contributed in without joining has no level to set. Then their figures, language and status chips, then their contributions, 25 a page. Each card shows the original (or prompt) on the left, what they entered on the right (or the recording and the text it reads), and below it the status, "Pasted in", and the review: accepted, corrected (with the corrected text) or rejected with the reason, and any note.
 - The view (language, status, page) is in the address (`lib/data-lab-admin/view.ts`), so reloads, Back and shared links keep it.
 - It's standalone (`lib/site.ts`): its own bar instead of the site's header and footer. `noindex`.
 

@@ -252,6 +252,80 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/admin/data-lab/translators/{id}/languages/{language}": {
+            "put": {
+                "security": [
+                    {
+                        "AdminPassword": []
+                    }
+                ],
+                "description": "Makes a volunteer a contributor, reviewer, or lead in a language they joined. A reviewer can review others' work in that language. Needs the admin password.",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Set a volunteer's level in a language",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Volunteer ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Language code, e.g. ugn",
+                        "name": "language",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Level",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.levelRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "invalid_input: not a level",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "not_found: they haven't joined the language",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/data-lab/consent/video": {
             "post": {
                 "security": [
@@ -1623,6 +1697,18 @@ const docTemplate = `{
                 "voice": {
                     "description": "Voice is true when recordings can be stored (object storage is set up).",
                     "type": "boolean"
+                }
+            }
+        },
+        "handlers.levelRequest": {
+            "type": "object",
+            "required": [
+                "level"
+            ],
+            "properties": {
+                "level": {
+                    "description": "Level is contributor, reviewer, or lead.",
+                    "type": "string"
                 }
             }
         },

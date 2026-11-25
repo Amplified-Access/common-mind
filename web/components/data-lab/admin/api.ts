@@ -2,7 +2,7 @@ import "server-only";
 
 import type { ContributionStatus } from "@/lib/data-lab-admin/view";
 
-import type { Language } from "../types";
+import type { Language, Level } from "../types";
 import type { AdminContributionPage, Translator } from "./types";
 
 // Read on the server only: the password never reaches the browser.
@@ -47,6 +47,36 @@ async function adminGet<T>(path: string, password: string): Promise<AdminResult<
   if (!res.ok) return { status: "unavailable" };
   const body = (await res.json()) as { data: T };
   return { status: "ok", data: body.data };
+}
+
+/** Sets a volunteer's level in a language they joined. */
+export async function putLevel(
+  password: string,
+  id: number,
+  language: string,
+  level: Level,
+): Promise<{ status: "ok" } | { status: "invalid" } | AdminFailure> {
+  let res: Response;
+  try {
+    res = await fetch(`${BASE}/api/v1/admin/data-lab/translators/${id}/languages/${encodeURIComponent(language)}`, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${password}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ level }),
+      cache: "no-store",
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+  } catch {
+    return { status: "unavailable" };
+  }
+  if (res.status === 204) return { status: "ok" };
+  if (res.status === 400) return { status: "invalid" };
+  if (res.status === 401) return { status: "unauthorized" };
+  if (res.status === 429) return { status: "locked" };
+  if (res.status === 404) {
+    const body = (await res.json().catch(() => null)) as { error?: { code?: string } } | null;
+    return body?.error?.code === "not_found" ? { status: "not_found" } : { status: "unavailable" };
+  }
+  return { status: "unavailable" };
 }
 
 export const fetchTranslators = (password: string, language: string | null) =>

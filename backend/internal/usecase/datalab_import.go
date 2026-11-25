@@ -155,10 +155,8 @@ func sourceEvidenceProblems(src ImportSource) []string {
 }
 
 func (im *importer) SetMemberLevel(ctx context.Context, email, language, level string) error {
-	switch level {
-	case domain.LevelContributor, domain.LevelReviewer, domain.LevelLead:
-	default:
-		return invalid("level must be contributor, reviewer, or lead")
+	if err := checkLevel(level); err != nil {
+		return err
 	}
 	return im.store.SetMemberLevel(ctx, email, language, level)
 }
