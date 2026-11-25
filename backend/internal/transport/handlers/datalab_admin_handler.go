@@ -90,7 +90,7 @@ func (h *Handler) AdminTranslatorHandler(c *gin.Context) {
 //	@Param			contributor	query		int		false	"Volunteer ID"
 //	@Param			language	query		string	false	"Target language code"
 //	@Param			status		query		string	false	"pending, verified, or rejected"
-//	@Param			modality	query		string	false	"text or audio"
+//	@Param			modality	query		string	false	"text, audio, or video"
 //	@Param			limit		query		int		false	"Page size: 50 by default, at most 200"
 //	@Param			offset		query		int		false	"Rows to skip"
 //	@Success		200			{object}	AdminContributionPageAlias

@@ -11,9 +11,10 @@ type Translator struct {
 	Email     string               `json:"email"`
 	Languages []TranslatorLanguage `json:"languages"`
 	JoinedAt  time.Time            `json:"joined_at"`
-	// Their contributions: written (translations and answers) and recorded.
+	// Their contributions: written (translations and answers), recorded, and signed.
 	Written  int `json:"written"`
 	Recorded int `json:"recorded"`
+	Signed   int `json:"signed"`
 	// The same contributions by status. Corrected counts the verified ones a
 	// reviewer corrected, so it is part of Verified.
 	Pending   int `json:"pending"`
@@ -56,6 +57,8 @@ type AdminContribution struct {
 	ReadText    string       `json:"read_text,omitempty"`
 	AudioKey    string       `json:"-"`
 	AudioURL    string       `json:"audio_url,omitempty"`
+	VideoKey    string       `json:"-"`
+	VideoURL    string       `json:"video_url,omitempty"` // for a sign
 	Pasted      bool         `json:"pasted"`
 	Status      string       `json:"status"`
 	SubmittedAt time.Time    `json:"submitted_at"`

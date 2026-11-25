@@ -51,6 +51,7 @@ function TranslatorDetail({
         stats={[
           { label: "Written", value: t.written },
           { label: "Recorded", value: t.recorded },
+          ...(t.signed ? [{ label: "Signed", value: t.signed }] : []),
           { label: t.corrected ? `Verified · ${t.corrected} corrected` : "Verified", value: t.verified },
           { label: "Waiting for review", value: t.pending },
           { label: "Accepted", value: rate === null ? "—" : `${rate}%` },
@@ -108,13 +109,20 @@ function TranslatorDetail({
 
 /** The item on the left, what the volunteer entered on the right, and the review below. */
 function ContributionCard({ contribution: c, nameOf }: { contribution: AdminContribution; nameOf: (code: string) => string }) {
-  const entered = c.modality === "audio" ? "Recording" : c.kind === "translate" ? "Translation" : "Answer";
+  const entered =
+    c.modality === "video"
+      ? "Sign"
+      : c.modality === "audio"
+        ? "Recording"
+        : c.kind === "translate"
+          ? "Translation"
+          : "Answer";
   return (
     <FramedCard panelsClassName="flex flex-col gap-px bg-[#131000]">
       <div className="grid gap-px md:grid-cols-2">
         <div className="flex flex-col gap-3 bg-[#1c1a0e] p-5 sm:p-6">
           <Eyebrow tone="foreground">
-            {c.kind === "translate" ? "Original" : "Prompt"} · {nameOf(c.item_language)}
+            {c.kind === "write" ? "Prompt" : c.kind === "word" ? "Word" : "Original"} · {nameOf(c.item_language)}
           </Eyebrow>
           <p lang={c.item_language} className="text-lg leading-snug text-pretty">
             {c.item_text}
@@ -127,7 +135,19 @@ function ContributionCard({ contribution: c, nameOf }: { contribution: AdminCont
           <Eyebrow>
             {entered} · {nameOf(c.language_code)}
           </Eyebrow>
-          {c.modality === "audio" ? (
+          {c.modality === "video" ? (
+            c.video_url ? (
+              <video
+                controls
+                playsInline
+                preload="none"
+                src={c.video_url}
+                className="aspect-video w-full rounded-inset border border-line bg-background object-contain"
+              />
+            ) : (
+              <p className="font-mono text-xs text-faint">The video can&apos;t be played here.</p>
+            )
+          ) : c.modality === "audio" ? (
             <>
               <p lang={c.language_code} className="text-lg leading-snug text-pretty whitespace-pre-line">
                 {c.read_text}

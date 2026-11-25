@@ -92,7 +92,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "text or audio",
+                        "description": "text, audio, or video",
                         "name": "modality",
                         "in": "query"
                     },
@@ -1128,6 +1128,10 @@ const docTemplate = `{
                 "text": {
                     "description": "Text is what the volunteer wrote; \"\" for a recording.",
                     "type": "string"
+                },
+                "video_url": {
+                    "description": "for a sign",
+                    "type": "string"
                 }
             }
         },
@@ -1501,11 +1505,14 @@ const docTemplate = `{
                     "description": "Reviewed counts the reviews they made of other volunteers' work.",
                     "type": "integer"
                 },
+                "signed": {
+                    "type": "integer"
+                },
                 "verified": {
                     "type": "integer"
                 },
                 "written": {
-                    "description": "Their contributions: written (translations and answers) and recorded.",
+                    "description": "Their contributions: written (translations and answers), recorded, and signed.",
                     "type": "integer"
                 }
             }

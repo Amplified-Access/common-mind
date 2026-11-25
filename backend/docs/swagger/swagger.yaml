@@ -44,6 +44,9 @@ definitions:
       text:
         description: Text is what the volunteer wrote; "" for a recording.
         type: string
+      video_url:
+        description: for a sign
+        type: string
     type: object
   domain.AdminReview:
     properties:
@@ -301,11 +304,13 @@ definitions:
       reviewed:
         description: Reviewed counts the reviews they made of other volunteers' work.
         type: integer
+      signed:
+        type: integer
       verified:
         type: integer
       written:
-        description: 'Their contributions: written (translations and answers) and
-          recorded.'
+        description: 'Their contributions: written (translations and answers), recorded,
+          and signed.'
         type: integer
     type: object
   handlers.UserAlias:
@@ -491,7 +496,7 @@ paths:
         in: query
         name: status
         type: string
-      - description: text or audio
+      - description: text, audio, or video
         in: query
         name: modality
         type: string

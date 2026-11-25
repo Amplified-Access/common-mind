@@ -147,3 +147,33 @@ func TestDataLab_SaveVideoConsent_CoversVideoOnly(t *testing.T) {
 		t.Errorf("after accepting video: video %v, voice %v, want video only", v.VideoConsent, v.VoiceConsent)
 	}
 }
+
+func TestDataLabAdmin_Signs_AreCountedAndListedWithTheirVideo(t *testing.T) {
+	truncate(t, "users", "sources")
+	ctx := context.Background()
+	signer := seedVolunteer(t, "uid-signer", "ugn")
+	ids := seedKinds(t, domain.KindWord)
+	if _, err := NewDataLabRepository(testDB).CreateContribution(ctx, usecase.ContributionRecord{
+		ItemID: ids[0], Language: "ugn", ContributorID: signer, Modality: domain.ModalityVideo,
+		VideoKey: "data-lab/sign/ugn/1/a.webm", ConsentVersion: domain.CurrentConsentVersion,
+	}); err != nil {
+		t.Fatalf("sign contribution: %v", err)
+	}
+	admin := NewDataLabAdminRepository(testDB)
+
+	translators, err := admin.ListTranslators(ctx, usecase.TranslatorFilter{})
+	if err != nil || len(translators) != 1 {
+		t.Fatalf("ListTranslators = %+v, %v", translators, err)
+	}
+	if got := translators[0]; got.Signed != 1 || got.Written != 0 || got.Recorded != 0 {
+		t.Errorf("signer's counts = %+v, want one sign", got)
+	}
+
+	page, err := admin.ListContributions(ctx, usecase.ContributionFilter{Modality: domain.ModalityVideo, Limit: 10})
+	if err != nil || len(page.Contributions) != 1 {
+		t.Fatalf("ListContributions(video) = %+v, %v", page, err)
+	}
+	if c := page.Contributions[0]; c.VideoKey != "data-lab/sign/ugn/1/a.webm" || c.Kind != domain.KindWord {
+		t.Errorf("sign = %+v, want the word's video", c)
+	}
+}

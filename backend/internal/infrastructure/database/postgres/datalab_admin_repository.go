@@ -42,6 +42,7 @@ func (r *dataLabAdminRepository) ListTranslators(ctx context.Context, f usecase.
                                LEFT JOIN language_members m ON m.user_id = u.id AND m.language_code = lang.code) l), '[]'),
                count(c.id) FILTER (WHERE c.modality = 'text'),
                count(c.id) FILTER (WHERE c.modality = 'audio'),
+               count(c.id) FILTER (WHERE c.modality = 'video'),
                count(c.id) FILTER (WHERE c.status = 'pending'),
                count(c.id) FILTER (WHERE c.status = 'verified'),
                count(c.id) FILTER (WHERE r.decision = 'correct'),
@@ -70,7 +71,7 @@ func (r *dataLabAdminRepository) ListTranslators(ctx context.Context, f usecase.
 		var languages []byte
 		var lastActive sql.NullTime
 		if err := rows.Scan(&t.ID, &t.Name, &t.Email, &t.JoinedAt, &languages,
-			&t.Written, &t.Recorded, &t.Pending, &t.Verified, &t.Corrected, &t.Rejected,
+			&t.Written, &t.Recorded, &t.Signed, &t.Pending, &t.Verified, &t.Corrected, &t.Rejected,
 			&t.Reviewed, &lastActive); err != nil {
 			return nil, fmt.Errorf("datalab admin repository: scan translator: %w", err)
 		}
@@ -107,7 +108,7 @@ func (r *dataLabAdminRepository) ListContributions(ctx context.Context, f usecas
 	q := `
         SELECT c.id, c.contributor_id, u.name, c.item_id, i.kind, i.category, s.title,
                i.text, i.language_code, c.language_code, c.modality, c.text,
-               COALESCE(read_review.corrected_text, read.text, ''), COALESCE(c.audio_key, ''),
+               COALESCE(read_review.corrected_text, read.text, ''), COALESCE(c.audio_key, ''), COALESCE(c.video_key, ''),
                c.pasted, c.status, c.created_at,
                r.decision, COALESCE(r.reason, ''), COALESCE(r.note, ''), COALESCE(r.corrected_text, ''),
                r.reviewer_id, COALESCE(reviewer.name, ''), r.created_at
@@ -136,7 +137,7 @@ func (r *dataLabAdminRepository) ListContributions(ctx context.Context, f usecas
 		var rv domain.AdminReview
 		if err := rows.Scan(&c.ID, &c.ContributorID, &c.ContributorName, &c.ItemID, &c.Kind, &c.Category, &c.SourceTitle,
 			&c.ItemText, &c.ItemLanguage, &c.LanguageCode, &c.Modality, &c.Text,
-			&c.ReadText, &c.AudioKey, &c.Pasted, &c.Status, &c.SubmittedAt,
+			&c.ReadText, &c.AudioKey, &c.VideoKey, &c.Pasted, &c.Status, &c.SubmittedAt,
 			&decision, &rv.Reason, &rv.Note, &rv.CorrectedText,
 			&reviewerID, &rv.ReviewerName, &reviewedAt); err != nil {
 			return nil, fmt.Errorf("datalab admin repository: scan contribution: %w", err)
