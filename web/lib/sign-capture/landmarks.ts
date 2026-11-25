@@ -108,3 +108,19 @@ export function createLandmarkLog(meta: Pick<LandmarksFile, "tracker" | "video">
 }
 
 export type LandmarkLog = ReturnType<typeof createLandmarkLog>;
+
+const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null;
+
+/**
+ * A landmarks file read back from storage, or null when it isn't one this
+ * version writes. Checks the outline and each frame's time; the points
+ * themselves are trusted as the tracker wrote them.
+ */
+export function parseLandmarks(data: unknown): LandmarksFile | null {
+  if (!isRecord(data) || data.format !== "commonmind.sign-landmarks" || data.version !== 1) return null;
+  const { video, blendshapes, frames } = data;
+  if (!isRecord(video) || typeof video.width !== "number" || typeof video.height !== "number") return null;
+  if (!Array.isArray(blendshapes) || !blendshapes.every((n) => typeof n === "string")) return null;
+  if (!Array.isArray(frames) || !frames.every((f) => isRecord(f) && typeof f.t === "number")) return null;
+  return data as LandmarksFile;
+}

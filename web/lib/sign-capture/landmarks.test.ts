@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { createLandmarkLog, type TrackerResult } from "./landmarks";
+import { createLandmarkLog, parseLandmarks, type TrackerResult } from "./landmarks";
 
 const point = (v: number, visibility = 0.98765) => ({ x: v, y: v / 2, z: -v, visibility });
 const points = (count: number, v: number) => Array.from({ length: count }, () => point(v));
@@ -97,5 +97,30 @@ describe("createLandmarkLog", () => {
 
     expect(log.file().frames).toEqual([]);
     expect(log.handCoverage()).toBe(0);
+  });
+});
+
+describe("parseLandmarks", () => {
+  it("reads back a file the log wrote", () => {
+    const log = createLandmarkLog(meta);
+    log.add(tracked, 0);
+    const file = log.file();
+
+    expect(parseLandmarks(JSON.parse(JSON.stringify(file)))).toEqual(file);
+  });
+
+  it("refuses anything else, so a bad download can't break the replay", () => {
+    const good = createLandmarkLog(meta).file();
+    for (const bad of [
+      null,
+      "text",
+      { ...good, format: "other" },
+      { ...good, version: 2 },
+      { ...good, frames: "none" },
+      { ...good, frames: [{ t: "soon" }] },
+      { ...good, video: null },
+    ]) {
+      expect(parseLandmarks(bad)).toBeNull();
+    }
   });
 });
