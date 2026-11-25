@@ -10,11 +10,12 @@ import { Eyebrow } from "@/components/system/primitives";
 import { Segmented } from "@/components/system/segmented";
 import { cn } from "@/lib/utils";
 
-import { ApiError, dataLabApi, uploadRecording } from "./api";
+import { ApiError, dataLabApi, uploadRecording, uploadTo } from "./api";
 import { useAuth } from "./auth-provider";
 import { BackLink } from "./back-link";
 import { CharacterPalette } from "./character-palette";
-import { voiceConsentPoints } from "./consent";
+import { videoConsentPoints, voiceConsentPoints } from "./consent";
+import { SignRecorder, type SignTake } from "./sign-recorder";
 import { primaryButton, quietButton } from "./styles";
 import type { Language, Modality, Task } from "./types";
 import { useVolunteer } from "./use-volunteer";
@@ -29,6 +30,49 @@ const FORM_HEIGHT = "h-104";
 
 const categoryLabel = (id: string) => civicCategories.find((c) => c.id === id)?.label ?? id;
 
+// What each recording modality asks the volunteer to agree to first.
+const consentFor = {
+  audio: {
+    intro: "Recording your voice adds to what you agreed to when you joined.",
+    points: voiceConsentPoints,
+    accept: "I agree, start recording",
+  },
+  video: {
+    intro: "Signing on camera adds to what you agreed to when you joined.",
+    points: videoConsentPoints,
+    accept: "I agree, start signing",
+  },
+} as const;
+
+/** Uploads a signed take and its landmarks, then submits it for review. */
+async function submitSign(token: string, task: Task, language: string, take: SignTake) {
+  const upload = await dataLabApi.startRecording(token, {
+    item_id: task.item_id,
+    language,
+    content_type: take.type,
+  });
+  await uploadTo(upload.upload_url, upload.content_type, take.video);
+  let landmarksKey: string | undefined;
+  if (take.landmarks && upload.landmarks_upload_url && upload.landmarks_content_type) {
+    // The landmarks are optional: if they don't upload, the video still goes.
+    try {
+      await uploadTo(upload.landmarks_upload_url, upload.landmarks_content_type, take.landmarks);
+      landmarksKey = upload.landmarks_key;
+    } catch {
+      landmarksKey = undefined;
+    }
+  }
+  await dataLabApi.contribute(token, {
+    item_id: task.item_id,
+    language,
+    modality: "video",
+    text: "",
+    video_key: upload.key,
+    landmarks_key: landmarksKey,
+    pasted: false,
+  });
+}
+
 type View =
   | { status: "loading" }
   | { status: "task"; task: Task }
@@ -38,25 +82,36 @@ type View =
 function Contribute({ language }: { language: string }) {
   const { user, getToken } = useAuth();
   const { state: volunteer, refresh: refreshVolunteer } = useVolunteer();
-  const [languages, setLanguages] = useState<Language[]>([]);
+  // null until loaded: a sign language's tasks wait for it, since they're signed.
+  const [languages, setLanguages] = useState<Language[] | null>(null);
   // Speaking is offered when the server stores recordings and the browser can record.
   const [voiceAvailable, setVoiceAvailable] = useState(false);
-  const [modality, setModality] = useState<Modality>("text");
+  const [chosen, setModality] = useState<Modality>("text");
   const [view, setView] = useState<View>({ status: "loading" });
   const [text, setText] = useState("");
   const [pasted, setPasted] = useState(false);
   const [recording, setRecording] = useState<Recording | null>(null);
+  const [take, setTake] = useState<SignTake | null>(null);
   const [busy, setBusy] = useState(false);
   const [submitted, setSubmitted] = useState(0);
   const editor = useRef<HTMLTextAreaElement>(null);
 
-  const target = languages.find((l) => l.code === language);
-  const nameOf = (code: string) => languages.find((l) => l.code === code)?.name ?? code;
-  const voiceConsent = volunteer.status === "ready" && volunteer.volunteer.voice_consent;
-  // Speaking needs the voice consent first; until then the consent shows instead of a task.
-  const askingConsent = modality === "audio" && volunteer.status === "ready" && !voiceConsent;
-  // Whether speaking is allowed isn't known until the profile loads.
-  const awaitingProfile = modality === "audio" && volunteer.status === "loading";
+  const target = languages?.find((l) => l.code === language);
+  const nameOf = (code: string) => languages?.find((l) => l.code === code)?.name ?? code;
+  // A sign language is signed on camera, and only that.
+  const signed = target?.modality === "signed";
+  const modality: Modality = signed ? "video" : chosen;
+  const consented =
+    volunteer.status === "ready" &&
+    (modality === "audio"
+      ? volunteer.volunteer.voice_consent
+      : modality === "video"
+        ? volunteer.volunteer.video_consent
+        : true);
+  // Recording needs its consent first; until then the consent shows instead of a task.
+  const askingConsent = modality !== "text" && volunteer.status === "ready" && !consented;
+  // Whether recording is allowed isn't known until the profile loads.
+  const awaitingProfile = modality !== "text" && volunteer.status === "loading";
 
   useEffect(() => {
     dataLabApi.languages().then(setLanguages, () => setLanguages([]));
@@ -76,18 +131,19 @@ function Contribute({ language }: { language: string }) {
   }, [getToken, language, modality]);
 
   useEffect(() => {
-    if (!user || askingConsent || awaitingProfile) return;
+    if (!user || askingConsent || awaitingProfile || languages === null) return;
     let cancelled = false;
     fetchTask().then((next) => !cancelled && setView(next));
     return () => {
       cancelled = true;
     };
-  }, [user, fetchTask, askingConsent, awaitingProfile]);
+  }, [user, fetchTask, askingConsent, awaitingProfile, languages]);
 
   const reset = () => {
     setText("");
     setPasted(false);
     setRecording(null);
+    setTake(null);
   };
 
   const switchTo = (next: Modality) => {
@@ -103,10 +159,11 @@ function Contribute({ language }: { language: string }) {
     setView(await fetchTask());
   };
 
-  const acceptVoiceConsent = async () => {
+  const acceptConsent = async () => {
     setBusy(true);
     try {
-      await dataLabApi.acceptVoiceConsent(await getToken());
+      const token = await getToken();
+      await (modality === "video" ? dataLabApi.acceptVideoConsent(token) : dataLabApi.acceptVoiceConsent(token));
       await refreshVolunteer();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong.");
@@ -119,7 +176,10 @@ function Contribute({ language }: { language: string }) {
     setBusy(true);
     try {
       const token = await getToken();
-      if (modality === "audio") {
+      if (modality === "video") {
+        if (!take) return;
+        await submitSign(token, task, language, take);
+      } else if (modality === "audio") {
         if (!recording) return;
         // The recording goes straight to storage; the contribution names it.
         const upload = await dataLabApi.startRecording(token, {
@@ -148,7 +208,8 @@ function Contribute({ language }: { language: string }) {
     }
   };
 
-  const ready = modality === "audio" ? !!recording : !!text.trim();
+  const ready = modality === "video" ? !!take : modality === "audio" ? !!recording : !!text.trim();
+  const consent = modality === "text" ? null : consentFor[modality];
 
   return (
     <div className="flex flex-col gap-8">
@@ -161,7 +222,7 @@ function Contribute({ language }: { language: string }) {
           {submitted > 0 && (
             <span className="font-mono text-xs text-subtle">{submitted} submitted for review this session</span>
           )}
-          {voiceAvailable && (
+          {voiceAvailable && !signed && (
             <Segmented
               label="Write or speak"
               value={modality}
@@ -175,14 +236,14 @@ function Contribute({ language }: { language: string }) {
         </div>
       </div>
 
-      {askingConsent ? (
+      {askingConsent && consent ? (
         <FramedCard panelsClassName="flex flex-col gap-6 bg-[#1c1a0e] p-6 sm:p-8">
           <div className="flex flex-col gap-3">
             <Eyebrow>Before you record</Eyebrow>
-            <p className="text-lg">Recording your voice adds to what you agreed to when you joined.</p>
+            <p className="text-lg">{consent.intro}</p>
           </div>
           <ul className="flex max-w-2xl flex-col gap-3 text-sm text-subtle">
-            {voiceConsentPoints.map((point) => (
+            {consent.points.map((point) => (
               <li key={point} className="flex gap-3">
                 <span className="mt-2 size-1 shrink-0 rounded-full bg-signal" />
                 {point}
@@ -190,17 +251,23 @@ function Contribute({ language }: { language: string }) {
             ))}
           </ul>
           <div className="flex flex-wrap gap-2">
-            <button type="button" onClick={acceptVoiceConsent} disabled={busy} className={primaryButton}>
-              I agree, start recording
+            <button type="button" onClick={acceptConsent} disabled={busy} className={primaryButton}>
+              {consent.accept}
             </button>
-            <button type="button" onClick={() => switchTo("text")} disabled={busy} className={quietButton}>
-              Keep writing
-            </button>
+            {signed ? (
+              <Link href="/data-lab/workspace" className={quietButton}>
+                Back to the workspace
+              </Link>
+            ) : (
+              <button type="button" onClick={() => switchTo("text")} disabled={busy} className={quietButton}>
+                Keep writing
+              </button>
+            )}
           </div>
         </FramedCard>
       ) : (
         <>
-          {view.status === "loading" && (
+          {view.status === "loading" && modality !== "video" && (
             <p className={cn("flex items-center font-mono text-xs text-faint", FORM_HEIGHT)}>
               Loading the next task…
             </p>
@@ -208,7 +275,12 @@ function Contribute({ language }: { language: string }) {
 
           {view.status === "empty" && (
             <FramedCard panelsClassName="bg-[#1c1a0e] p-6 sm:p-8">
-              {modality === "audio" ? (
+              {modality === "video" ? (
+                <>
+                  <p className="text-lg">You&apos;ve signed every word and sentence in {target?.name ?? language} for now.</p>
+                  <p className="pt-2 text-sm text-subtle">New words are added regularly. Check back soon.</p>
+                </>
+              ) : modality === "audio" ? (
                 <>
                   <p className="text-lg">
                     No verified translations in {target?.name ?? language} are waiting to be recorded.
@@ -235,7 +307,61 @@ function Contribute({ language }: { language: string }) {
             </FramedCard>
           )}
 
-          {view.status === "task" && (
+          {/* Stays mounted while the next task loads, so the camera and the
+              hand tracker start once per visit. */}
+          {(view.status === "task" || view.status === "loading") && modality === "video" && (
+            <FramedCard panelsClassName="grid bg-[#0b0a07] md:grid-cols-[2fr_3fr]">
+              <div className="flex flex-col gap-5 bg-[#1c1a0e] p-6 sm:p-8">
+                {view.status === "task" ? (
+                  <>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                      <Eyebrow>Sign in {target?.name ?? language}</Eyebrow>
+                      <span className="font-mono text-xs text-faint">{categoryLabel(view.task.category)}</span>
+                    </div>
+                    <p lang={view.task.text_language} className="text-2xl leading-snug text-pretty">
+                      {view.task.text}
+                    </p>
+                    <p className="mt-auto text-sm text-subtle">
+                      {view.task.kind === "word"
+                        ? "Sign this word as you would in conversation, then let your hands rest."
+                        : "Sign the meaning of this sentence, as you would tell it to someone."}
+                    </p>
+                  </>
+                ) : (
+                  <p className="font-mono text-xs text-faint">Loading the next task…</p>
+                )}
+              </div>
+
+              <form
+                className="flex flex-col gap-4 p-6 sm:p-8"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (view.status === "task") submit(view.task);
+                }}
+              >
+                <SignRecorder take={take} onChange={setTake} disabled={busy} />
+                <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={next}
+                    disabled={busy || view.status !== "task"}
+                    className={quietButton}
+                  >
+                    Skip
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={busy || !ready || view.status !== "task"}
+                    className={cn(primaryButton, "min-w-32")}
+                  >
+                    {busy ? "Uploading…" : "Submit"}
+                  </button>
+                </div>
+              </form>
+            </FramedCard>
+          )}
+
+          {view.status === "task" && modality !== "video" && (
             <FramedCard panelsClassName="grid bg-[#0b0a07] md:grid-cols-2">
               <div className="flex flex-col gap-5 bg-[#1c1a0e] p-6 sm:p-8">
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
