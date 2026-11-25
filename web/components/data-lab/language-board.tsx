@@ -29,23 +29,36 @@ function LanguageBoard({
                     {l.name}
                   </span>
                 </div>
-                <div className="mt-auto flex flex-col gap-3">
-                  <span className="font-mono text-[11px] text-faint">
-                    English–{l.name} sentence pairs
-                  </span>
-                  <PairsBar
-                    language={l.name}
-                    available={p?.available ?? 0}
-                    translated={p?.translated ?? 0}
-                    verified={p?.verified ?? 0}
-                  />
-                  {!!p?.recorded && (
-                    <span className="font-mono text-[11px] text-faint tabular-nums">
-                      {p.recorded.toLocaleString("en-US")} recorded · {p.recorded_verified.toLocaleString("en-US")}{" "}
-                      verified
+                {l.modality === "signed" ? (
+                  <div className="mt-auto flex flex-col gap-3">
+                    <span className="font-mono text-[11px] text-faint">English words and sentences, signed</span>
+                    <PairsBar
+                      language={l.name}
+                      verb="signed"
+                      available={p?.available ?? 0}
+                      translated={p?.signed ?? 0}
+                      verified={p?.signed_verified ?? 0}
+                    />
+                  </div>
+                ) : (
+                  <div className="mt-auto flex flex-col gap-3">
+                    <span className="font-mono text-[11px] text-faint">
+                      English–{l.name} sentence pairs
                     </span>
-                  )}
-                </div>
+                    <PairsBar
+                      language={l.name}
+                      available={p?.available ?? 0}
+                      translated={p?.translated ?? 0}
+                      verified={p?.verified ?? 0}
+                    />
+                    {!!p?.recorded && (
+                      <span className="font-mono text-[11px] text-faint tabular-nums">
+                        {p.recorded.toLocaleString("en-US")} recorded · {p.recorded_verified.toLocaleString("en-US")}{" "}
+                        verified
+                      </span>
+                    )}
+                  </div>
+                )}
               </FramedCard>
             </li>
           );

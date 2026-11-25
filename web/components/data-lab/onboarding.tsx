@@ -29,6 +29,18 @@ function Onboarding({ languages, volunteer, onDone }: OnboardingProps) {
   const [agreed, setAgreed] = useState(false);
   const [busy, setBusy] = useState(false);
 
+  // Sign languages are listed in their own group, after the spoken ones.
+  const groups = [
+    {
+      legend: "Languages you speak well enough to translate into",
+      languages: languages.filter((l) => l.modality !== "signed"),
+    },
+    {
+      legend: "Sign languages you sign fluently, to record on camera",
+      languages: languages.filter((l) => l.modality === "signed"),
+    },
+  ].filter((g) => g.languages.length > 0);
+
   const toggle = (code: string) =>
     setChosen((prev) => {
       const next = new Set(prev);
@@ -66,37 +78,39 @@ function Onboarding({ languages, volunteer, onDone }: OnboardingProps) {
           <input required value={name} onChange={(e) => setName(e.target.value)} className={fieldClasses} />
         </label>
 
-        <fieldset className="flex flex-col gap-3">
-          <legend className="pb-3 font-mono text-xs text-faint">Languages you speak well enough to translate into</legend>
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {languages.map((l) => {
-              const selected = chosen.has(l.code);
-              const locked = joined.has(l.code);
-              return (
-                <label
-                  key={l.code}
-                  className={cn(
-                    "flex cursor-pointer items-center justify-between gap-3 rounded-inset border px-4 py-3 transition-colors",
-                    selected ? "border-signal bg-signal/5" : "border-line hover:border-line-strong",
-                    locked && "cursor-default",
-                  )}
-                >
-                  <span className="flex flex-col">
-                    <span className="text-sm">{l.native_name}</span>
-                    <span className="font-mono text-[11px] text-faint">{l.name}</span>
-                  </span>
-                  <input
-                    type="checkbox"
-                    checked={selected}
-                    disabled={locked}
-                    onChange={() => toggle(l.code)}
-                    className="size-4 accent-[#ffd300]"
-                  />
-                </label>
-              );
-            })}
-          </div>
-        </fieldset>
+        {groups.map((group) => (
+          <fieldset key={group.legend} className="flex flex-col gap-3">
+            <legend className="pb-3 font-mono text-xs text-faint">{group.legend}</legend>
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {group.languages.map((l) => {
+                const selected = chosen.has(l.code);
+                const locked = joined.has(l.code);
+                return (
+                  <label
+                    key={l.code}
+                    className={cn(
+                      "flex cursor-pointer items-center justify-between gap-3 rounded-inset border px-4 py-3 transition-colors",
+                      selected ? "border-signal bg-signal/5" : "border-line hover:border-line-strong",
+                      locked && "cursor-default",
+                    )}
+                  >
+                    <span className="flex flex-col">
+                      <span className="text-sm">{l.native_name}</span>
+                      <span className="font-mono text-[11px] text-faint">{l.name}</span>
+                    </span>
+                    <input
+                      type="checkbox"
+                      checked={selected}
+                      disabled={locked}
+                      onChange={() => toggle(l.code)}
+                      className="size-4 accent-[#ffd300]"
+                    />
+                  </label>
+                );
+              })}
+            </div>
+          </fieldset>
+        ))}
 
         <div className="flex flex-col gap-4 rounded-inset border border-line bg-background p-5">
           <span className="font-mono text-xs text-signal">How your contributions are used</span>

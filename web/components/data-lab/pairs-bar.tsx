@@ -7,10 +7,13 @@ import { cn } from "@/lib/utils";
 const SEGMENTS = {
   verified: { label: "Verified", fill: "bg-signal", swatch: "bg-signal" },
   review: { label: "In review", fill: "bg-[#806a00]", swatch: "bg-[#806a00]" },
-  rest: { label: "Not yet translated", fill: "bg-[#2e2808]", swatch: "bg-[#2e2808]" },
+  rest: { label: "Still to do", fill: "bg-[#2e2808]", swatch: "bg-[#2e2808]" },
 } as const;
 
 type Counts = { available: number; translated: number; verified: number };
+
+/** What the work is: translating sentences, or signing words and sentences. */
+type Verb = "translated" | "signed";
 
 const share = (part: number, whole: number) => (whole > 0 ? (part / whole) * 100 : 0);
 
@@ -23,7 +26,14 @@ const percent = (part: number, whole: number) => {
 
 const n = (v: number) => v.toLocaleString("en-US");
 
-function PairsBar({ available, translated, verified, language }: Counts & { language: string }) {
+function PairsBar({
+  available,
+  translated,
+  verified,
+  language,
+  verb = "translated",
+}: Counts & { language: string; verb?: Verb }) {
+  const items = verb === "signed" ? "words and sentences" : "sentences";
   const review = Math.max(translated - verified, 0);
   const rest = Math.max(available - translated, 0);
   const parts = [
@@ -41,13 +51,13 @@ function PairsBar({ available, translated, verified, language }: Counts & { lang
           {percent(verified, available)} <span className="text-sm text-subtle">verified</span>
         </span>
         <span className="font-mono text-[11px] text-faint tabular-nums">
-          {n(translated)} of {n(available)} translated
+          {n(translated)} of {n(available)} {verb}
         </span>
       </div>
 
       <div
         role="img"
-        aria-label={`${language}: ${n(verified)} verified, ${n(review)} in review, ${n(rest)} not yet translated, of ${n(available)} sentences`}
+        aria-label={`${language}: ${n(verified)} verified, ${n(review)} in review, ${n(rest)} not yet ${verb}, of ${n(available)} ${items}`}
         className="flex h-2.5 gap-0.5"
       >
         {parts.length === 0 ? (
