@@ -19,12 +19,14 @@ import { LiveAvatar, SignReplay } from "./sign-replay-lazy";
 import { quietButton, secondaryButton } from "./styles";
 
 // The tracker runs on the signer's device (ADR 0014). Its runtime and model
-// load from their public CDNs, pinned: the runtime version matches
-// @mediapipe/tasks-vision in package.json.
+// are served from our own storage, published there by
+// `make publish-mediapipe` in backend/, so loading the tracker sends no
+// request to anyone else. The runtime version matches @mediapipe/tasks-vision
+// in package.json; republish when it changes.
 const MEDIAPIPE_VERSION = "1.2.3";
-const WASM_URL = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MEDIAPIPE_VERSION}/wasm`;
-const MODEL_URL =
-  "https://storage.googleapis.com/mediapipe-models/holistic_landmarker/holistic_landmarker/float16/1/holistic_landmarker.task";
+const ASSETS_URL = (process.env.NEXT_PUBLIC_ASSETS_URL || "https://cdn.thecommonmind.org").replace(/\/$/, "");
+const WASM_URL = `${ASSETS_URL}/mediapipe/tasks-vision/${MEDIAPIPE_VERSION}/wasm`;
+const MODEL_URL = `${ASSETS_URL}/mediapipe/models/holistic_landmarker/float16/1/holistic_landmarker.task`;
 const TRACKER = `MediaPipe HolisticLandmarker float16/1 (tasks-vision ${MEDIAPIPE_VERSION})`;
 
 // A take is a word or a sentence: a minute is plenty, and keeps the video
